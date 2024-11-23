@@ -1,6 +1,7 @@
 package dk.netbizz.vaadin.gridpro.utils;
 
 import com.vaadin.flow.component.Html;
+import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.*;
 
 public class InputFieldCreator {
@@ -219,6 +220,29 @@ public class InputFieldCreator {
 
     public static Html createDivider() {
         return new Html("<hr class='viavea-hr'></hr>");
+    }
+
+
+    /**************************************************************************************
+     *  S E L E C T     F I E L D
+     */
+
+    public static <T> Select<T> createStandardSelect(T t, String title, String placeholder) {
+        Select<T> cb  = new Select<T>();
+        cb.setLabel(title);
+        cb.setPlaceholder(placeholder);
+        cb.setWidth("10rem");
+        cb.setMaxWidth("10rem");
+        return cb;
+    }
+
+    public static <T> Select<T> createShortSelect(T t, String title, String placeholder) {
+        Select<T> cb  = new Select<T>();
+        cb.setLabel(title);
+        cb.setPlaceholder(placeholder);
+        cb.setWidth("5rem");
+        cb.setMaxWidth("5rem");
+        return cb;
     }
 
 }

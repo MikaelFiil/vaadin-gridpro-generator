@@ -28,7 +28,7 @@ package dk.netbizz.vaadin.gridpro.entity.base;
  *
  *  Notice that GridPro requires a commercial license from Vaadin
  *
- * Version 0.21 - 2024-11-23
+ * Version 0.22 - 2024-11-24
  */
 
 import com.vaadin.flow.component.button.Button;
@@ -40,14 +40,17 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.renderer.IconRenderer;
 import com.vaadin.flow.data.renderer.TextRenderer;
 import com.vaadin.flow.function.ValueProvider;
+import dk.netbizz.vaadin.gridpro.themes.RadioButtonTheme;
 import dk.netbizz.vaadin.gridpro.utils.ConfirmationDialog;
 import dk.netbizz.vaadin.gridpro.utils.DateTimePickerCreator;
 import dk.netbizz.vaadin.gridpro.utils.InputFieldCreator;
+import dk.netbizz.vaadin.gridpro.views.components.TrafficLight;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -190,6 +193,10 @@ public abstract class GenericGridProEditView<T extends BaseEntity> extends Verti
 
                             case "com.vaadin.flow.component.datepicker.DatePicker":
                                 column = makeDatePickerFieldColumn(columnInfo, camelName);
+                                break;
+
+                            case "dk.netbizz.vaadin.gridpro.views.components.TrafficLight":
+                                column = makeTrafficlightFieldColumn(columnInfo, camelName);
                                 break;
 
                             case "dk.netbizz.vaadin.gridpro.entity.base.ArrayIntegerEditor":
@@ -420,6 +427,32 @@ public abstract class GenericGridProEditView<T extends BaseEntity> extends Verti
                     setSystemError(item,  columnInfo.propertyName(), e);
                 }
                 return "";
+            }));
+    }
+
+    private Grid.Column<T> makeTrafficlightFieldColumn(GridColumnInfo columnInfo, String camelName) {
+        Select<String> trafficlightEditorComponent =  new Select<>(); // InputFieldCreator.createStandardSelect("", null, null);
+        trafficlightEditorComponent.setItems(TrafficLight.TRAFFICLIGHT_NORMAL);
+
+        return genericGrid.addEditColumn(columnInfo.propertyName())
+            .custom(trafficlightEditorComponent, (item, newValue) -> {
+                try {
+                    entityClass.getMethod("set" + camelName, columnInfo.type).invoke(item, newValue);
+                    saveEntity(item);
+                    genericGrid.recalculateColumnWidths();
+                } catch (Exception e) {
+                    setSystemError(item,  columnInfo.propertyName(), e);
+                }
+            })
+            .setRenderer(new ComponentRenderer<RadioButtonGroup<String>, T>(item -> {
+                try {
+                    RadioButtonGroup<String> prop = TrafficLight.createRadioButtonGroup("", TrafficLight.TRAFFICLIGHT_NORMAL, RadioButtonTheme.TRAFFICLIGHT);
+                    prop.setValue((String)entityClass.getMethod("get" + camelName).invoke(item));
+                    return prop;
+                } catch (Exception e) {
+                    setSystemError(item,  columnInfo.propertyName(), e);
+                }
+                return null;
             }));
     }
 

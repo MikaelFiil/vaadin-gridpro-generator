@@ -15,8 +15,7 @@ import java.util.List;
 import java.util.Map;
 
 @PageTitle("GridPro Inline")
-@Menu(order = 0
-        , icon = "line-awesome/svg/home-solid.svg")
+@Menu(order = 0, icon = "line-awesome/svg/home-solid.svg")
 @Route(value = "", layout = MainLayout.class)
 public class ItemView extends GenericGridProEditView<Item> {
 

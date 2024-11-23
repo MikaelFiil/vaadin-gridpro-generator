@@ -4,6 +4,7 @@
 ### Version history
 * ### Version 0.20 - 2024-11-23  - Initial commit
 * ### Version 0.21 - 2024-11-23  - Updated editor types with BigDecimal, improved input handling of numbers. Handling of validation- and error messages relayed to domain view class. Bindings on main class GenericGridProEditView are now at a minimum.
+* ### Version 0.22 - 2024-11-24  - Added new columns type Trafficlight aka Radiobutton Group
 ### Author Mikael Fiil - mikael.fiil@netbizz.dk
 ###
 
@@ -32,6 +33,7 @@
 ###  Notice that GridPro requires a commercial license from Vaadin
 ###
 
+![cover image](https://github.com/MikaelFiil/vaadin-gridpro-generator/cover.png?raw=true)
 
 ### Based on:
 ### - Spring Boot 3.3.5

@@ -10,6 +10,7 @@ import dk.netbizz.vaadin.gridpro.entity.base.ArrayBigDecimalEditor;
 import dk.netbizz.vaadin.gridpro.entity.base.ArrayIntegerEditor;
 import dk.netbizz.vaadin.gridpro.entity.base.BaseEntity;
 import dk.netbizz.vaadin.gridpro.entity.base.GridEditColumn;
+import dk.netbizz.vaadin.gridpro.views.components.TrafficLight;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -26,13 +27,14 @@ import java.time.Period;
 public class Item implements BaseEntity {
 
     // Easier construction avoiding arrays in parameters
-    public Item(Long itemId, String itemName, String category, Integer price, LocalDate birthday, Boolean active) {
+    public Item(Long itemId, String itemName, String category, Integer price, LocalDate birthday, Boolean active, String criticality) {
         this.itemId = itemId;
         this.itemName = itemName;
         this. category = category;
         this.price = price;
         this.birthday = birthday;
         this.active = active;
+        this.criticality = criticality;
     }
 
 
@@ -63,13 +65,16 @@ public class Item implements BaseEntity {
     @GridEditColumn(header = "Is Active", order = 7, editorClass = Checkbox.class)
     private Boolean active = false;
 
-    @GridEditColumn(header = "Year", order = 8, fieldLength = 5, sortable = false, maxValue = 25000, format = "%d kg.", arrayEndIdx = 9, editorClass = ArrayIntegerEditor.class)
+    @GridEditColumn(header = "Criticality", order = 8, sortable = false, editorClass = TrafficLight.class)
+    private String criticality = "Low";
+
+    @GridEditColumn(header = "Year", order = 9, fieldLength = 5, sortable = false, maxValue = 25000, format = "%d kg.", arrayEndIdx = 9, editorClass = ArrayIntegerEditor.class)
     private Integer[] yearlyAmount = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};                // Up to 10 years, but can in principle be very long
 
     public Integer getYearlyAmount(int idx) { return yearlyAmount[idx]; }
     public void setYearlyAmount(int idx, Integer value) { yearlyAmount[idx] = value; }
 
-    @GridEditColumn(header = "Silo", order = 9, fieldLength = 6, sortable = false, maxValue = 22.5,  format = "%,.2f Ton", arrayEndIdx = 9, editorClass = ArrayBigDecimalEditor.class)
+    @GridEditColumn(header = "Silo", order = 10, fieldLength = 6, sortable = false, maxValue = 22.5,  format = "%,.2f Ton", arrayEndIdx = 9, editorClass = ArrayBigDecimalEditor.class)
     private BigDecimal[] siloTon = {BigDecimal.valueOf(0.0), BigDecimal.valueOf(0.0), BigDecimal.valueOf(0.0), BigDecimal.valueOf(0.0), BigDecimal.valueOf(0.0),
             BigDecimal.valueOf(0.0), BigDecimal.valueOf(0.0), BigDecimal.valueOf(0.0), BigDecimal.valueOf(0.0), BigDecimal.valueOf(0.0)};                // Up to 10 silos
 
