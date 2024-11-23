@@ -45,10 +45,10 @@ public class Item implements BaseEntity {
     @GridEditColumn(header = "Category", order = 2, sortable = false, editorClass = Select.class)
     private String category = "";
 
-    @GridEditColumn(header = "Kr./Liter", order = 3, sortable = false, format = "%,.2f", editorClass = BigDecimalField.class)
+    @GridEditColumn(header = "Kr./Liter", order = 3, sortable = false, maxValue = 25, format = "%,.2f", editorClass = BigDecimalField.class)
     private BigDecimal krPerLiter = BigDecimal.valueOf(0.0);
 
-    @GridEditColumn(header = "Price", order = 4, fieldLength = 7, format = "%d kr.", editorClass = IntegerField.class)
+    @GridEditColumn(header = "Price", order = 4, fieldLength = 7, maxValue = 9999, format = "%d kr.", editorClass = IntegerField.class)
     private Integer price = 0;
 
     @GridEditColumn(header = "Birthday", order = 5, format = "dd.MM.yyyy", editorClass = DatePicker.class)
@@ -63,16 +63,17 @@ public class Item implements BaseEntity {
     @GridEditColumn(header = "Is Active", order = 7, editorClass = Checkbox.class)
     private Boolean active = false;
 
-    @GridEditColumn(header = "Year", order = 8, fieldLength = 5, sortable = false, format = "%d kg.", arrayEndIdx = 9, editorClass = ArrayIntegerEditor.class)
-    private Number[] yearlyAmount = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};                // Up to 10 years, but can in principle be very long
+    @GridEditColumn(header = "Year", order = 8, fieldLength = 5, sortable = false, maxValue = 25000, format = "%d kg.", arrayEndIdx = 9, editorClass = ArrayIntegerEditor.class)
+    private Integer[] yearlyAmount = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};                // Up to 10 years, but can in principle be very long
 
-    public Number getYearlyAmount(int idx) { return yearlyAmount[idx]; }
-    public void setYearlyAmount(int idx, Number value) { yearlyAmount[idx] = value; }
+    public Integer getYearlyAmount(int idx) { return yearlyAmount[idx]; }
+    public void setYearlyAmount(int idx, Integer value) { yearlyAmount[idx] = value; }
 
-    @GridEditColumn(header = "Silo", order = 9, fieldLength = 6, sortable = false, format = "%,.2f Ton", arrayEndIdx = 9, editorClass = ArrayBigDecimalEditor.class)
-    private Number[] siloTon = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};                // Up to 10 silos
+    @GridEditColumn(header = "Silo", order = 9, fieldLength = 6, sortable = false, maxValue = 22.5,  format = "%,.2f Ton", arrayEndIdx = 9, editorClass = ArrayBigDecimalEditor.class)
+    private BigDecimal[] siloTon = {BigDecimal.valueOf(0.0), BigDecimal.valueOf(0.0), BigDecimal.valueOf(0.0), BigDecimal.valueOf(0.0), BigDecimal.valueOf(0.0),
+            BigDecimal.valueOf(0.0), BigDecimal.valueOf(0.0), BigDecimal.valueOf(0.0), BigDecimal.valueOf(0.0), BigDecimal.valueOf(0.0)};                // Up to 10 silos
 
-    public Number getSiloTon(int idx) { return siloTon[idx]; }
-    public void setSiloTon(int idx, Number value) { siloTon[idx] = value; }
+    public BigDecimal getSiloTon(int idx) { return siloTon[idx]; }
+    public void setSiloTon(int idx, BigDecimal value) { siloTon[idx] = value; }
 
 }

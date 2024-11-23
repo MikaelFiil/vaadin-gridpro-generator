@@ -1,7 +1,11 @@
 # Vaadin GridPro Generator
 
 ## A Vaadin GridPro toolkit that converts annotations on your POJO entity class into a GridPro grid for updating
-
+### Version history
+* ### Version 0.20 - 2024-11-23  - Initial commit
+* ### Version 0.21 - 2024-11-23  - Updated editor types with BigDecimal, improved input handling of numbers. Handling of validation- and error messages relayed to domain view class. Bindings on main class GenericGridProEditView are now at a minimum.
+### Author Mikael Fiil - mikael.fiil@netbizz.dk
+###
 
 *** 
 ### This is given to the public domain and without any warranty
@@ -9,27 +13,23 @@
 ### https://github.com/andrlange/vaadin-grid-form-entities
 ###
 ### This is a GridPro extension of the idea of using annotations on your POJO to simplify setting up GridPro.
-### Besides the most common field types, there is a special option for editing variable length array fields,
-### which is actually why I started to make this, since it avoids having a lot of repetitive application code.
+### Besides the most common field types, there is a special option for editing variable length array fields, which is actually why I started to make this, since it avoids having a lot of repetitive application code.
 ### Since a user can move freely around in the grid, you can never know when editing is finished, hence there is instant persistence.
 ### Every edit of a single cell will cause a call to save the entity of the row.
-### The application domain view must extend this class and replace the generic placeholder with the domain class for the grid.
+### The application domain view must extend this class and replace the generic placeholder with the domain class for the grid and implement the abstract methods.
+### Logning of validation and error messages refer to the domain view.
 ***
 ### There is room for improvement and I will probably do some myself, since I have only started to use it.
 * ### More field types
 * ### Having a more dynamic set of parameters for all types of fields
 * ### More validation options 
-* ### Cleaning up the code, e.g. I don't like the exception handling it has unnecessary bindings and no real design. Better code design in general (as always)
-* ### Proper logging
+* ### Cleaning up the code, maybe further improve exception handling with lambda wrappers
 * ### More examples utilizing it for complex UI interactions with one-to-many relations etc.
 * ### Tests
 * ### Better readme ;-) 
 * ### ... Oh yes, remove any bugs not yet found :-)
 ###
 ###  Notice that GridPro requires a commercial license from Vaadin
-###
-### Version 0.2 - 2024-11-23  
-### Author Mikael Fiil - mikael.fiil@netbizz.dk
 ###
 
 

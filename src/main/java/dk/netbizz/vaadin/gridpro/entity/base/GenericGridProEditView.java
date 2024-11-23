@@ -18,18 +18,17 @@ package dk.netbizz.vaadin.gridpro.entity.base;
  * The application domain view must extend this class and replace the generic placeholder with the domain class for the grid.
  *
  * There is room for improvement and I will probably do some myself, since I have only started to use it.
- * - More field types
+ * - More field types, one or two comes to my mind
  * - Having a more dynamic set of parameters for all types of fields
  * - More validation options
- * - Cleaning up the code, e.g. I don't like the exception handling it has unnecessary bindings and no real design
- * - Proper logging
+ * - Cleaning up the code, maybe further improve exception handling with lambda wrappers
  * - More examples utilizing it for complex UI interactions with one-to-many relations etc.
  * - Tests
  * - ... Oh yes, remove any bugs not yet found :-)
  *
  *  Notice that GridPro requires a commercial license from Vaadin
  *
- * Version 0.2 - 2024-11-23
+ * Version 0.21 - 2024-11-23
  */
 
 import com.vaadin.flow.component.button.Button;
@@ -44,13 +43,11 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.renderer.IconRenderer;
-import com.vaadin.flow.data.renderer.NumberRenderer;
 import com.vaadin.flow.data.renderer.TextRenderer;
 import com.vaadin.flow.function.ValueProvider;
 import dk.netbizz.vaadin.gridpro.utils.ConfirmationDialog;
 import dk.netbizz.vaadin.gridpro.utils.DateTimePickerCreator;
 import dk.netbizz.vaadin.gridpro.utils.InputFieldCreator;
-import dk.netbizz.vaadin.gridpro.utils.StandardNotifications;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -82,19 +79,21 @@ public abstract class GenericGridProEditView<T extends BaseEntity> extends Verti
         add(gridContainer);
     }
 
-    // Abstract methods to be implemented by specific views
+    // Abstract methods to be implemented by specific domain views
+    protected abstract void setValidationError(T entity, String columName, String msg);     // Let domain view handle UI messages
+    protected abstract void setSystemError(T entity, String columName, Exception e);        // Let domain view handle UI messages
     protected abstract void saveEntity(T entity);
     protected abstract List<T> loadEntities();
     protected abstract void deleteEntity(T entity);
     protected abstract void selectEntity(T entity);
     protected abstract List<String> getItemsForSelect(String colName);
 
-    protected void setupEventHandlers() {
+    protected void setupGridEventHandlers() {
         // genericGrid.setSelectionMode(Grid.SelectionMode.SINGLE);  // Set this if you really want to be able to select a row
-        genericGrid.setSelectionMode(Grid.SelectionMode.NONE);   // If you use this, you cannot addSelectionListener below
+        genericGrid.setSelectionMode(Grid.SelectionMode.NONE);      // If you use this, you cannot addSelectionListener below
 
         // A selectionListener is a bit detached in GridPro you can easily have one selected row while editing another row !?
-        //genericGrid.addSelectionListener(event -> event.getFirstSelectedItem().ifPresent(item -> {
+        // genericGrid.addSelectionListener(event -> event.getFirstSelectedItem().ifPresent(item -> {
         //   selectedItem = item;
         //    selectEntity(selectedItem);
         // }));
@@ -139,7 +138,7 @@ public abstract class GenericGridProEditView<T extends BaseEntity> extends Verti
                             Object value = columnInfo.method().invoke(item);
                             return formatValue(value, columnInfo);
                         } catch (Exception e) {
-                            StandardNotifications.showTempSystemError();
+                            setSystemError(item,  columnInfo.propertyName(), e);
                             return null;
                         }
                     });
@@ -155,7 +154,7 @@ public abstract class GenericGridProEditView<T extends BaseEntity> extends Verti
                                     Object value = field.get(item);
                                     return formatValue(value, columnInfo);
                                 } catch (Exception e) {
-                                    StandardNotifications.showTempSystemError();
+                                    setSystemError(item,  columnInfo.propertyName(), e);
                                     return null;
                                 }
                             });
@@ -164,7 +163,7 @@ public abstract class GenericGridProEditView<T extends BaseEntity> extends Verti
                         }
                         setStandardColumnProperties(column, columnInfo, null);
 
-                    } else { // For field based and editable columns
+                    } else { // For field based editable columns
                         boolean columnPropsSet = false;
                         String camelName = columnInfo.propertyName().substring(0, 1).toUpperCase() + columnInfo.propertyName().substring(1);
 
@@ -212,7 +211,6 @@ public abstract class GenericGridProEditView<T extends BaseEntity> extends Verti
                         }
                     }
                 }
-
             }); // forEach
 
             // Make delete icon
@@ -301,65 +299,66 @@ public abstract class GenericGridProEditView<T extends BaseEntity> extends Verti
 
     private Grid.Column<T> makeTextFieldColumn(GridColumnInfo columnInfo, String camelName) {
         return genericGrid.addEditColumn(columnInfo.propertyName())
-            .custom(InputFieldCreator.createStandardTextField(columnInfo.fieldLength()), (element, newValue) -> {
+            .custom(InputFieldCreator.createStandardTextField(columnInfo.fieldLength()), (item, newValue) -> {
                 String setterMethod = "set" + camelName;
                 try {
-                    entityClass.getMethod(setterMethod, columnInfo.type).invoke(element, newValue);
-                    saveEntity(element);
+                    entityClass.getMethod(setterMethod, columnInfo.type).invoke(item, newValue);
+                    saveEntity(item);
                     genericGrid.recalculateColumnWidths();
                 } catch (Exception e) {
-                    StandardNotifications.showTempSystemError();
+                    setSystemError(item,  columnInfo.propertyName(), e);
                 }
             });
     }
 
     private Grid.Column<T> makeIntegerFieldColumn(GridColumnInfo columnInfo, String camelName) {
         return genericGrid.addEditColumn(columnInfo.propertyName())
-            .custom(InputFieldCreator.createShortIntegerField("", (long) columnInfo.minValue(), (long) columnInfo.maxValue(), 1), (element, newValue) -> {
+            .custom(InputFieldCreator.createShortIntegerField("", (long) columnInfo.minValue(), (long) columnInfo.maxValue(), 1), (item, newValue) -> {
                 String setterMethod = "set" + camelName;
                 try {
-                    if (newValue < columnInfo.minValue() || newValue > columnInfo.maxValue()) {
-                        StandardNotifications.showTempErrorNotification("Value must be between " + columnInfo.minValue() + " and " + columnInfo.maxValue());
+                    if (newValue == null || newValue < columnInfo.minValue() || newValue > columnInfo.maxValue()) {
+                        setValidationError(item, camelName, "Value must be between " + columnInfo.minValue() + " and " + columnInfo.maxValue());     // Let domain view handle UI messaging
                         return;
                     }
-                    entityClass.getMethod(setterMethod, columnInfo.type).invoke(element, newValue);
-                    saveEntity(element);
+                    entityClass.getMethod(setterMethod, columnInfo.type).invoke(item, newValue);
+                    saveEntity(item);
                     genericGrid.recalculateColumnWidths();
                 } catch (Exception e) {
-                    StandardNotifications.showTempSystemError();
-                }
-            })
-            .setRenderer(new NumberRenderer<>(item -> {
-                try {
-                    return (Number)entityClass.getMethod("get" + camelName).invoke(item);
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-            },  columnInfo.format))
-            .setTextAlign(ColumnTextAlign.END);
-    }
-
-    private Grid.Column<T> makeBigDecimalFieldColumn(GridColumnInfo columnInfo, String camelName) {
-        return genericGrid.addEditColumn(columnInfo.propertyName())
-            .custom(InputFieldCreator.createShortBigDecimalField(""), (element, newValue) -> {
-                String setterMethod = "set" + camelName;
-                try {
-                    if (newValue.doubleValue() < columnInfo.minValue() || newValue.doubleValue() > columnInfo.maxValue()) {
-                        StandardNotifications.showTempErrorNotification("Value must be between " + columnInfo.minValue() + " and " + columnInfo.maxValue());
-                        return;
-                    }
-                    entityClass.getMethod(setterMethod, columnInfo.type).invoke(element, newValue);
-                    saveEntity(element);
-                    genericGrid.recalculateColumnWidths();
-                } catch (Exception e) {
-                    StandardNotifications.showTempSystemError();
+                    setSystemError(item,  columnInfo.propertyName(), e);
                 }
             })
             .setRenderer(new TextRenderer<>(item -> {
                 try {
                     return String.format(columnInfo.format() , entityClass.getMethod("get" + camelName).invoke(item));
                 } catch (Exception e) {
-                    StandardNotifications.showTempSystemError();
+                    setSystemError(item,  columnInfo.propertyName(), e);
+                }
+                return "";
+            }))
+            .setTextAlign(ColumnTextAlign.END);
+    }
+
+    private Grid.Column<T> makeBigDecimalFieldColumn(GridColumnInfo columnInfo, String camelName) {
+        return genericGrid.addEditColumn(columnInfo.propertyName())
+            .custom(InputFieldCreator.createShortBigDecimalField(""), (item, newValue) -> {
+                String setterMethod = "set" + camelName;
+                try {
+                    if (newValue == null || newValue.doubleValue() < columnInfo.minValue() || newValue.doubleValue() > columnInfo.maxValue()) {
+                        setValidationError(item, camelName, "Value must be between " + columnInfo.minValue() + " and " + columnInfo.maxValue());     // Let domain view handle UI messaging
+                        return;
+                    }
+                    entityClass.getMethod(setterMethod, columnInfo.type).invoke(item, newValue);
+                    saveEntity(item);
+                    genericGrid.recalculateColumnWidths();
+                } catch (Exception e) {
+                    setSystemError(item,  columnInfo.propertyName(), e);
+                }
+            })
+            .setRenderer(new TextRenderer<>(item -> {
+                try {
+                    return String.format(columnInfo.format() , entityClass.getMethod("get" + camelName).invoke(item));
+                } catch (Exception e) {
+                    setSystemError(item,  columnInfo.propertyName(), e);
                 }
                 return "";
             }))
@@ -368,21 +367,20 @@ public abstract class GenericGridProEditView<T extends BaseEntity> extends Verti
 
     private Grid.Column<T> makeBooleanFieldColumn(GridColumnInfo columnInfo, String camelName) {
         return genericGrid.addEditColumn(columnInfo.propertyName())
-            .custom(new Checkbox(), (element, newValue) -> {
+            .custom(new Checkbox(), (item, newValue) -> {
                 try {
-                    entityClass.getMethod("set" + camelName, columnInfo.type).invoke(element, newValue);
-                    saveEntity(element);
+                    entityClass.getMethod("set" + camelName, columnInfo.type).invoke(item, newValue);
+                    saveEntity(item);
                     genericGrid.recalculateColumnWidths();
                 } catch (Exception e) {
-                    StandardNotifications.showTempSystemError();
-                    throw new RuntimeException(e);
+                    setSystemError(item,  columnInfo.propertyName(), e);
                 }
             })
             .setRenderer(new ComponentRenderer<>(item -> {
                 try {
                     return new Checkbox((boolean) entityClass.getMethod("get" + camelName).invoke(item));
                 } catch (Exception e) {
-                    StandardNotifications.showTempSystemError();
+                    setSystemError(item,  columnInfo.propertyName(), e);
                 }
                 return null;
             }));
@@ -393,61 +391,64 @@ public abstract class GenericGridProEditView<T extends BaseEntity> extends Verti
         selectEditorComponent.setItems(getItemsForSelect(columnInfo.propertyName()));
 
         return genericGrid.addEditColumn(columnInfo.propertyName())
-            .custom(selectEditorComponent, (element, newValue) -> {
+            .custom(selectEditorComponent, (item, newValue) -> {
                 try {
-                    entityClass.getMethod("set" + camelName, columnInfo.type).invoke(element, newValue);
-                    saveEntity(element);
+                    entityClass.getMethod("set" + camelName, columnInfo.type).invoke(item, newValue);
+                    saveEntity(item);
                     genericGrid.recalculateColumnWidths();
                 } catch (Exception e) {
-                    StandardNotifications.showTempSystemError();
+                    setSystemError(item,  columnInfo.propertyName(), e);
                 }
             });
     }
 
     private Grid.Column<T> makeDatePickerFieldColumn(GridColumnInfo columnInfo, String camelName) {
         return genericGrid.addEditColumn(columnInfo.propertyName())
-            .custom(DateTimePickerCreator.createDatePicker("", columnInfo.format, true), (element, newValue) -> {
+            .custom(DateTimePickerCreator.createDatePicker("", columnInfo.format, true), (item, newValue) -> {
                 try {
-                    entityClass.getMethod("set" + camelName, columnInfo.type).invoke(element, newValue);
-                    saveEntity(element);
+                    entityClass.getMethod("set" + camelName, columnInfo.type).invoke(item, newValue);
+                    saveEntity(item);
                     genericGrid.recalculateColumnWidths();
                 } catch (Exception e) {
-                    StandardNotifications.showTempSystemError();
+                    setSystemError(item,  columnInfo.propertyName(), e);
                 }
             })
             .setRenderer(new TextRenderer<>(item -> {
                 try {
                     return (String)formatValue(entityClass.getMethod("get" + camelName).invoke(item), columnInfo);
                 } catch (Exception e) {
-                    StandardNotifications.showTempSystemError();
+                    setSystemError(item,  columnInfo.propertyName(), e);
                 }
                 return "";
             }));
     }
 
     private Grid.Column<T> makeArrayIntegerFieldColumns(GridColumnInfo columnInfo, int idx, String camelName) {
-        return genericGrid.addEditColumn((ValueProvider<T, ?>) evt -> {
-                try { return (Number) entityClass.getMethod("get" + camelName, Integer.TYPE).invoke(evt, idx);  } catch (Exception e) { StandardNotifications.showTempSystemError(); return null; }
+        return genericGrid.addEditColumn((ValueProvider<T, ?>) item -> {
+                try { return (Integer) entityClass.getMethod("get" + camelName, Integer.TYPE).invoke(item, idx);  } catch (Exception e) {
+                    setValidationError(item, camelName, "Value must be between " + columnInfo.minValue() + " and " + columnInfo.maxValue());
+                    return null;
+                }
             })
-            .custom(InputFieldCreator.createShortIntegerField("", Math.round(columnInfo.minValue()), Math.round(columnInfo.maxValue()), 1), (element, newValue) -> {
+            .custom(InputFieldCreator.createShortIntegerField("", Math.round(columnInfo.minValue()), Math.round(columnInfo.maxValue()), 1), (item, newValue) -> {
                  try {
-                    if (newValue < columnInfo.minValue() || newValue > columnInfo.maxValue()) {
-                        StandardNotifications.showTempErrorNotification("Value must be between " + columnInfo.minValue() + " and " + columnInfo.maxValue());
+                    if (newValue == null || newValue < columnInfo.minValue() || newValue > columnInfo.maxValue()) {
+                        setValidationError(item, camelName, "Value must be between " + columnInfo.minValue() + " and " + columnInfo.maxValue());     // Let domain view handle UI messaging
                         return;
                     }
-                    Method method = entityClass.getMethod("set" + camelName, Integer.TYPE, java.lang.Number.class);
-                    method.invoke(element, idx, newValue);
-                    saveEntity(element);
+                    Method method = entityClass.getMethod("set" + camelName, Integer.TYPE, java.lang.Integer.class);
+                    method.invoke(item, idx, newValue);
+                    saveEntity(item);
                     genericGrid.recalculateColumnWidths();
                 } catch (Exception e) {
-                    StandardNotifications.showTempSystemError();
+                     setSystemError(item,  columnInfo.propertyName(), e);
                 }
             })
             .setRenderer(new TextRenderer<>(item -> {
                 try {
                     return String.format(columnInfo.format() , entityClass.getMethod("get" + camelName, Integer.TYPE).invoke(item, idx));
                 } catch (Exception e) {
-                    StandardNotifications.showTempSystemError();
+                    setSystemError(item,  columnInfo.propertyName(), e);
                 }
                 return "";
             }))
@@ -455,28 +456,31 @@ public abstract class GenericGridProEditView<T extends BaseEntity> extends Verti
     }
 
     private Grid.Column<T> makeArrayBigDecimalFieldColumns(GridColumnInfo columnInfo, int idx, String camelName) {
-        return genericGrid.addEditColumn((ValueProvider<T, ?>) evt -> {
-                try { return (Number) entityClass.getMethod("get" + camelName, Integer.TYPE).invoke(evt, idx);  } catch (Exception e) { StandardNotifications.showTempSystemError(); return null; }
+        return genericGrid.addEditColumn((ValueProvider<T, ?>) item -> {
+                try { return entityClass.getMethod("get" + camelName, Integer.TYPE).invoke(item, idx);  } catch (Exception e) {
+                    setValidationError(item, camelName, "Value must be between " + columnInfo.minValue() + " and " + columnInfo.maxValue());
+                    return null;
+                }
             })
-            .custom(InputFieldCreator.createShortBigDecimalField(""), (element, newValue) -> {
+            .custom(InputFieldCreator.createShortBigDecimalField(""), (item, newValue) -> {
                 try {
-                    if (newValue.doubleValue() < columnInfo.minValue() || newValue.doubleValue() > columnInfo.maxValue()) {
-                        StandardNotifications.showTempErrorNotification("Value must be between " + columnInfo.minValue() + " and " + columnInfo.maxValue());
+                    if (newValue == null || newValue.doubleValue() < columnInfo.minValue() || newValue.doubleValue() > columnInfo.maxValue()) {
+                        setValidationError(item, camelName, "Value must be between " + columnInfo.minValue() + " and " + columnInfo.maxValue());     // Let domain view handle UI messaging
                         return;
                     }
-                    Method method = entityClass.getMethod("set" + camelName, Integer.TYPE, java.lang.Number.class);
-                    method.invoke(element, idx, newValue);
-                    saveEntity(element);
+                    Method method = entityClass.getMethod("set" + camelName, Integer.TYPE, java.math.BigDecimal.class);
+                    method.invoke(item, idx, newValue);
+                    saveEntity(item);
                     genericGrid.recalculateColumnWidths();
                 } catch (Exception e) {
-                    StandardNotifications.showTempSystemError();
+                    setSystemError(item,  columnInfo.propertyName(), e);
                 }
             })
             .setRenderer(new TextRenderer<>(item -> {
                 try {
                     return String.format(columnInfo.format() , entityClass.getMethod("get" + camelName, Integer.TYPE).invoke(item, idx));
                 } catch (Exception e) {
-                    StandardNotifications.showTempSystemError();
+                    setSystemError(item,  columnInfo.propertyName(), e);
                 }
                 return "";
             }))

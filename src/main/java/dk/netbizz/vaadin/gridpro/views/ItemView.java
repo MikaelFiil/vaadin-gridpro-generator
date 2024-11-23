@@ -8,6 +8,7 @@ import com.vaadin.flow.router.Route;
 import dk.netbizz.vaadin.gridpro.entity.Item;
 import dk.netbizz.vaadin.gridpro.entity.base.GenericGridProEditView;
 import dk.netbizz.vaadin.gridpro.service.ItemDataService;
+import dk.netbizz.vaadin.gridpro.utils.StandardNotifications;
 
 import java.util.HashMap;
 import java.util.List;
@@ -45,7 +46,7 @@ public class ItemView extends GenericGridProEditView<Item> {
 
         // with the dataService set we can now continue the generic setup
         setupGrid(params);
-        setupEventHandlers();
+        setupGridEventHandlers();
         refreshGrid();
 
         // Add Button for adding new person
@@ -56,6 +57,17 @@ public class ItemView extends GenericGridProEditView<Item> {
         addButton.add(addAvatar);
         addButton.addClickListener(event -> addNew());
         gridContainer.addComponentAsFirst(addButton);
+    }
+
+
+    @Override
+    protected void setValidationError(Item entity, String columName, String msg) {
+        StandardNotifications.showTempWarningNotification(msg);
+    }
+
+    @Override
+    protected void setSystemError(Item entity, String columName, Exception e) {
+        StandardNotifications.showTempSystemError();
     }
 
     @Override
