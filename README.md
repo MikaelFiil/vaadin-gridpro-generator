@@ -33,7 +33,7 @@
 ###  Notice that GridPro requires a commercial license from Vaadin
 ###
 
-![cover image](https://github.com/MikaelFiil/vaadin-gridpro-generator/cover.png?raw=true)
+![cover image](https://github.com/MikaelFiil/vaadin-gridpro-generator/blob/main/cover.png?raw=true)
 
 ### Based on:
 ### - Spring Boot 3.3.5
