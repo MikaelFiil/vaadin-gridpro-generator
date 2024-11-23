@@ -1,12 +1,13 @@
 package dk.netbizz.vaadin.gridpro.utils;
 
 import com.vaadin.flow.component.Html;
-import com.vaadin.flow.component.textfield.IntegerField;
-import com.vaadin.flow.component.textfield.NumberField;
-import com.vaadin.flow.component.textfield.TextArea;
-import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.component.textfield.*;
 
 public class InputFieldCreator {
+
+    /**************************************************************************************
+     *  T E X T   F I E L D
+     */
 
     private static TextField setTextFieldStd(TextField tf, int maxLength) {
         tf.setWidth("20rem");
@@ -15,12 +16,12 @@ public class InputFieldCreator {
         return tf;
     }
 
-    public static TextField createStandardTextField(String label, int maxLength) {
-        return setTextFieldStd(new TextField(label), maxLength);
-    }
-
     public static TextField createStandardTextField(int maxLength) {
         return setTextFieldStd(new TextField(), maxLength);
+    }
+
+    public static TextField createStandardTextField(String label, int maxLength) {
+        return setTextFieldStd(new TextField(label), maxLength);
     }
 
     public static TextField createFullWidthTextField(int maxLength) {
@@ -30,11 +31,33 @@ public class InputFieldCreator {
         return tf;
     }
 
+    public static TextField createFullWidthTextField(String label, int maxLength) {
+        TextField tf = new TextField(label);
+        tf.setWidth("100%");
+        tf.setMaxLength(maxLength);
+        return tf;
+    }
+
+    public static TextField createLongTextField(int maxLength) {
+        TextField tf = new TextField();
+        tf.setWidth("42rem");
+        tf.setMaxWidth("42rem");
+        tf.setMaxLength(maxLength);
+        return tf;
+    }
 
     public static TextField createLongTextField(String label, int maxLength) {
         TextField tf = new TextField(label);
         tf.setWidth("42rem");
         tf.setMaxWidth("42rem");
+        tf.setMaxLength(maxLength);
+        return tf;
+    }
+
+    public static TextField createShortTextField(int maxLength) {
+        TextField tf = new TextField();
+        tf.setWidth("9rem");
+        tf.setMaxWidth("9rem");
         tf.setMaxLength(maxLength);
         return tf;
     }
@@ -46,6 +69,11 @@ public class InputFieldCreator {
         tf.setMaxLength(maxLength);
         return tf;
     }
+
+    /**************************************************************************************
+     *  I N T E G E R   F I E L D
+     */
+
 
     public static IntegerField createStandardIntegerField(String label) {
         IntegerField tf;
@@ -106,6 +134,10 @@ public class InputFieldCreator {
     }
 
 
+    /**************************************************************************************
+     *  N U M B E R   F I E L D
+     */
+
     public static NumberField createShortNumberField(String label) {
         NumberField tf;
         if (label != null) {
@@ -120,11 +152,46 @@ public class InputFieldCreator {
 
     public static NumberField createShortNumberField(String label, Double min, Double max) {
         NumberField tf = createShortNumberField(label);
+
         if (min != null) { tf.setMin(min); tf.setValue(min); }
         if (max != null) { tf.setMax(max); }
         return tf;
     }
 
+
+    /**************************************************************************************
+     *  B I G D E C I M A L   F I E L D
+     */
+    public static BigDecimalField createBigDecimalField(String label) {
+        BigDecimalField tf;
+        if (label != null) {
+            tf = new BigDecimalField(label);
+        } else {
+            tf = new BigDecimalField();
+        }
+        tf.setAutocorrect(true);
+        return tf;
+    }
+
+
+    public static BigDecimalField createShortBigDecimalField(String label) {
+        BigDecimalField tf = createBigDecimalField(label);
+        tf.setWidth("4.5rem");
+        tf.setMaxWidth("4.5rem");
+        return tf;
+    }
+
+    public static BigDecimalField createStandardBigDecimalField(String label) {
+        BigDecimalField tf = createBigDecimalField(label);
+        tf.setWidth("9.5rem");
+        tf.setMaxWidth("9.5rem");
+        return tf;
+    }
+
+
+    /**************************************************************************************
+     *  T E X T A R E A    F I E L D
+     */
 
 
     public static TextArea createStandardTextArea(String label) {
