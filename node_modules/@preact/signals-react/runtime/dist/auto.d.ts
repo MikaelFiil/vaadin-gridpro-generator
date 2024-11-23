@@ -1,0 +1,12 @@
+import React from "react";
+export interface ReactDispatcher {
+    useRef: typeof React.useRef;
+    useCallback: typeof React.useCallback;
+    useReducer: typeof React.useReducer;
+    useSyncExternalStore: typeof React.useSyncExternalStore;
+    useEffect: typeof React.useEffect;
+    useImperativeHandle: typeof React.useImperativeHandle;
+}
+export declare let isAutoSignalTrackingInstalled: boolean;
+export declare function installJSXHooks(): void;
+export declare function installAutoSignalTracking(): void;

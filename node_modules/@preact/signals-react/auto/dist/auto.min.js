@@ -1,0 +1,1 @@
+!function(e,n){"object"==typeof exports&&"undefined"!=typeof module?n(require("@preact/signals-react/runtime")):"function"==typeof define&&define.amd?define(["@preact/signals-react/runtime"],n):n((e||self).reactSignalsRuntime)}(this,function(e){e.installAutoSignalTracking()});//# sourceMappingURL=auto.min.js.map

@@ -8,11 +8,11 @@
         <version>3.3.5</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
-    <groupId>coo.cfapps</groupId>
+    <groupId>dk.netbizz</groupId>
     <artifactId>vaadinentity</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
-    <name>vaadinentity</name>
-    <description>vaadinentity</description>
+    <version>0.2.0-SNAPSHOT</version>
+    <name>vaadin-gridpro-generato</name>
+    <description>From POJO to GridPro</description>
     <url/>
     <licenses>
         <license/>
@@ -31,6 +31,11 @@
         <vaadin.version>24.5.5</vaadin.version>
     </properties>
     <dependencies>
+        <dependency>
+            <groupId>com.vaadin</groupId>
+            <!-- Replace artifactId with vaadin-core to use only free components -->
+            <artifactId>vaadin</artifactId>
+        </dependency>
         <dependency>
             <groupId>com.vaadin</groupId>
             <artifactId>vaadin-spring-boot-starter</artifactId>
@@ -106,7 +111,7 @@
                     <plugin>
                         <groupId>com.vaadin</groupId>
                         <artifactId>vaadin-maven-plugin</artifactId>
-                        <version>24.5.4</version>
+                        <version>24.5.5</version>
                         <executions>
                             <execution>
                                 <id>frontend</id>

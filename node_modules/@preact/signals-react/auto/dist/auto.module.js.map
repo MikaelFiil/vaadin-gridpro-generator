@@ -1,0 +1,1 @@
+{"version":3,"file":"auto.module.js","sources":["../src/index.ts"],"sourcesContent":["import { installAutoSignalTracking } from \"@preact/signals-react/runtime\";\ninstallAutoSignalTracking();\n"],"names":["installAutoSignalTracking"],"mappings":"oCACAA,MAAAA,gCAAAA"}
