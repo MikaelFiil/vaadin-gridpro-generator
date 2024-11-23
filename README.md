@@ -1,6 +1,8 @@
 # Vaadin GridPro Generator
 
 ## A Vaadin GridPro toolkit that converts annotations on your POJO entity class into a GridPro grid for updating
+![cover image](https://github.com/MikaelFiil/vaadin-gridpro-generator/blob/main/cover.png?raw=true)
+
 ### Version history
 * ### Version 0.20 - 2024-11-23  - Initial commit
 * ### Version 0.21 - 2024-11-23  - Updated editor types with BigDecimal, improved input handling of numbers. Handling of validation- and error messages relayed to domain view class. Bindings on main class GenericGridProEditView are now at a minimum.
@@ -32,8 +34,6 @@
 ###
 ###  Notice that GridPro requires a commercial license from Vaadin
 ###
-
-![cover image](https://github.com/MikaelFiil/vaadin-gridpro-generator/blob/main/cover.png?raw=true)
 
 ### Based on:
 ### - Spring Boot 3.3.5
