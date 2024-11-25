@@ -11,8 +11,9 @@ import java.util.List;
 
 public class TrafficLight extends Component {
 
-    public static final List<String> TRAFFICLIGHT_NORMAL = Arrays.asList("Low", "Middle", "High");
-    public static final List<String> TRAFFICLIGHT_REVERSE = Arrays.asList("High", "Middle", "Low");
+    // Select if Green should be Low or High
+    public static final List<String> TRAFFICLIGHT_NORMAL = Arrays.asList("Low", "Medium", "High");
+    public static final List<String> TRAFFICLIGHT_REVERSE = Arrays.asList("High", "Medium", "Low");
 
     public static RadioButtonGroup<String> createRadioButtonTrafficlight() {
         return createRadioButtonGroup("", TRAFFICLIGHT_NORMAL, RadioButtonTheme.TRAFFICLIGHT);
@@ -23,7 +24,6 @@ public class TrafficLight extends Component {
         RadioButtonGroup<String> group = new RadioButtonGroup(label);
         group.addThemeNames(themeNames);
         group.setItems(greenYellowRedValues);
-        // group.setWidth(18, Unit.REM);
 
         group.getChildren().forEach(component -> {
             for (String themeName : themeNames) {

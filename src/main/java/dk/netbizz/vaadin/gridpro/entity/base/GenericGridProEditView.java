@@ -1,12 +1,14 @@
 package dk.netbizz.vaadin.gridpro.entity.base;
 
 /*
- * A Vaadin GridPro toolkit that converts annotations on your POJO entity class into a GridPro grid for updating
+ * A Vaadin GridPro tool that converts annotations on your POJO entity class into a GridPro grid for updating
  *
  * This is given to the public domain and without any warranty
  *
  * Original idea of using annotations for generating the Vaadin UI by Andreas Lange
  * https://github.com/andrlange/vaadin-grid-form-entities
+ *
+ * See the README for more information
  *
  * This is a GridPro extension of the idea of using annotations on your POJO to simplify setting up GridPro.
  * Besides the most common field types, there is a special option for editing variable length array fields,
@@ -17,18 +19,13 @@ package dk.netbizz.vaadin.gridpro.entity.base;
  *
  * The application domain view must extend this class and replace the generic placeholder with the domain class for the grid.
  *
- * There is room for improvement and I will probably do some myself, since I have only started to use it.
- * - More field types, one or two comes to my mind
- * - Having a more dynamic set of parameters for all types of fields
- * - More validation options
- * - Cleaning up the code, maybe further improve exception handling with lambda wrappers
- * - More examples utilizing it for complex UI interactions with one-to-many relations etc.
- * - Tests
- * - ... Oh yes, remove any bugs not yet found :-)
+ * Git Repo
+ * https://github.com/MikaelFiil/vaadin-gridpro-generator
  *
- *  Notice that GridPro requires a commercial license from Vaadin
+ * Hot Deploy and Live Reload
+ * https://vaadin.com/docs/latest/flow/configuration/live-reload
  *
- * Version 0.22 - 2024-11-24
+ *
  */
 
 import com.vaadin.flow.component.button.Button;
@@ -64,13 +61,15 @@ public abstract class GenericGridProEditView<T extends BaseEntity> extends Verti
 
     protected final GridPro<T> genericGrid;
     private final Class<T> entityClass;
-    private T selectedItem;
+    private T selectedItem;     // This is not really useful with GridPro
     public final Div gridContainer = new Div();
 
     protected GenericGridProEditView(Class<T> entityClass) {
         this.entityClass = entityClass;
         this.genericGrid = new GridPro<>(entityClass);
         this.genericGrid.removeAllColumns();
+        this.genericGrid.setSingleCellEdit(false);      // Default
+        this.genericGrid.setEditOnClick(true);
         setupLayout();
         // Further setup initialization done via subclass
     }
@@ -88,7 +87,7 @@ public abstract class GenericGridProEditView<T extends BaseEntity> extends Verti
     protected abstract void saveEntity(T entity);
     protected abstract List<T> loadEntities();
     protected abstract void deleteEntity(T entity);
-    protected abstract void selectEntity(T entity);
+    protected abstract void selectEntity(T entity);                                         // Seldom used, GridPro makes row selection obsolete - I think.
     protected abstract List<String> getItemsForSelect(String colName);
 
     protected void setupGridEventHandlers() {
@@ -102,23 +101,8 @@ public abstract class GenericGridProEditView<T extends BaseEntity> extends Verti
         // }));
     }
 
-    protected void addNew() {
-        // Create empty instance
-        selectedItem = createEmptyInstance();
-        saveEntity(selectedItem);
-        refreshGrid();
-    }
-
     protected void refreshGrid() {
         genericGrid.setItems(loadEntities());
-    }
-
-    protected T createEmptyInstance() {
-        try {
-            return entityClass.getDeclaredConstructor().newInstance();
-        } catch (Exception e) {
-            throw new RuntimeException("Could not create empty instance of " + entityClass.getSimpleName(), e);
-        }
     }
 
     protected void setupGrid(Map<String, String> dynamicParameters) {
@@ -132,71 +116,74 @@ public abstract class GenericGridProEditView<T extends BaseEntity> extends Verti
             .sorted(Comparator.comparingInt(GridColumnInfo::order))
             .forEach(columnInfo -> {
 
-                Grid.Column<T> column = null;
-
                 if (columnInfo.method() != null) {
                     // For method-based columns
-                    column = genericGrid.addColumn(item -> {
-                        try {
-                            Object value = columnInfo.method().invoke(item);
-                            return formatValue(value, columnInfo);
-                        } catch (Exception e) {
-                            setSystemError(item,  columnInfo.propertyName(), e);
-                            return null;
-                        }
-                    });
-                    setStandardColumnProperties(column, columnInfo, null);
+
+                    setStandardColumnProperties(
+                        genericGrid.addColumn(item -> {
+                            try {
+                                Object value = columnInfo.method().invoke(item);
+                                return formatValue(value, columnInfo);
+                            } catch (Exception e) {
+                                setSystemError(item,  columnInfo.propertyName(), e);
+                                return null;
+                            }
+                        })
+                        , columnInfo, null);
 
                 } else {  // Field based columns
+
                     if (columnInfo.editorClass == null) { // For un-editable field-based columns
                         if (isTemporalType(columnInfo.type()) && !columnInfo.format().isEmpty()) {
-                            column = genericGrid.addColumn(item -> {
-                                try {
-                                    Field field = entityClass.getDeclaredField(columnInfo.propertyName());
-                                    field.setAccessible(true);
-                                    Object value = field.get(item);
-                                    return formatValue(value, columnInfo);
-                                } catch (Exception e) {
-                                    setSystemError(item,  columnInfo.propertyName(), e);
-                                    return null;
-                                }
-                            });
+                            setStandardColumnProperties(
+                                genericGrid.addColumn(item -> {
+                                    try {
+                                        Field field = entityClass.getDeclaredField(columnInfo.propertyName());
+                                        field.setAccessible(true);
+                                        Object value = field.get(item);
+                                        return formatValue(value, columnInfo);
+                                    } catch (Exception e) {
+                                        setSystemError(item,  columnInfo.propertyName(), e);
+                                        return null;
+                                    }
+                                })
+                                , columnInfo, null);
                         } else {
-                            column = genericGrid.addColumn(columnInfo.propertyName());      // Plain vanilla display column
+
+                            setStandardColumnProperties(genericGrid.addColumn(columnInfo.propertyName()), columnInfo, null);      // Plain vanilla display only column
                         }
-                        setStandardColumnProperties(column, columnInfo, null);
 
                     } else { // For field based editable columns
-                        boolean columnPropsSet = false;
+
                         String camelName = columnInfo.propertyName().substring(0, 1).toUpperCase() + columnInfo.propertyName().substring(1);
 
                         switch (columnInfo.editorClass.getName()) {
                             case "com.vaadin.flow.component.textfield.TextField":
-                                column =  makeTextFieldColumn(columnInfo, camelName);
+                                setStandardColumnProperties(makeTextFieldColumn(columnInfo, camelName), columnInfo, null);
                                 break;
 
                             case "com.vaadin.flow.component.textfield.IntegerField":
-                                column = makeIntegerFieldColumn(columnInfo, camelName);
+                                setStandardColumnProperties(makeIntegerFieldColumn(columnInfo, camelName), columnInfo, null);
                                 break;
 
                             case "com.vaadin.flow.component.textfield.BigDecimalField":
-                                column = makeBigDecimalFieldColumn(columnInfo, camelName);
+                                setStandardColumnProperties(makeBigDecimalFieldColumn(columnInfo, camelName), columnInfo, null);
                                 break;
 
                             case "com.vaadin.flow.component.checkbox.Checkbox":
-                                column = makeBooleanFieldColumn(columnInfo, camelName);
+                                setStandardColumnProperties(makeBooleanFieldColumn(columnInfo, camelName), columnInfo, null);
                                 break;
 
                             case "com.vaadin.flow.component.select.Select":
-                                column = makeSelectFieldColumn(columnInfo, camelName);
+                                setStandardColumnProperties(makeSelectFieldColumn(columnInfo, camelName), columnInfo, null);
                                 break;
 
                             case "com.vaadin.flow.component.datepicker.DatePicker":
-                                column = makeDatePickerFieldColumn(columnInfo, camelName);
+                                setStandardColumnProperties(makeDatePickerFieldColumn(columnInfo, camelName), columnInfo, null);
                                 break;
 
                             case "dk.netbizz.vaadin.gridpro.views.components.TrafficLight":
-                                column = makeTrafficlightFieldColumn(columnInfo, camelName);
+                                setStandardColumnProperties(makeTrafficlightFieldColumn(columnInfo, camelName), columnInfo, null);
                                 break;
 
                             case "dk.netbizz.vaadin.gridpro.entity.base.ArrayIntegerEditor":
@@ -209,12 +196,7 @@ public abstract class GenericGridProEditView<T extends BaseEntity> extends Verti
                                         setStandardColumnProperties(makeArrayBigDecimalFieldColumns(columnInfo, idx, camelName), columnInfo, dynamicParameters.get(columnInfo.propertyName + ".header" + idx));
                                     }
                                 }
-                                columnPropsSet = true;
                                 break;
-                        }
-
-                        if (!columnPropsSet) {
-                            setStandardColumnProperties(column, columnInfo, null);
                         }
                     }
                 }

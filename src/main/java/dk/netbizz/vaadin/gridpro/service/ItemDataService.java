@@ -15,7 +15,7 @@ public class ItemDataService {
     public List<String> getItemsForSelect(String colName) {
         List<String> list = new ArrayList<>();
 
-        switch(colName) {
+        switch(colName.toLowerCase()) {
             case "category":
                 list.add("Technical");
                 list.add("Quality");
@@ -31,7 +31,7 @@ public class ItemDataService {
         items.addAll(List.of(
                 new Item(1L, "Swimsuit", "Technical", 120, LocalDate.of(1962, 2, 25), true, "Middle"),
                 new Item(2L, "Skates", "Quality", 1100, LocalDate.of(1983, 11, 2), false, "Low"),
-                new Item(3L, "MTB", "Delivery", 10495, LocalDate.of(1988, 12, 6), true, "High"),
+                new Item(3L, "MTB", "Delivery", 9495, LocalDate.of(1988, 12, 6), true, "High"),
                 new Item(4L, "Volleyball", "Legal", 150, LocalDate.of(1997, 5, 3), true, "Low")));
     }
 

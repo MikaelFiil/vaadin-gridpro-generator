@@ -7,6 +7,7 @@
 * ### Version 0.20 - 2024-11-23  - Initial commit
 * ### Version 0.21 - 2024-11-23  - Updated editor types with BigDecimal, improved input handling of numbers. Handling of validation- and error messages relayed to domain view class. Bindings on main class GenericGridProEditView are now at a minimum.
 * ### Version 0.22 - 2024-11-24  - Added new columns type Trafficlight aka Radiobutton Group
+* ### Version 0.23 - 2024-11-25  - Moved creation of new entity out of generic code and into the domain specific subclass, small text improvements in Trafficlight, simplified columns creation in Generic class, fiddled with Grid layout
 ### Author Mikael Fiil - mikael.fiil@netbizz.dk
 ###
 

@@ -1,6 +1,7 @@
 package dk.netbizz.vaadin.gridpro.views;
 
 import com.vaadin.flow.component.avatar.Avatar;
+import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.router.Menu;
 import com.vaadin.flow.router.PageTitle;
@@ -42,6 +43,8 @@ public class ItemView extends GenericGridProEditView<Item> {
         genericGrid.setWidth("100%");;
         genericGrid.setHeight("500px");
         genericGrid.setEmptyStateText("No items found.");
+        genericGrid.addThemeVariants(GridVariant.LUMO_COMPACT, GridVariant.LUMO_ROW_STRIPES, GridVariant.LUMO_NO_BORDER);
+
 
         // with the dataService set we can now continue the generic setup
         setupGrid(params);
@@ -57,6 +60,18 @@ public class ItemView extends GenericGridProEditView<Item> {
         addButton.addClickListener(event -> addNew());
         gridContainer.addComponentAsFirst(addButton);
     }
+
+
+    // Constructing a new entity is domain specific
+    private void addNew() {
+        // Create empty instance
+        Item item = new Item();
+        item.setCategory(getItemsForSelect("category").getFirst());
+        saveEntity(item);
+        refreshGrid();
+    }
+
+
 
 
     @Override

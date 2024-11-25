@@ -65,7 +65,7 @@ public class Item implements BaseEntity {
     @GridEditColumn(header = "Is Active", order = 7, editorClass = Checkbox.class)
     private Boolean active = false;
 
-    @GridEditColumn(header = "Criticality", order = 8, sortable = false, editorClass = TrafficLight.class)
+    @GridEditColumn(header = "Critical", order = 8, sortable = false, editorClass = TrafficLight.class)
     private String criticality = "Low";
 
     @GridEditColumn(header = "Year", order = 9, fieldLength = 5, sortable = false, maxValue = 25000, format = "%d kg.", arrayEndIdx = 9, editorClass = ArrayIntegerEditor.class)
@@ -74,7 +74,7 @@ public class Item implements BaseEntity {
     public Integer getYearlyAmount(int idx) { return yearlyAmount[idx]; }
     public void setYearlyAmount(int idx, Integer value) { yearlyAmount[idx] = value; }
 
-    @GridEditColumn(header = "Silo", order = 10, fieldLength = 6, sortable = false, maxValue = 22.5,  format = "%,.2f Ton", arrayEndIdx = 9, editorClass = ArrayBigDecimalEditor.class)
+    @GridEditColumn(header = "Silo", order = 10, fieldLength = 6, sortable = false, maxValue = 22.5,  format = "%,.3f Ton", arrayEndIdx = 9, editorClass = ArrayBigDecimalEditor.class)
     private BigDecimal[] siloTon = {BigDecimal.valueOf(0.0), BigDecimal.valueOf(0.0), BigDecimal.valueOf(0.0), BigDecimal.valueOf(0.0), BigDecimal.valueOf(0.0),
             BigDecimal.valueOf(0.0), BigDecimal.valueOf(0.0), BigDecimal.valueOf(0.0), BigDecimal.valueOf(0.0), BigDecimal.valueOf(0.0)};                // Up to 10 silos
 
