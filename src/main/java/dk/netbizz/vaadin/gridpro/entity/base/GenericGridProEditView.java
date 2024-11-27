@@ -56,6 +56,10 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 public abstract class GenericGridProEditView<T extends BaseEntity> extends VerticalLayout {
 
@@ -111,6 +115,10 @@ public abstract class GenericGridProEditView<T extends BaseEntity> extends Verti
         addFieldColumns(gridColumns);   // Using side effects - sorry
         addMethodColumns(gridColumns);
 
+        List<Integer> indexesOfAlternatingColsStart = new ArrayList<>();
+        int[] colIdx = {0};     // A bit strange, but it has to be available in lambda
+        List<GridColumnInfo> alternatingCols = new ArrayList<>();
+
         // Sort columns by order and add them to grid
         gridColumns.stream()
             .sorted(Comparator.comparingInt(GridColumnInfo::order))
@@ -130,6 +138,7 @@ public abstract class GenericGridProEditView<T extends BaseEntity> extends Verti
                             }
                         })
                         , columnInfo, null);
+                    colIdx[0] ++;
 
                 } else {  // Field based columns
 
@@ -148,9 +157,11 @@ public abstract class GenericGridProEditView<T extends BaseEntity> extends Verti
                                     }
                                 })
                                 , columnInfo, null);
-                        } else {
+                            colIdx[0] ++;
 
+                        } else {
                             setStandardColumnProperties(genericGrid.addColumn(columnInfo.propertyName()), columnInfo, null);      // Plain vanilla display only column
+                            colIdx[0] ++;
                         }
 
                     } else { // For field based editable columns
@@ -160,34 +171,45 @@ public abstract class GenericGridProEditView<T extends BaseEntity> extends Verti
                         switch (columnInfo.editorClass.getName()) {
                             case "com.vaadin.flow.component.textfield.TextField":
                                 setStandardColumnProperties(makeTextFieldColumn(columnInfo, camelName), columnInfo, null);
+                                colIdx[0] ++;
                                 break;
 
                             case "com.vaadin.flow.component.textfield.IntegerField":
                                 setStandardColumnProperties(makeIntegerFieldColumn(columnInfo, camelName), columnInfo, null);
+                                colIdx[0] ++;
                                 break;
 
                             case "com.vaadin.flow.component.textfield.BigDecimalField":
                                 setStandardColumnProperties(makeBigDecimalFieldColumn(columnInfo, camelName), columnInfo, null);
+                                colIdx[0] ++;
                                 break;
 
                             case "com.vaadin.flow.component.checkbox.Checkbox":
                                 setStandardColumnProperties(makeBooleanFieldColumn(columnInfo, camelName), columnInfo, null);
+                                colIdx[0] ++;
                                 break;
 
                             case "com.vaadin.flow.component.select.Select":
                                 setStandardColumnProperties(makeSelectFieldColumn(columnInfo, camelName), columnInfo, null);
+                                colIdx[0] ++;
                                 break;
 
                             case "com.vaadin.flow.component.datepicker.DatePicker":
                                 setStandardColumnProperties(makeDatePickerFieldColumn(columnInfo, camelName), columnInfo, null);
+                                colIdx[0] ++;
                                 break;
 
                             case "dk.netbizz.vaadin.gridpro.views.components.TrafficLight":
                                 setStandardColumnProperties(makeTrafficlightFieldColumn(columnInfo, camelName), columnInfo, null);
+                                colIdx[0] ++;
                                 break;
 
                             case "dk.netbizz.vaadin.gridpro.entity.base.ArrayIntegerEditor":
                             case "dk.netbizz.vaadin.gridpro.entity.base.ArrayBigDecimalEditor":
+                                if (columnInfo.alternatingCol && (alternatingCols.size() == 0 || !alternatingCols.getLast().propertyName.equalsIgnoreCase(columnInfo.propertyName))) {       // is it a new alternating column type
+                                    alternatingCols.add(columnInfo);
+                                    indexesOfAlternatingColsStart.add(colIdx[0]);
+                                }
                                 int lastIdx = ((dynamicParameters.get(columnInfo.propertyName + ".arrayEndIdx") != null ? Math.min(columnInfo.arrayEndIdx, Integer.parseInt(dynamicParameters.get(columnInfo.propertyName + ".arrayEndIdx"))) : columnInfo.arrayEndIdx));
                                 for (int idx = 0; idx <= lastIdx; idx++) {
                                     if (columnInfo.editorClass.getName().contains("ArrayIntegerEditor")) {
@@ -195,12 +217,32 @@ public abstract class GenericGridProEditView<T extends BaseEntity> extends Verti
                                     } else {
                                         setStandardColumnProperties(makeArrayBigDecimalFieldColumns(columnInfo, idx, camelName), columnInfo, dynamicParameters.get(columnInfo.propertyName + ".header" + idx));
                                     }
+                                    colIdx[0] ++;
                                 }
                                 break;
                         }
                     }
                 }
+
             }); // forEach
+
+            // Do we have alternating columns, then we need to reorder
+            if (alternatingCols.size() > 0) {
+                List<Grid.Column<T>> nextColumns = new ArrayList<>();
+                List<Grid.Column<T>> existingColumns = genericGrid.getColumns();
+                int firstIdx = indexesOfAlternatingColsStart.get(0);
+                int nextIdx = indexesOfAlternatingColsStart.get(1);
+                List<Grid.Column<T>> part1 = existingColumns.subList(0, firstIdx);
+                List<Grid.Column<T>> part2 = existingColumns.subList(firstIdx, nextIdx);
+                List<Grid.Column<T>> part3 = existingColumns.subList(nextIdx, existingColumns.size());
+
+                nextColumns.addAll(part1);
+                for (int i = 0; i < part2.size(); i++) {
+                    nextColumns.add(part2.get(i));
+                    nextColumns.add(part3.get(i));
+                }
+                genericGrid.setColumnOrder(nextColumns);
+            }
 
             // Make delete icon
             genericGrid.addColumn(new IconRenderer<>(item -> {
@@ -221,6 +263,7 @@ public abstract class GenericGridProEditView<T extends BaseEntity> extends Verti
             .setTextAlign(ColumnTextAlign.END);
     }
 
+
     private void addFieldColumns(List<GridColumnInfo> gridColumns) {
         // Add field-based columns
         Arrays.stream(entityClass.getDeclaredFields())
@@ -239,7 +282,8 @@ public abstract class GenericGridProEditView<T extends BaseEntity> extends Verti
                     annotation.fieldLength(),
                     annotation.minValue(),
                     annotation.maxValue(),
-                    annotation.arrayEndIdx()
+                    annotation.arrayEndIdx(),
+                    annotation.alternatingCol()
                 ));
             });
     }
@@ -267,7 +311,8 @@ public abstract class GenericGridProEditView<T extends BaseEntity> extends Verti
                     annotation.fieldLength(),
                     annotation.minValue(),
                     annotation.maxValue(),
-                    annotation.arrayEndIdx()
+                    annotation.arrayEndIdx(),
+                    annotation.alternatingCol()
                 ));
             });
     }
@@ -502,6 +547,38 @@ public abstract class GenericGridProEditView<T extends BaseEntity> extends Verti
             .setTextAlign(ColumnTextAlign.END);
     }
 
+    // Alternating columns experiment
+    private Grid.Column<T> saveArrayIntegerFieldColumns(GridColumnInfo columnInfo, int idx, String camelName) {
+        return genericGrid.addEditColumn((ValueProvider<T, ?>) item -> {
+                    try { return (Integer) entityClass.getMethod("get" + camelName, Integer.TYPE).invoke(item, idx);  } catch (Exception e) {
+                        setValidationError(item, camelName, "Value must be between " + columnInfo.minValue() + " and " + columnInfo.maxValue());
+                        return null;
+                    }
+                })
+                .custom(InputFieldCreator.createShortIntegerField("", Math.round(columnInfo.minValue()), Math.round(columnInfo.maxValue()), 1), (item, newValue) -> {
+                    try {
+                        if (newValue == null || newValue < columnInfo.minValue() || newValue > columnInfo.maxValue()) {
+                            setValidationError(item, camelName, "Value must be between " + columnInfo.minValue() + " and " + columnInfo.maxValue());     // Let domain view handle UI messaging
+                            return;
+                        }
+                        Method method = entityClass.getMethod("set" + camelName, Integer.TYPE, java.lang.Integer.class);
+                        method.invoke(item, idx, newValue);
+                        saveEntity(item);
+                        genericGrid.recalculateColumnWidths();
+                    } catch (Exception e) {
+                        setSystemError(item,  columnInfo.propertyName(), e);
+                    }
+                })
+                .setRenderer(new TextRenderer<>(item -> {
+                    try {
+                        return String.format(columnInfo.format() , entityClass.getMethod("get" + camelName, Integer.TYPE).invoke(item, idx));
+                    } catch (Exception e) {
+                        setSystemError(item,  columnInfo.propertyName(), e);
+                    }
+                    return "";
+                }))
+                .setTextAlign(ColumnTextAlign.END);
+    }
 
     private boolean isTemporalType(Class<?> type) {
         return LocalDateTime.class.isAssignableFrom(type) ||
@@ -542,6 +619,7 @@ public abstract class GenericGridProEditView<T extends BaseEntity> extends Verti
         int fieldLength,
         double minValue,
         double maxValue,
-        int arrayEndIdx) {
+        int arrayEndIdx,
+        int alternatingCol) {
     }
 }

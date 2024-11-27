@@ -70,15 +70,18 @@ public class Item implements BaseEntity {
 
     @GridEditColumn(header = "Year", order = 9, fieldLength = 5, sortable = false, maxValue = 25000, format = "%d kg.", arrayEndIdx = 9, editorClass = ArrayIntegerEditor.class)
     private Integer[] yearlyAmount = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};                // Up to 10 years, but can in principle be very long
-
     public Integer getYearlyAmount(int idx) { return yearlyAmount[idx]; }
     public void setYearlyAmount(int idx, Integer value) { yearlyAmount[idx] = value; }
 
-    @GridEditColumn(header = "Silo", order = 10, fieldLength = 6, sortable = false, maxValue = 22.5,  format = "%,.3f Ton", arrayEndIdx = 9, editorClass = ArrayBigDecimalEditor.class)
-    private BigDecimal[] siloTon = {BigDecimal.valueOf(0.0), BigDecimal.valueOf(0.0), BigDecimal.valueOf(0.0), BigDecimal.valueOf(0.0), BigDecimal.valueOf(0.0),
-            BigDecimal.valueOf(0.0), BigDecimal.valueOf(0.0), BigDecimal.valueOf(0.0), BigDecimal.valueOf(0.0), BigDecimal.valueOf(0.0)};                // Up to 10 silos
+    @GridEditColumn(header = "Impact", order = 10, fieldLength = 5, sortable = false, maxValue = 100000, format = "%d kr.", arrayEndIdx = 9, alternatingCol = 11, editorClass = ArrayIntegerEditor.class)
+    private Integer[] impactAmount = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};                // Up to 10, but can in principle be very long
+    public Integer getImpactAmount(int idx) { return impactAmount[idx]; }
+    public void setImpactAmount(int idx, Integer value) { impactAmount[idx] = value; }
 
-    public BigDecimal getSiloTon(int idx) { return siloTon[idx]; }
-    public void setSiloTon(int idx, BigDecimal value) { siloTon[idx] = value; }
+    @GridEditColumn(header = "Likelihood %", order = 11, fieldLength = 6, sortable = false, maxValue = 100,  format = "%,.1f %%", arrayEndIdx = 9, editorClass = ArrayBigDecimalEditor.class)
+    private BigDecimal[] likelihood = {BigDecimal.valueOf(0.0), BigDecimal.valueOf(0.0), BigDecimal.valueOf(0.0), BigDecimal.valueOf(0.0), BigDecimal.valueOf(0.0),
+                                    BigDecimal.valueOf(0.0), BigDecimal.valueOf(0.0), BigDecimal.valueOf(0.0), BigDecimal.valueOf(0.0), BigDecimal.valueOf(0.0)};                // Up to 10
+    public BigDecimal getLikelihood(int idx) { return likelihood[idx]; }
+    public void setLikelihood(int idx, BigDecimal value) { likelihood[idx] = value; }
 
 }

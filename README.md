@@ -8,6 +8,7 @@
 * ### Version 0.21 - 2024-11-23  - Updated editor types with BigDecimal, improved input handling of numbers. Handling of validation- and error messages relayed to domain view class. Bindings on main class GenericGridProEditView are now at a minimum.
 * ### Version 0.22 - 2024-11-24  - Added new columns type Trafficlight aka Radiobutton Group
 * ### Version 0.23 - 2024-11-25  - Moved creation of new entity out of generic code and into the domain specific subclass, small text improvements in Trafficlight, simplified columns creation in Generic class, fiddled with Grid layout
+* ### Version 0.24 - 2024-11-26  - Removed state (item list) from the service as it should be, even for a demo :-) added the possibility to have alternating array columns (see demo to understand).
 ### Author Mikael Fiil - mikael.fiil@netbizz.dk
 ###
 
@@ -16,7 +17,7 @@
 ### Original idea of using annotations for generating the Vaadin UI by Andreas Lange
 ### https://github.com/andrlange/vaadin-grid-form-entities
 ###
-### This is a GridPro extension of the idea of using annotations on your POJO to simplify setting up GridPro.
+### This is a GridPro extension of the idea of using annotations on your POJO to simplify setting up your Vaadin UI.
 ### Besides the most common field types, there is a special option for editing variable length array fields, which is actually why I started to make this, since it avoids having a lot of repetitive application code.
 ### Since a user can move freely around in the grid, you can never know when editing is finished, hence there is instant persistence.
 ### Every edit of a single cell will cause a call to save the entity of the row.

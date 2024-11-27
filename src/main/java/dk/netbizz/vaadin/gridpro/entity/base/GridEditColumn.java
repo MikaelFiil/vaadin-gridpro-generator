@@ -19,4 +19,5 @@ public @interface GridEditColumn {
     double minValue() default 0;
     double maxValue() default 1999999999;
     int arrayEndIdx() default 0;         // Values from 0 to size of array
+    int alternatingCol() default -1;         // If there are multiple array columns they may alternate in the grid
 }

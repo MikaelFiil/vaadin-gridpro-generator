@@ -11,6 +11,7 @@ import dk.netbizz.vaadin.gridpro.entity.base.GenericGridProEditView;
 import dk.netbizz.vaadin.gridpro.service.ItemDataService;
 import dk.netbizz.vaadin.gridpro.utils.StandardNotifications;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,6 +21,7 @@ import java.util.Map;
 @Route(value = "", layout = MainLayout.class)
 public class ItemView extends GenericGridProEditView<Item> {
 
+    private final List<Item> itemList = new ArrayList<>();     // The list really should be here
     private final ItemDataService dataService;
 
     public ItemView(ItemDataService dataService) {
@@ -27,24 +29,25 @@ public class ItemView extends GenericGridProEditView<Item> {
         this.dataService = dataService;                                          // setupGrid needs DataService
 
         // Create parameters specifically for the arrays
-        // The point is that it is dynamic as to the count and headers of the arrays columns
+        // The point is that it is dynamic as to the count and headers of the array columns
         Map<String , String> params = new HashMap<String, String>();
-        params.put("yearlyAmount.arrayEndIdx", "3");            // Indexes are zero based
+        params.put("yearlyAmount.arrayEndIdx", "2");            // Indexes are zero based
         params.put("yearlyAmount.header0", "Year 2024");
         params.put("yearlyAmount.header1", "Year 2025");
         params.put("yearlyAmount.header2", "Year 2026");
-        params.put("yearlyAmount.header3", "Year 2027");
 
-        params.put("siloTon.arrayEndIdx", "2");
-        params.put("siloTon.header0", "Silo 1");
-        params.put("siloTon.header1", "Silo 2");
-        params.put("siloTon.header2", "Silo 3");
+        params.put("impactAmount.arrayEndIdx", "1");
+        params.put("impactAmount.header0", "Impact 1");
+        params.put("impactAmount.header1", "Impact 2");
+
+        params.put("likelihood.arrayEndIdx", "1");
+        params.put("likelihood.header0", "likelihood 1");
+        params.put("likelihood.header1", "likelihood 2");
 
         genericGrid.setWidth("100%");;
         genericGrid.setHeight("500px");
         genericGrid.setEmptyStateText("No items found.");
         genericGrid.addThemeVariants(GridVariant.LUMO_COMPACT, GridVariant.LUMO_ROW_STRIPES, GridVariant.LUMO_NO_BORDER);
-
 
         // with the dataService set we can now continue the generic setup
         setupGrid(params);
@@ -64,15 +67,12 @@ public class ItemView extends GenericGridProEditView<Item> {
 
     // Constructing a new entity is domain specific
     private void addNew() {
-        // Create empty instance
+        // Create empty instance and add to the current list here if need be
         Item item = new Item();
         item.setCategory(getItemsForSelect("category").getFirst());
         saveEntity(item);
         refreshGrid();
     }
-
-
-
 
     @Override
     protected void setValidationError(Item entity, String columName, String msg) {
@@ -86,18 +86,17 @@ public class ItemView extends GenericGridProEditView<Item> {
 
     @Override
     protected void saveEntity(Item entity) {
-        dataService.save(entity);
+        dataService.save(entity, itemList);
     }
 
     @Override
     protected List<Item> loadEntities() {
-        // You may save the current list here if need be
         return dataService.findAll();
     }
 
     @Override
     protected void deleteEntity(Item item) {
-        dataService.delete(item);
+        dataService.delete(item, itemList);
     }
 
     @Override
