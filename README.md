@@ -8,7 +8,8 @@
 * ### Version 0.21 - 2024-11-23  - Updated editor types with BigDecimal, improved input handling of numbers. Handling of validation- and error messages relayed to domain view class. Bindings on main class GenericGridProEditView are now at a minimum.
 * ### Version 0.22 - 2024-11-24  - Added new columns type Trafficlight aka Radiobutton Group
 * ### Version 0.23 - 2024-11-25  - Moved creation of new entity out of generic code and into the domain specific subclass, small text improvements in Trafficlight, simplified columns creation in Generic class, fiddled with Grid layout
-* ### Version 0.24 - 2024-11-26  - Removed state (item list) from the service as it should be, even for a demo :-) added the possibility to have alternating array columns (see demo to understand).
+* ### Version 0.24 - 2024-11-27  - Removed state (item list) from the service as it should be, even for a demo :-) added the possibility to have one set of alternating array columns in the end (see demo to understand). Changes to main loop. Added TextAlign as annotation. 
+* ###        
 ### Author Mikael Fiil - mikael.fiil@netbizz.dk
 ###
 
@@ -24,11 +25,10 @@
 ### The application domain view must extend this class and replace the generic placeholder with the domain class for the grid and implement the abstract methods.
 ### Logning of validation and error messages refer to the domain view.
 ***
-### There is room for improvement and I will probably do some myself, since I have only started to use it.
-* ### More field types
-* ### Having a more dynamic set of parameters for all types of fields
-* ### More validation options 
-* ### Cleaning up the code, maybe further improve exception handling with lambda wrappers
+### There is room for some improvement and I will probably still do some myself, since I have only started to use it, but it serves my purpose now.
+* ### More field types or generic field types for the arrays
+* ### More validation options - Perhaps refer to domain view
+* ### Cleaning up the code. Move editors into separate classes and perhaps use interfaces with generics for simplified extension 
 * ### More examples utilizing it for complex UI interactions with one-to-many relations etc.
 * ### Tests
 * ### Better readme ;-) 

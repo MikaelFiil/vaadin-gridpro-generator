@@ -1,5 +1,6 @@
 package dk.netbizz.vaadin.gridpro.entity.base;
 
+import com.vaadin.flow.component.grid.ColumnTextAlign;
 import com.vaadin.flow.component.textfield.TextField;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -18,6 +19,7 @@ public @interface GridEditColumn {
     int fieldLength() default 50;
     double minValue() default 0;
     double maxValue() default 1999999999;
+    ColumnTextAlign textAlign() default ColumnTextAlign.START;
     int arrayEndIdx() default 0;         // Values from 0 to size of array
-    int alternatingCol() default -1;         // If there are multiple array columns they may alternate in the grid
+    boolean alternatingCol() default false;         // If there are multiple array columns they may alternate in the grid
 }

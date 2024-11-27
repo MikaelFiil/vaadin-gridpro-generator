@@ -21,7 +21,7 @@ import java.util.Map;
 @Route(value = "", layout = MainLayout.class)
 public class ItemView extends GenericGridProEditView<Item> {
 
-    private final List<Item> itemList = new ArrayList<>();     // The list really should be here
+    private final List<Item> itemList = new ArrayList<>();     // State should go here
     private final ItemDataService dataService;
 
     public ItemView(ItemDataService dataService) {
@@ -43,6 +43,8 @@ public class ItemView extends GenericGridProEditView<Item> {
         params.put("likelihood.arrayEndIdx", "1");
         params.put("likelihood.header0", "likelihood 1");
         params.put("likelihood.header1", "likelihood 2");
+
+        params.put("calculatedImpact.arrayEndIdx", "1");
 
         genericGrid.setWidth("100%");;
         genericGrid.setHeight("500px");
