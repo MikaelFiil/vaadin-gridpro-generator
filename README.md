@@ -8,7 +8,8 @@
 * ### Version 0.21 - 2024-11-23  - Updated editor types with BigDecimal, improved input handling of numbers. Handling of validation- and error messages relayed to domain view class. Bindings on main class GenericGridProEditView are now at a minimum.
 * ### Version 0.22 - 2024-11-24  - Added new columns type Trafficlight aka Radiobutton Group
 * ### Version 0.23 - 2024-11-25  - Moved creation of new entity out of generic code and into the domain specific subclass, small text improvements in Trafficlight, simplified columns creation in Generic class, fiddled with Grid layout
-* ### Version 0.24 - 2024-11-27  - Removed state (item list) from the service as it should be, even for a demo :-) added the possibility to have one set of alternating array columns in the end (see demo to understand). Changes to main loop. Added TextAlign as annotation. 
+* ### Version 0.24 - 2024-11-27  - Removed state (item list) from the service as it should be, even for a demo :-) added the possibility to have one set of alternating array columns in the end (see demo to understand). Changes to main loop. Added TextAlign as annotation.
+* ### Version 0.25 - 2024-11-29  - Ups, had an immutable list, SORRY - fixed. Created a Icon(VaadinIcon.PLUS) as header of delete column and made it add a new row, removed gridContainer and old add button  - since I needed to fix the bug, you get some very experimental code working on TreeGrid too ...
 * ###        
 ### Author Mikael Fiil - mikael.fiil@netbizz.dk
 ###

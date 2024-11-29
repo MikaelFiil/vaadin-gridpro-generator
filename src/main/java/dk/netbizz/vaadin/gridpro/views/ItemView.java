@@ -7,7 +7,6 @@ import com.vaadin.flow.router.Menu;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import dk.netbizz.vaadin.gridpro.entity.Item;
-import dk.netbizz.vaadin.gridpro.entity.base.GenericGridProEditView;
 import dk.netbizz.vaadin.gridpro.service.ItemDataService;
 import dk.netbizz.vaadin.gridpro.utils.StandardNotifications;
 
@@ -21,8 +20,7 @@ import java.util.Map;
 @Route(value = "", layout = MainLayout.class)
 public class ItemView extends GenericGridProEditView<Item> {
 
-    private final List<Item> itemList = new ArrayList<>();     // State should go here
-    private final ItemDataService dataService;
+    private ItemDataService dataService;
 
     public ItemView(ItemDataService dataService) {
         super(Item.class);
@@ -55,20 +53,12 @@ public class ItemView extends GenericGridProEditView<Item> {
         setupGrid(params);
         setupGridEventHandlers();
         refreshGrid();
-
-        // Add Button for adding new person
-        Div addButton = new Div();
-        addButton.setClassName("circle-button-container");
-        Avatar addAvatar = new Avatar("+");
-        addAvatar.addClassName("circle-button");
-        addButton.add(addAvatar);
-        addButton.addClickListener(event -> addNew());
-        gridContainer.addComponentAsFirst(addButton);
     }
 
 
     // Constructing a new entity is domain specific
-    private void addNew() {
+    @Override
+    protected void addNew() {
         // Create empty instance and add to the current list here if need be
         Item item = new Item();
         item.setCategory(getItemsForSelect("category").getFirst());
@@ -88,17 +78,17 @@ public class ItemView extends GenericGridProEditView<Item> {
 
     @Override
     protected void saveEntity(Item entity) {
-        dataService.save(entity, itemList);
+        dataService.save(entity);
     }
 
     @Override
     protected List<Item> loadEntities() {
-        return dataService.findAll();
+        return dataService.getItemList();
     }
 
     @Override
     protected void deleteEntity(Item item) {
-        dataService.delete(item, itemList);
+        dataService.delete(item);
     }
 
     @Override

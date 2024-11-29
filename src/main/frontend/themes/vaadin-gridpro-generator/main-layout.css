@@ -51,3 +51,22 @@ vaadin-side-nav-item vaadin-icon {
   margin: 10px;
 }
 
+
+.vaadin-tree-grid {
+
+}
+
+
+.vaadin-tree-grid::part(header-cell) {
+    background: #aaaaaa;
+    color: #000000;
+    font-weight: bold;
+}
+
+
+.vaadin-tree-subgrid::part(header-cell) {
+    background: #777777;
+    color: #eeeeee;
+    font-weight: bold;
+}
+

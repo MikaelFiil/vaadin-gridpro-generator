@@ -1,4 +1,4 @@
-package dk.netbizz.vaadin.gridpro.entity.base;
+package dk.netbizz.vaadin.gridpro.views;
 
 /*
  * A Vaadin GridPro tool that converts annotations on your POJO entity class into a GridPro grid for updating
@@ -32,7 +32,6 @@ import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.grid.ColumnTextAlign;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.gridpro.GridPro;
-import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -42,6 +41,8 @@ import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.renderer.IconRenderer;
 import com.vaadin.flow.data.renderer.TextRenderer;
 import com.vaadin.flow.function.ValueProvider;
+import dk.netbizz.vaadin.gridpro.entity.base.BaseEntity;
+import dk.netbizz.vaadin.gridpro.entity.base.GridEditColumn;
 import dk.netbizz.vaadin.gridpro.themes.RadioButtonTheme;
 import dk.netbizz.vaadin.gridpro.utils.ConfirmationDialog;
 import dk.netbizz.vaadin.gridpro.utils.DateTimePickerCreator;
@@ -62,7 +63,7 @@ public abstract class GenericGridProEditView<T extends BaseEntity> extends Verti
     protected final GridPro<T> genericGrid;
     private final Class<T> entityClass;
     private T selectedItem;     // This is not really useful with GridPro
-    public final Div gridContainer = new Div();
+    private Button btnAdd = new Button();
 
     protected GenericGridProEditView(Class<T> entityClass) {
         this.entityClass = entityClass;
@@ -76,15 +77,19 @@ public abstract class GenericGridProEditView<T extends BaseEntity> extends Verti
 
     private void setupLayout() {
         setSizeFull();
-        gridContainer.setSizeFull();
-        gridContainer.add(genericGrid);
-        add(gridContainer);
+        genericGrid.setSizeFull();
+        add(genericGrid);
+
+        btnAdd.setClassName("icon-plus");
+        btnAdd.setIcon(new Icon(VaadinIcon.PLUS));
+        btnAdd.addClickListener(evt -> addNew());
     }
 
     // Abstract methods to be implemented by specific domain views
     protected abstract void setValidationError(T entity, String columName, String msg);     // Let domain view handle UI messages
     protected abstract void setSystemError(T entity, String columName, Exception e);        // Let domain view handle UI messages
     protected abstract void saveEntity(T entity);
+    protected abstract void addNew();
     protected abstract List<T> loadEntities();
     protected abstract void deleteEntity(T entity);
     protected abstract void selectEntity(T entity);                                         // Seldom used, GridPro makes row selection obsolete - I think.
@@ -151,7 +156,6 @@ public abstract class GenericGridProEditView<T extends BaseEntity> extends Verti
                             })
                             , columnInfo, null);
                 }
-
                 colIdx++;
 
             } else {  // Field based columns
@@ -268,6 +272,7 @@ public abstract class GenericGridProEditView<T extends BaseEntity> extends Verti
             });
             return btnRemove;
         },item -> ""))
+        .setHeader(btnAdd)
         .setAutoWidth(true)
         .setFlexGrow(0)
         .setResizable(false)
@@ -361,6 +366,10 @@ public abstract class GenericGridProEditView<T extends BaseEntity> extends Verti
 
     private Grid.Column<T> makeShortTextFieldColumn(GridColumnInfo columnInfo, String camelName) {
         return genericGrid.addEditColumn(columnInfo.propertyName())
+            .withCellEditableProvider(item -> {
+                Set<T> sl = genericGrid.getSelectedItems();
+                return true;
+            })
             .custom(InputFieldCreator.createShortTextField(columnInfo.fieldLength()), (item, newValue) -> {
                 String setterMethod = "set" + camelName;
                 try {
