@@ -24,9 +24,10 @@ package dk.netbizz.vaadin.gridpro.views;
  * Git Repo
  * https://github.com/MikaelFiil/vaadin-gridpro-generator
  *
- *
+ * Author mikael.fiil@netbizz.dk
  */
 
+import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.grid.ColumnTextAlign;
@@ -35,6 +36,9 @@ import com.vaadin.flow.component.gridpro.GridPro;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.popover.Popover;
+import com.vaadin.flow.component.popover.PopoverPosition;
+import com.vaadin.flow.component.popover.PopoverVariant;
 import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
@@ -63,7 +67,7 @@ public abstract class GenericGridProEditView<T extends BaseEntity> extends Verti
     protected final GridPro<T> genericGrid;
     private final Class<T> entityClass;
     private T selectedItem;     // This is not really useful with GridPro
-    private Button btnAdd = new Button();
+    private final Button btnAdd = new Button();
 
     protected GenericGridProEditView(Class<T> entityClass) {
         this.entityClass = entityClass;
@@ -86,6 +90,7 @@ public abstract class GenericGridProEditView<T extends BaseEntity> extends Verti
         plus.getStyle().set("padding", "0");
         btnAdd.setIcon(plus);
         btnAdd.addClickListener(evt -> addNew());
+        addPopover("Add row", btnAdd);
     }
 
     // Abstract methods to be implemented by specific domain views
@@ -130,11 +135,12 @@ public abstract class GenericGridProEditView<T extends BaseEntity> extends Verti
         // and add them to grid
         for (GridColumnInfo columnInfo : gridColumns) {
 
+            String camelName = columnInfo.propertyName().substring(0, 1).toUpperCase() + columnInfo.propertyName().substring(1);
+
             if (columnInfo.method() != null) {
                 // For method-based columns
-                String camelName = columnInfo.propertyName().substring(0, 1).toUpperCase() + columnInfo.propertyName().substring(1);
 
-                switch (columnInfo.editorClass.getName()) {
+                switch (columnInfo.editorClass.getName()) {                                 // using switch is future proof
 
                     case "dk.netbizz.vaadin.gridpro.entity.base.ArrayCalculator":           // Array method
                         if (columnInfo.alternatingCol) {
@@ -186,8 +192,6 @@ public abstract class GenericGridProEditView<T extends BaseEntity> extends Verti
                     }
 
                 } else { // For field based editable columns
-
-                    String camelName = columnInfo.propertyName().substring(0, 1).toUpperCase() + columnInfo.propertyName().substring(1);
 
                     switch (columnInfo.editorClass.getName()) {
                         case "com.vaadin.flow.component.textfield.TextField":
@@ -267,11 +271,14 @@ public abstract class GenericGridProEditView<T extends BaseEntity> extends Verti
             Button btnRemove = new Button();
             btnRemove.setClassName("icon-trash");
             btnRemove.setIcon(new Icon(VaadinIcon.TRASH));
+            addPopover("Delete row", btnRemove);
             btnRemove.addClickListener(elem -> {            // No DB changes yet, only when updating the BidRequest as a whole
-                ConfirmationDialog.confirm("Warning", "You are deleting the item, continue?").addConfirmListener(event -> {
-                    deleteEntity(item);
-                    refreshGrid();
-                });
+                btnRemove.getStyle().set("color", "red");
+                ConfirmationDialog.confirm("Warning", "You are deleting the row, continue?", () -> btnRemove.getStyle().remove("color"))
+                    .addConfirmListener(event -> {
+                        deleteEntity(item);
+                        refreshGrid();
+                    });
             });
             return btnRemove;
         },item -> ""))
@@ -346,7 +353,7 @@ public abstract class GenericGridProEditView<T extends BaseEntity> extends Verti
             .setResizable(true)
             .setHeader((header != null ? header : columnInfo.header()))
             .setSortable(columnInfo.sortable())
-            .setTextAlign(columnInfo.textAlign());;
+            .setTextAlign(columnInfo.textAlign());
     }
 
     /**
@@ -369,10 +376,6 @@ public abstract class GenericGridProEditView<T extends BaseEntity> extends Verti
 
     private Grid.Column<T> makeShortTextFieldColumn(GridColumnInfo columnInfo, String camelName) {
         return genericGrid.addEditColumn(columnInfo.propertyName())
-            .withCellEditableProvider(item -> {
-                Set<T> sl = genericGrid.getSelectedItems();
-                return true;
-            })
             .custom(InputFieldCreator.createShortTextField(columnInfo.fieldLength()), (item, newValue) -> {
                 String setterMethod = "set" + camelName;
                 try {
@@ -509,13 +512,13 @@ public abstract class GenericGridProEditView<T extends BaseEntity> extends Verti
                     setSystemError(item,  columnInfo.propertyName(), e);
                 }
             })
-            .setRenderer(new ComponentRenderer<RadioButtonGroup<String>, T>(item -> {
+            .setRenderer(new ComponentRenderer<>(item -> {
                 try {
                     RadioButtonGroup<String> prop = TrafficLight.createRadioButtonGroup("", TrafficLight.TRAFFICLIGHT_NORMAL, RadioButtonTheme.TRAFFICLIGHT);
-                    prop.setValue((String)entityClass.getMethod("get" + camelName).invoke(item));
+                    prop.setValue((String) entityClass.getMethod("get" + camelName).invoke(item));
                     return prop;
                 } catch (Exception e) {
-                    setSystemError(item,  columnInfo.propertyName(), e);
+                    setSystemError(item, columnInfo.propertyName(), e);
                 }
                 return null;
             }));
@@ -610,6 +613,16 @@ public abstract class GenericGridProEditView<T extends BaseEntity> extends Verti
 
     }
 
+    private void addPopover(String text, Component target) {
+        Popover popover = new Popover();
+        popover.add(text);
+        popover.addThemeVariants(PopoverVariant.ARROW);
+        popover.setPosition(PopoverPosition.TOP);
+        popover.setOpenOnClick(false);
+        popover.setOpenOnHover(true);
+        popover.setOpenOnFocus(false);
+        popover.setTarget(target);
+    }
 
     private boolean isTemporalType(Class<?> type) {
         return LocalDateTime.class.isAssignableFrom(type) ||
@@ -646,7 +659,7 @@ public abstract class GenericGridProEditView<T extends BaseEntity> extends Verti
         Class<?> type,
         Method method,
         String format,
-        Class editorClass,
+        Class<?> editorClass,
         int fieldLength,
         double minValue,
         double maxValue,

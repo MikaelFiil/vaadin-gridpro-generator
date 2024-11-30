@@ -10,6 +10,7 @@
 * ### Version 0.23 - 2024-11-25  - Moved creation of new entity out of generic code and into the domain specific subclass, small text improvements in Trafficlight, simplified columns creation in Generic class, fiddled with Grid layout
 * ### Version 0.24 - 2024-11-27  - Removed state (item list) from the service as it should be, even for a demo :-) added the possibility to have one set of alternating array columns in the end (see demo to understand). Changes to main loop. Added TextAlign as annotation.
 * ### Version 0.25 - 2024-11-29  - Ups, had an immutable list, SORRY - fixed. Created a Icon(VaadinIcon.PLUS) as header of delete column and made it add a new row, removed gridContainer and old add button  - there is some very experimental TreeGrid code too ...
+* ### Version 0.26 - 2024-11-30  - UI improvements and code cleanup
 * ###        
 ### Author Mikael Fiil - mikael.fiil@netbizz.dk
 ###

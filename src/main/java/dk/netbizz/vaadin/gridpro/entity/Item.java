@@ -15,6 +15,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.Period;
 
@@ -85,6 +86,6 @@ public class Item implements BaseEntity {
 
     @GridEditColumn(header = "Weight", order = 12, format = "%,.1f kr.", textAlign =  ColumnTextAlign.END, arrayEndIdx = 9, alternatingCol = true, editorClass = ArrayCalculator.class)
     public BigDecimal getCalculatedImpact(int idx) {
-        return  BigDecimal.valueOf(impactAmount[idx]).multiply(likelihood[idx]).divideToIntegralValue(BigDecimal.valueOf(100.0));
+        return  BigDecimal.valueOf(impactAmount[idx]).multiply(likelihood[idx]).divide(BigDecimal.valueOf(100.0), RoundingMode.HALF_EVEN);
     }
 }

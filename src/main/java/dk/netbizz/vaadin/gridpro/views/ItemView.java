@@ -1,8 +1,6 @@
 package dk.netbizz.vaadin.gridpro.views;
 
-import com.vaadin.flow.component.avatar.Avatar;
 import com.vaadin.flow.component.grid.GridVariant;
-import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.router.Menu;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
@@ -10,7 +8,6 @@ import dk.netbizz.vaadin.gridpro.entity.Item;
 import dk.netbizz.vaadin.gridpro.service.ItemDataService;
 import dk.netbizz.vaadin.gridpro.utils.StandardNotifications;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,7 +17,7 @@ import java.util.Map;
 @Route(value = "", layout = MainLayout.class)
 public class ItemView extends GenericGridProEditView<Item> {
 
-    private ItemDataService dataService;
+    private final ItemDataService dataService;
 
     public ItemView(ItemDataService dataService) {
         super(Item.class);
@@ -28,7 +25,7 @@ public class ItemView extends GenericGridProEditView<Item> {
 
         // Create parameters specifically for the arrays
         // The point is that it is dynamic as to the count and headers of the array columns
-        Map<String , String> params = new HashMap<String, String>();
+        Map<String , String> params = new HashMap<>();
         params.put("yearlyAmount.arrayEndIdx", "2");            // Indexes are zero based
         params.put("yearlyAmount.header0", "Year 2024");
         params.put("yearlyAmount.header1", "Year 2025");
@@ -44,7 +41,7 @@ public class ItemView extends GenericGridProEditView<Item> {
 
         params.put("calculatedImpact.arrayEndIdx", "1");
 
-        genericGrid.setWidth("100%");;
+        genericGrid.setWidth("100%");
         genericGrid.setHeight("500px");
         genericGrid.setEmptyStateText("No items found.");
         genericGrid.addThemeVariants(GridVariant.LUMO_COMPACT, GridVariant.LUMO_ROW_STRIPES, GridVariant.LUMO_NO_BORDER);
@@ -98,6 +95,6 @@ public class ItemView extends GenericGridProEditView<Item> {
     }
 
     @Override
-    public List<String> getItemsForSelect(String colName) { return dataService.getItemsForSelect(colName); };
+    public List<String> getItemsForSelect(String colName) { return dataService.getItemsForSelect(colName); }
 
 }
