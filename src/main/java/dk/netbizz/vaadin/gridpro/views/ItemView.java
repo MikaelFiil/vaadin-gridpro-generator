@@ -48,6 +48,7 @@ public class ItemView extends GenericGridProEditView<Item> {
         genericGrid.setHeight("500px");
         genericGrid.setEmptyStateText("No items found.");
         genericGrid.addThemeVariants(GridVariant.LUMO_COMPACT, GridVariant.LUMO_ROW_STRIPES, GridVariant.LUMO_NO_BORDER);
+        genericGrid.addClassName("vaadin-grid-generator");
 
         // with the dataService set we can now continue the generic setup
         setupGrid(params);

@@ -14,7 +14,7 @@ package dk.netbizz.vaadin.gridpro.views;
  * Besides the most common field types, there is a special option for editing variable length array fields,
  * which is actually why I started to make this, since it avoids having a lot of repetitive application code.
  *
- * Since a user can move complete freely around in the grid you can never know when editing is finished, hence there is instant persistence.
+ * Since a user can move freely around in the grid you can never know when editing is finished, hence there is instant persistence.
  * Every edit of a single cell will cause a call to save the entity of the row.
  *
  * The application domain view must extend this class and replace the generic placeholder with the domain class for the grid.
@@ -81,7 +81,10 @@ public abstract class GenericGridProEditView<T extends BaseEntity> extends Verti
         add(genericGrid);
 
         btnAdd.setClassName("icon-plus");
-        btnAdd.setIcon(new Icon(VaadinIcon.PLUS));
+        Icon plus = new Icon(VaadinIcon.PLUS);
+        plus.setSize("28px");
+        plus.getStyle().set("padding", "0");
+        btnAdd.setIcon(plus);
         btnAdd.addClickListener(evt -> addNew());
     }
 

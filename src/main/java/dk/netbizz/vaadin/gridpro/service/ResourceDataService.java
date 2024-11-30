@@ -10,15 +10,9 @@ import java.util.List;
 @Service
 public class ResourceDataService {
 
-    @Getter
-    private List<Resource> entityList = new ArrayList<>();     // DB
-
     public ResourceDataService() {
     }
 
-    public void setData(List<Resource> entityList) {
-        this.entityList = entityList;
-    }
 
     public List<String> getItemsForSelect(String colName) {
         List<String> list = new ArrayList<>();
@@ -70,7 +64,7 @@ public class ResourceDataService {
 
     }
 
-    public void save(Resource entity) {
+    public void save(Resource entity, List<Resource> entityList) {
         if (entity.getId() == null) {
             Integer newId = entityList.stream().mapToInt(Resource::getId).max().orElse(0) + 1;
             entity.setId(newId);
@@ -80,7 +74,7 @@ public class ResourceDataService {
         }
     }
 
-    public void delete(Resource entity) {
+    public void delete(Resource entity, List<Resource> entityList) {
         entityList.removeIf(p -> p.getId().equals(entity.getId()));
     }
 

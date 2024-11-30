@@ -4,6 +4,7 @@ import com.vaadin.flow.component.grid.GridVariant;
 import dk.netbizz.vaadin.gridpro.entity.Resource;
 import dk.netbizz.vaadin.gridpro.service.ResourceDataService;
 import dk.netbizz.vaadin.gridpro.utils.StandardNotifications;
+import lombok.Getter;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -13,12 +14,13 @@ import java.util.Map;
 
 public class ResourceView extends GenericGridProEditView<Resource> {
 
+
+    private List<Resource> entityList = new ArrayList<>();     // DB
     private final ResourceDataService dataService;
 
     public ResourceView(ResourceDataService dataService) {
         super(Resource.class);
         this.dataService = dataService;
-        dataService.setData(new ArrayList<>());
 
         // Create parameters specifically for the arrays
         // The point is that it is dynamic as to the count and headers of the array columns
@@ -55,17 +57,17 @@ public class ResourceView extends GenericGridProEditView<Resource> {
 
     @Override
     protected void saveEntity(Resource entity) {
-        dataService.save(entity);
+        dataService.save(entity, entityList);
     }
 
     @Override
     protected List<Resource> loadEntities() {
-        return dataService.getEntityList();
+        return entityList;
     }
 
     @Override
     protected void deleteEntity(Resource entity) {
-        dataService.delete(entity);
+        dataService.delete(entity, entityList);
     }
 
     @Override

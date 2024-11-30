@@ -57,14 +57,15 @@ vaadin-side-nav-item vaadin-icon {
 }
 
 
-.vaadin-tree-grid::part(header-cell) {
-    background: #aaaaaa;
+.vaadin-grid-generator::part(header-cell) {
+    background: #888888;
     color: #000000;
     font-weight: bold;
+    font-size: 16px;
 }
 
 
-.vaadin-tree-subgrid::part(header-cell) {
+.vaadin-subgrid-generator::part(header-cell) {
     background: #777777;
     color: #eeeeee;
     font-weight: bold;

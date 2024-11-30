@@ -22,7 +22,7 @@ import dk.netbizz.vaadin.gridpro.service.ResourceDataService;
 import java.util.List;
 
 
-@PageTitle("Tree Grid")
+@PageTitle("Tree Grid experimental")
 @Menu(order = 2, icon = "line-awesome/svg/home-solid.svg")
 @Route(value = "tree-grid-rich-content", layout = MainLayout.class)
 public class TreeGridRichContent extends VerticalLayout {
@@ -79,8 +79,7 @@ public class TreeGridRichContent extends VerticalLayout {
             Anchor emailLink = new Anchor();
             emailLink.add(emailIcon, email);
             emailLink.setHref("mailto:" + person.getEmail());
-            emailLink.getStyle().set("align-items", "center").set("display",
-                    "flex");
+            emailLink.getStyle().set("align-items", "center").set("display", "flex");
 
             Icon phoneIcon = createIcon(VaadinIcon.PHONE);
             Span phone = new Span(person.getAddress().getPhone());
@@ -88,8 +87,7 @@ public class TreeGridRichContent extends VerticalLayout {
             Anchor phoneLink = new Anchor();
             phoneLink.add(phoneIcon, phone);
             phoneLink.setHref("tel:" + person.getAddress().getPhone());
-            phoneLink.getStyle().set("align-items", "center").set("display",
-                    "flex");
+            phoneLink.getStyle().set("align-items", "center").set("display", "flex");
 
             VerticalLayout column = new VerticalLayout(emailLink, phoneLink);
             column.getStyle().set("font-size", "var(--lumo-font-size-s)")
@@ -121,7 +119,7 @@ public class TreeGridRichContent extends VerticalLayout {
             ResourceView resourceView = new ResourceView(resourceDataService);
             resourceView.genericGrid.setMinHeight("200px");
             resourceView.genericGrid.setMaxHeight("400px");
-            resourceView.genericGrid.addClassName("vaadin-tree-subgrid");
+            resourceView.genericGrid.addClassName("vaadin-subgrid-generator");
             return resourceView;
 
         })
