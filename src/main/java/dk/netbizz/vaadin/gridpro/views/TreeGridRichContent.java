@@ -117,13 +117,12 @@ public class TreeGridRichContent extends VerticalLayout {
             return costGrid;
 */
             ResourceView resourceView = new ResourceView(resourceDataService);
-            resourceView.genericGrid.setMinHeight("200px");
-            resourceView.genericGrid.setMaxHeight("400px");
+            resourceView.genericGrid.setHeight("250px");
             resourceView.genericGrid.addClassName("vaadin-subgrid-generator");
             return resourceView;
 
         })
-        .setFlexGrow(5)
+        .setFlexGrow(6)
         .setHeader("Bid Resources");
 
 

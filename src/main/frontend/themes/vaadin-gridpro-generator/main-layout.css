@@ -57,6 +57,11 @@ vaadin-side-nav-item vaadin-icon {
 }
 
 
+.vaadin-grid-generator {
+    padding: 0;
+    margin: 0;
+}
+
 .vaadin-grid-generator::part(header-cell) {
     background: #888888;
     color: #000000;

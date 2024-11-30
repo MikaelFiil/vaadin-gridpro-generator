@@ -14,7 +14,6 @@ import java.util.Map;
 
 public class ResourceView extends GenericGridProEditView<Resource> {
 
-
     private List<Resource> entityList = new ArrayList<>();     // DB
     private final ResourceDataService dataService;
 

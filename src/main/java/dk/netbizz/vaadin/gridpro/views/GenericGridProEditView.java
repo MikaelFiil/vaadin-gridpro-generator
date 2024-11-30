@@ -72,7 +72,6 @@ public abstract class GenericGridProEditView<T extends BaseEntity> extends Verti
     protected GenericGridProEditView(Class<T> entityClass) {
         this.entityClass = entityClass;
         this.genericGrid = new GridPro<>(entityClass);
-        this.genericGrid.removeAllColumns();
         this.genericGrid.setSingleCellEdit(false);      // Default
         this.genericGrid.setEditOnClick(true);
         setupLayout();
@@ -81,7 +80,6 @@ public abstract class GenericGridProEditView<T extends BaseEntity> extends Verti
 
     private void setupLayout() {
         setSizeFull();
-        genericGrid.setSizeFull();
         add(genericGrid);
 
         btnAdd.setClassName("icon-plus");
@@ -116,10 +114,11 @@ public abstract class GenericGridProEditView<T extends BaseEntity> extends Verti
 
     protected void refreshGrid() {
         genericGrid.setItems(loadEntities());
+        genericGrid.recalculateColumnWidths();
     }
 
     protected void setupGrid(Map<String, String> dynamicParameters) {
-
+        genericGrid.removeAllColumns();
         List<GridColumnInfo> gridColumns = new ArrayList<>();
         addFieldColumns(gridColumns);   // Using side effects - sorry
         addMethodColumns(gridColumns);

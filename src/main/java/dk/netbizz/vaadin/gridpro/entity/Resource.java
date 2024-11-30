@@ -34,7 +34,7 @@ public class Resource implements BaseEntity {
     private Integer margin = 0;
 
     @GridEditColumn(header = "Description", order = 5, editorClass = TextField.class)
-    private String description;
+    private String description = "";
 
     @GridEditColumn(header = "Is Active", order = 6, editorClass = Checkbox.class)
     private Boolean active = false;
