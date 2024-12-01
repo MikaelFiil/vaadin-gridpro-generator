@@ -21,7 +21,7 @@ public class ItemSubView extends GenericGridProEditView<Item> {
 
         // Create parameters specifically for the arrays
         // The point is that it is dynamic as to the count and headers of the array columns
-        genericGrid.setWidth("99%");
+        genericGrid.setWidth("100%");
         genericGrid.setHeight("500px");
         genericGrid.setEmptyStateText("No items found.");
         genericGrid.addThemeVariants(GridVariant.LUMO_COMPACT, GridVariant.LUMO_ROW_STRIPES, GridVariant.LUMO_NO_BORDER);
@@ -33,9 +33,8 @@ public class ItemSubView extends GenericGridProEditView<Item> {
     }
 
     public void resetGrid(Map<String , String> params) {
-        genericGrid.setItems(new ArrayList<>());
+        // genericGrid.setItems(new ArrayList<>());
         setupGrid(params);
-        refreshGrid();
     }
 
 

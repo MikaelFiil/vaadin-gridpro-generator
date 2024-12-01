@@ -1,5 +1,9 @@
 package dk.netbizz.vaadin.gridpro.views;
 
+import com.flowingcode.vaadin.addons.simpletimer.SimpleTimer;
+import com.flowingcode.vaadin.addons.simpletimer.SimpleTimerDemo;
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
@@ -8,6 +12,7 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import dk.netbizz.vaadin.gridpro.service.ItemDataService;
 
+import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -23,8 +28,9 @@ public class GridProGeneratorTest extends VerticalLayout {
     private ItemSubView itemSubView;
     Select<Integer> startYear = new Select<>();
     Select<Integer> endYear = new Select<>();
+    Button refreshBtn = new Button("Refresh");
     List<Integer> years = Arrays.asList(2024, 2025, 2026, 2027, 2028, 2029, 2030, 2031, 2032, 2033);
-
+    SimpleTimer timer = new SimpleTimer();
 
     public GridProGeneratorTest( ItemDataService dataService) {
         this.dataService = dataService;
@@ -32,16 +38,36 @@ public class GridProGeneratorTest extends VerticalLayout {
 
         makeMainView();
         itemSubView = new ItemSubView(makeParams(), dataService);
-        HorizontalLayout selectRow = new HorizontalLayout(startYear, endYear);
+        SimpleTimerDemo timerDemo = new SimpleTimerDemo();
+        HorizontalLayout selectRow = new HorizontalLayout(startYear, endYear, refreshBtn, timer);
+        selectRow.setAlignItems(Alignment.BASELINE);
         add(selectRow);
         add(itemSubView);
 
+        timer.setFractions(true);
+        timer.addTimerEndEvent(ev-> {
+            System.out.println("tick");
+            itemSubView.genericGrid.recalculateColumnWidths();      // Now it works
+        });
+
         startYear.addValueChangeListener(evt -> {
             itemSubView.resetGrid(makeParams());
+            itemSubView.genericGrid.recalculateColumnWidths();      // Doesn't work
+
+            timer.setStartTime(3);
+            timer.start();
         });
 
         endYear.addValueChangeListener(evt -> {
             itemSubView.resetGrid(makeParams());
+            itemSubView.genericGrid.recalculateColumnWidths();      // Doesn't work
+
+            timer.setStartTime(3);
+            timer.start();
+        });
+
+        refreshBtn.addClickListener(evt -> {
+            itemSubView.genericGrid.recalculateColumnWidths();      // Now it works
         });
 
     }
