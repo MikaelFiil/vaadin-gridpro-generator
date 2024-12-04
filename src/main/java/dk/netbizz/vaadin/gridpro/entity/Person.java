@@ -14,7 +14,6 @@ public class Person {
     @EqualsAndHashCode.Include
     Integer id;
 
-
     String fullName;
     String profession;
     String email;

@@ -47,7 +47,7 @@ public class CostView extends GenericGridProEditView<Cost> {
     }
 
     @Override
-    protected void setSystemError(Cost entity, String columName, Exception e) {
+    protected void setSystemError(String classname, String columName, Exception e) {
         StandardNotifications.showTempSystemError();
     }
 

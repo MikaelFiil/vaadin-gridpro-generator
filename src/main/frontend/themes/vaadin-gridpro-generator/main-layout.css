@@ -76,3 +76,19 @@ vaadin-side-nav-item vaadin-icon {
     font-weight: bold;
 }
 
+/*  TEST af grid selection   */
+
+vaadin-grid::part(selected-row-cell) {
+    border-top: var(--selected-row-border);
+    border-bottom: var(--selected-row-border);
+}
+
+vaadin-grid::part(selected-row-cell first-column-cell) {
+    border-left: var(--selected-row-border);
+}
+vaadin-grid::part(selected-row-cell last-column-cell) {
+    border-right: var(--selected-row-border);
+}
+
+
+

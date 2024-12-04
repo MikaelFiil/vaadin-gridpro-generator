@@ -1,6 +1,7 @@
 package dk.netbizz.vaadin.gridpro.service;
 
 import dk.netbizz.vaadin.gridpro.entity.Item;
+import dk.netbizz.vaadin.gridpro.entity.Warehouse;
 import lombok.Getter;
 import org.springframework.stereotype.Service;
 
@@ -14,8 +15,9 @@ public class ItemDataService {
 
     @Getter
     private List<Item> itemList;                                // my DB :-)
+    private WarehouseDataService warehouseDataService;
 
-    public List<String> getItemsForSelect(String colName) {
+    public <S>List<S> getItemsForSelect(String colName) {
         List<String> list = new ArrayList<>();
 
         switch(colName.toLowerCase()) {
@@ -24,22 +26,27 @@ public class ItemDataService {
                 list.add("Quality");
                 list.add("Delivery");
                 list.add("Legal");
+
             break;
+            case "warehouse":
+                return (List<S>) warehouseDataService.findAll();
         }
-        return list;
+        return (List<S>) list;
     }
 
-    public ItemDataService() {
+    public ItemDataService(WarehouseDataService warehouseDataService) {
+        this.warehouseDataService = warehouseDataService;
         //Should be stateless, but itemList is my DB
         itemList = findAll();
     }
 
     public List<Item> findAll() {
+        List<Warehouse> warehouseList = warehouseDataService.findAll();
         return new ArrayList<Item>(List.of(
-                new Item(1L, "Swimsuit", "Technical", 120, LocalDate.of(1962, 2, 25), true, "Medium"),
-                new Item(2L, "Skates", "Quality", 1100, LocalDate.of(1983, 11, 2), false, "Low"),
-                new Item(3L, "MTB", "Delivery", 9495, LocalDate.of(1988, 12, 6), true, "High"),
-                new Item(4L, "Volleyball", "Legal", 150, LocalDate.of(1997, 5, 3), true, "Low")));
+                new Item(1L, "Swimsuit", "Technical", 120, warehouseList.get(0), LocalDate.of(1962, 2, 25), true, "Medium"),
+                new Item(2L, "Skates", "Quality", 1100, warehouseList.get(1), LocalDate.of(1983, 11, 2), false, "Low"),
+                new Item(3L, "MTB", "Delivery", 9495, warehouseList.get(2), LocalDate.of(1988, 12, 6), true, "High"),
+                new Item(4L, "Volleyball", "Legal", 150, warehouseList.get(3), LocalDate.of(1997, 5, 3), true, "Low")));
     }
 
     public void save(Item item) {

@@ -50,7 +50,7 @@ public class TemplateView extends GenericGridProEditView<Template> {
     }
 
     @Override
-    protected void setSystemError(Template entity, String columName, Exception e) {
+    protected void setSystemError(String classname, String columName, Exception e) {
         StandardNotifications.showTempSystemError();
     }
 

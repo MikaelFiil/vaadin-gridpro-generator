@@ -1,9 +1,7 @@
 package dk.netbizz.vaadin.gridpro.views;
 
 import com.flowingcode.vaadin.addons.simpletimer.SimpleTimer;
-import com.flowingcode.vaadin.addons.simpletimer.SimpleTimerDemo;
 import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
@@ -12,7 +10,6 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import dk.netbizz.vaadin.gridpro.service.ItemDataService;
 
-import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -38,7 +35,6 @@ public class GridProGeneratorTest extends VerticalLayout {
 
         makeMainView();
         itemSubView = new ItemSubView(makeParams(), dataService);
-        SimpleTimerDemo timerDemo = new SimpleTimerDemo();
         HorizontalLayout selectRow = new HorizontalLayout(startYear, endYear, refreshBtn, timer);
         selectRow.setAlignItems(Alignment.BASELINE);
         add(selectRow);

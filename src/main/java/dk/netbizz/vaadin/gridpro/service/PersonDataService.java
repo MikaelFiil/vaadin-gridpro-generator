@@ -41,19 +41,19 @@ public class PersonDataService {
 
     public List<Person> findAll() {
         return List.of(
-                new Person(idx++, "Peter Petersen", "Doctor", "pep@atea.com", new Address(1, "Elisevej", "3", "4130", "12345678"), ""),
-                new Person(idx++, "Lone Lonsen", "Psychologist", "lol@atea.com", new Address(2, "Hannavej", "4", "4130", "12345678"), ""),
-                new Person(idx++, "Kurt Kurtsen", "Salesman", "kuk@atea.com", new Address(3, "Emilsgave", "123", "4130", "12345678"), ""),
-                new Person(idx++, "Anne Annesen", "Designer", "ana@atea.com", new Address(4, "Hovedgaden", "4", "4130", "12345678"), ""));
+                new Person(idx++, "Peter Petersen", "Doctor", "pep@company.com", new Address(1, "Elisevej", "3", "4130", "12345678"), ""),
+                new Person(idx++, "Lone Lonsen", "Psychologist", "lol@company.com", new Address(2, "Hannavej", "4", "4130", "12345678"), ""),
+                new Person(idx++, "Kurt Kurtsen", "Salesman", "kuk@company.com", new Address(3, "Emilsgave", "123", "4130", "12345678"), ""),
+                new Person(idx++, "Anne Annesen", "Designer", "ana@company.com", new Address(4, "Hovedgaden", "4", "4130", "12345678"), ""));
     }
 
     public List<Person> findStaffById(Integer id) {
         if (id > 30) return new ArrayList<>();
         return List.of(
-                new Person(idx++, "Hans Hansen", "Doctor", "pep@atea.com", new Address(1, "Elisevej", "3", "4130", "12345678"), ""),
-                new Person(idx++, "Katrine Katrinsen", "Psychologist", "lol@atea.com", new Address(2, "Hannavej", "4", "4130", "12345678"), ""),
-                new Person(idx++, "Niels Nielsen", "Salesman", "kuk@atea.com", new Address(3, "Emilsgave", "123", "4130", "12345678"), ""),
-                new Person(idx++, "Pia Piasen", "Designer", "ana@atea.com", new Address(4, "Hovedgaden", "4", "4130", "12345678"), ""));
+                new Person(idx++, "Hans Hansen", "Doctor", "pep@company.com", new Address(1, "Elisevej", "3", "4130", "12345678"), ""),
+                new Person(idx++, "Katrine Katrinsen", "Psychologist", "lol@company.com", new Address(2, "Hannavej", "4", "4130", "12345678"), ""),
+                new Person(idx++, "Niels Nielsen", "Salesman", "kuk@company.com", new Address(3, "Emilsgave", "123", "4130", "12345678"), ""),
+                new Person(idx++, "Pia Piasen", "Designer", "ana@company.com", new Address(4, "Hovedgaden", "4", "4130", "12345678"), ""));
     }
 
 

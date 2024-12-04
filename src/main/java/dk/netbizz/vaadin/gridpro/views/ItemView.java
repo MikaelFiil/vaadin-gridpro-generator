@@ -59,7 +59,7 @@ public class ItemView extends GenericGridProEditView<Item> {
     protected void addNew() {
         // Create empty instance and add to the current list here if need be
         Item item = new Item();
-        item.setCategory(getItemsForSelect("category").getFirst());
+        item.setCategory((String)getItemsForSelect("category").getFirst());
         saveEntity(item);
         refreshGrid();
     }
@@ -70,7 +70,7 @@ public class ItemView extends GenericGridProEditView<Item> {
     }
 
     @Override
-    protected void setSystemError(Item entity, String columName, Exception e) {
+    protected void setSystemError(String classname, String columName, Exception e) {
         StandardNotifications.showTempSystemError();
     }
 
@@ -95,6 +95,6 @@ public class ItemView extends GenericGridProEditView<Item> {
     }
 
     @Override
-    public List<String> getItemsForSelect(String colName) { return dataService.getItemsForSelect(colName); }
+    public <S>List<S> getItemsForSelect(String colName) { return dataService.getItemsForSelect(colName); }
 
 }

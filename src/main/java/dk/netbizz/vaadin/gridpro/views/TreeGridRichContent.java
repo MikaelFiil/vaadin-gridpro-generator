@@ -22,9 +22,9 @@ import dk.netbizz.vaadin.gridpro.service.ResourceDataService;
 import java.util.List;
 
 
-@PageTitle("Tree Grid experimental")
-@Menu(order = 2, icon = "line-awesome/svg/home-solid.svg")
-@Route(value = "tree-grid-rich-content", layout = MainLayout.class)
+// @PageTitle("Tree Grid experimental")
+// @Menu(order = 2, icon = "line-awesome/svg/home-solid.svg")
+// @Route(value = "tree-grid-rich-content", layout = MainLayout.class)
 public class TreeGridRichContent extends VerticalLayout {
 
     private final ResourceDataService resourceDataService;

@@ -47,7 +47,7 @@ public class RiskView extends GenericGridProEditView<Risk> {
     }
 
     @Override
-    protected void setSystemError(Risk entity, String columName, Exception e) {
+    protected void setSystemError(String classname, String columName, Exception e) {
         StandardNotifications.showTempSystemError();
     }
 

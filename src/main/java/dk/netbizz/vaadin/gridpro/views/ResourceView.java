@@ -50,7 +50,7 @@ public class ResourceView extends GenericGridProEditView<Resource> {
     }
 
     @Override
-    protected void setSystemError(Resource entity, String columName, Exception e) {
+    protected void setSystemError(String classname, String columName, Exception e) {
         StandardNotifications.showTempSystemError();
     }
 

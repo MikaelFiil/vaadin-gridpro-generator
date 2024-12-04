@@ -15,11 +15,12 @@ public @interface GridEditColumn {
     int order() default 999;
     boolean sortable() default true;
     String format() default "";     // Is mandatory for dates
-    java.lang.Class editorClass() default TextField.class;
+    Class<?> editorClass() default TextField.class;
+    String labelGenerator() default "";
     int fieldLength() default 50;
     double minValue() default 0;
     double maxValue() default 1999999999;
     ColumnTextAlign textAlign() default ColumnTextAlign.START;
     int arrayEndIdx() default 0;         // Values from 0 to size of array
-    boolean alternatingCol() default false;         // If there are multiple array columns they may alternate in the grid
+    boolean alternatingCol() default false;       // If there are multiple array columns they may alternate in the grid
 }

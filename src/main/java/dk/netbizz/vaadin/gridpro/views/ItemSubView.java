@@ -19,8 +19,6 @@ public class ItemSubView extends GenericGridProEditView<Item> {
         this.dataService = dataService;                                          // setupGrid needs DataService
         setSizeFull();
 
-        // Create parameters specifically for the arrays
-        // The point is that it is dynamic as to the count and headers of the array columns
         genericGrid.setWidth("100%");
         genericGrid.setHeight("500px");
         genericGrid.setEmptyStateText("No items found.");
@@ -43,7 +41,7 @@ public class ItemSubView extends GenericGridProEditView<Item> {
     protected void addNew() {
         // Create empty instance and add to the current list here if need be
         Item item = new Item();
-        item.setCategory(getItemsForSelect("category").getFirst());
+        item.setCategory((String)getItemsForSelect("category").getFirst());
         saveEntity(item);
         refreshGrid();
     }
@@ -54,7 +52,7 @@ public class ItemSubView extends GenericGridProEditView<Item> {
     }
 
     @Override
-    protected void setSystemError(Item entity, String columName, Exception e) {
+    protected void setSystemError(String classname, String columName, Exception e) {
         StandardNotifications.showTempSystemError();
     }
 
@@ -79,6 +77,6 @@ public class ItemSubView extends GenericGridProEditView<Item> {
     }
 
     @Override
-    public List<String> getItemsForSelect(String colName) { return dataService.getItemsForSelect(colName); }
+    protected <S>List<S> getItemsForSelect(String colName) { return dataService.getItemsForSelect(colName); }
 
 }
