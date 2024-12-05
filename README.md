@@ -12,6 +12,7 @@
 * ### Version 0.25 - 2024-11-29  - Ups, had an immutable list, SORRY - fixed. Created a Icon(VaadinIcon.PLUS) as header of delete column and made it add a new row, removed gridContainer and old add button  - there is some very experimental TreeGrid code too ...
 * ### Version 0.26 - 2024-11-30  - UI improvements and code cleanup
 * ### Version 0.27 - 2024-12-04  - Support for embedded entities via the Select editor class. Take a look at the Warehouse in Item
+* ### Version 0.28 - 2024-12-05  - Bug fix - Removed constant recalculation of column widths, it interfered with automatic horizontal scrolling when the grid is wider than view port. 
 * ###        
 ### Author Mikael Fiil - mikael.fiil@netbizz.dk
 ###
