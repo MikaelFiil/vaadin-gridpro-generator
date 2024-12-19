@@ -13,6 +13,7 @@
 * ### Version 0.26 - 2024-11-30  - UI improvements and code cleanup
 * ### Version 0.27 - 2024-12-04  - Support for embedded entities via the Select editor class. Take a look at the Warehouse in Item
 * ### Version 0.28 - 2024-12-05  - Bug fix - Removed constant recalculation of column widths, it interfered with automatic horizontal scrolling when the grid is wider than view port. 
+* ### Version 0.29 - 2024-12-19  - Added the possibility to hide specific columns by adding e.g. -  params.put("price.hidden", ""); - to hide the price column  
 * ###        
 ### Author Mikael Fiil - mikael.fiil@netbizz.dk
 ###

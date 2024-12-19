@@ -26,6 +26,8 @@ public class ItemView extends GenericGridProEditView<Item> {
         // Create parameters specifically for the arrays
         // The point is that it is dynamic as to the count and headers of the array columns
         Map<String , String> params = new HashMap<>();
+        params.put("price.hidden", "");                         // Don't show price column in this view, only the key is used
+
         params.put("yearlyAmount.arrayEndIdx", "2");            // Indexes are zero based
         params.put("yearlyAmount.header0", "Year 2024");
         params.put("yearlyAmount.header1", "Year 2025");
