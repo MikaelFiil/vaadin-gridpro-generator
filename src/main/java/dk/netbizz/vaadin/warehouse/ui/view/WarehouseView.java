@@ -9,7 +9,7 @@ import dk.netbizz.vaadin.signal.Signal;
 
 @Route("warehouse")
 @PageTitle("Warehouse list")
-@Menu(order = 2, icon = "vaadin:clipboard-check", title = "Warehouses")
+@Menu(order = 4, icon = "vaadin:clipboard-check", title = "Warehouses")
 public class WarehouseView extends Main implements Signal {
 
     VerticalLayout verticalLayout = new VerticalLayout();

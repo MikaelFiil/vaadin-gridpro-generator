@@ -37,9 +37,15 @@ public class ItemRowMapper implements RowMapper<Item> {
         item.setCriticality(rs.getString("criticality"));
         item.setDescription(rs.getString("description"));
 
-        item.setYearlyAmount((Integer[]) rs.getArray("yearly_amount").getArray());  //  = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};                // Up to 10 years, but can in principle be very long
-        item.setImpactAmount((Integer[]) rs.getArray("impact_amount").getArray());  //  = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};                // Up to 10 years, but can in principle be very long
-        item.setLikelihood((BigDecimal[]) rs.getArray("likelihood").getArray());    //  = {BigDecimal.valueOf(0.0), BigDecimal.valueOf(0.0), BigDecimal.valueOf(0.0), BigDecimal.valueOf(0.0), BigDecimal.valueOf(0.0),
+        // Following is H2 specific
+        item.setYearlyAmount((Integer[]) rs.getObject("yearly_amount", Integer[].class));  //  = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};                // Up to 10 years, but can in principle be very long
+        item.setImpactAmount((Integer[]) rs.getObject("impact_amount", Integer[].class));  //  = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};                // Up to 10 years, but can in principle be very long
+        item.setLikelihood((BigDecimal[]) rs.getObject("likelihood", BigDecimal[].class));    //  = {BigDecimal.valueOf(0.0), BigDecimal.valueOf(0.0), BigDecimal.valueOf(0.0), BigDecimal.valueOf(0.0), BigDecimal.valueOf(0.0),
+        // Following is PostgreSQL specific
+        // item.setYearlyAmount((Integer[]) rs.getArray("yearly_amount").getArray());  //  = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};                // Up to 10 years, but can in principle be very long
+        // item.setImpactAmount((Integer[]) rs.getArray("impact_amount").getArray());  //  = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};                // Up to 10 years, but can in principle be very long
+        // item.setLikelihood((BigDecimal[]) rs.getArray("likelihood").getArray());    //  = {BigDecimal.valueOf(0.0), BigDecimal.valueOf(0.0), BigDecimal.valueOf(0.0), BigDecimal.valueOf(0.0), BigDecimal.valueOf(0.0),
+
         item.setVersion(rs.getInt("version"));
         return item;
     };

@@ -14,6 +14,7 @@
 * ### Version 0.27 - 2024-12-04  - Support for embedded entities via the Select editor class. Take a look at the Warehouse in Item
 * ### Version 0.28 - 2024-12-05  - Bug fix - Removed constant recalculation of column widths, it interfered with automatic horizontal scrolling when the grid is wider than view port. 
 * ### Version 0.29 - 2024-12-19  - Added the possibility to hide specific columns by adding e.g. -  params.put("price.hidden", ""); - to hide the price column  
+* ### Version 0.30 - 2025-04-23  - Major changes to code structure and with enhancements to central class GenericGridProEditView. Added some performance tests behind the menus "Companies" and "Data generation" using H2 memory database 
 * ###        
 ### Author Mikael Fiil - mikael.fiil@netbizz.dk
 ###
@@ -43,8 +44,8 @@
 ###
 
 ### Based on:
-### - Spring Boot 3.3.5
-### - Vaadin Flow 24.5.5
+### - Spring Boot 3.4.4
+### - Vaadin Flow 24.7.2
 
 ## Annotations
 
@@ -59,8 +60,10 @@ public @interface GridEditColumn {
     int order() default 999;
     boolean sortable() default true;
     String format() default "";     // Is mandatory for dates
-    java.lang.Class editorClass() default TextField.class;
+    Class<?> editorClass() default TextField.class;
+    String labelGenerator() default "";
     int fieldLength() default 50;
+    int flexGrow() default 1;
     double minValue() default 0;
     double maxValue() default 1999999999;
     ColumnTextAlign textAlign() default ColumnTextAlign.START;
@@ -71,12 +74,10 @@ public @interface GridEditColumn {
 
 ## Code
 ### The tool specific files are in the two packages
-###  - package dk.netbizz.vaadin.gridpro.entity.base
 ###  - package dk.netbizz.vaadin.gridpro.utils;
 ### 
 
 ## Demo
-### This demo provides one entity type, one view and one service:
-### - Item.java
+### This demo provides one entity type, one view and one pseudo service for the "GridPor inline" menu
 ### - ItemView.java
 ### - ItemDataService.java

@@ -14,7 +14,7 @@ public interface TenantDepartmentEmployeeRepository extends ListCrudRepository<A
     List<ApplicationUser> findByTenantDepartmentId(int tenantDepartmentId);
     Optional<ApplicationUser> findByFullnameIgnoreCase(String name);
 
-    @Query("select * from application_user where id > 4787000 order by id limit 1000")
+    @Query("select * from application_user order by id limit 1000")
     List<ApplicationUser> findFirst1000();
 
 }

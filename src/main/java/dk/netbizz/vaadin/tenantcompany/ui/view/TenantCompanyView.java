@@ -20,7 +20,7 @@ import dk.netbizz.vaadin.user.ui.view.TenantDepartmentEmployeeGrid;
 // https://docs.spring.io/spring-framework/docs/4.3.25.RELEASE/spring-framework-reference/html/jdbc.html
 
 @PageTitle("Company list")
-@Menu(order = 4, icon = "vaadin:clipboard-check", title = "Companies")
+@Menu(order = 5, icon = "vaadin:clipboard-check", title = "Companies")
 @Route(value = "companies", layout = MainLayout.class)
 public class TenantCompanyView extends Main implements Signal {
 
@@ -43,7 +43,7 @@ public class TenantCompanyView extends Main implements Signal {
         verticalLayout.setWidthFull();
         departmentDetails.setWidthFull();
         employeeDetails.setWidthFull();
-        itemDetails.setWidthFull();
+        itemDetails.setSizeFull();
 
         add(verticalLayout);
         tenantCompanyGrid.refresh();
@@ -54,6 +54,7 @@ public class TenantCompanyView extends Main implements Signal {
         verticalLayout.add(tenantCompanyGrid);
         employeeDetails.add(tenantDepartmentEmployeeGrid);
         departmentDetails.add(tenantDepartmentGrid);
+        itemGrid.setSizeFull();
         itemDetails.add(itemGrid);
         verticalLayout.add(departmentDetails);
         verticalLayout.add(employeeDetails);
