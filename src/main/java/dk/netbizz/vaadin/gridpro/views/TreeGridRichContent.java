@@ -14,10 +14,11 @@ import com.vaadin.flow.component.treegrid.TreeGrid;
 import com.vaadin.flow.router.Menu;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
-import dk.netbizz.vaadin.gridpro.entity.Person;
-import dk.netbizz.vaadin.gridpro.service.CostDataService;
-import dk.netbizz.vaadin.gridpro.service.PersonDataService;
-import dk.netbizz.vaadin.gridpro.service.ResourceDataService;
+import dk.netbizz.vaadin.MainLayout;
+import dk.netbizz.vaadin.person.domain.Person;
+import dk.netbizz.vaadin.person.service.PersonDataService;
+import dk.netbizz.vaadin.resource.service.ResourceDataService;
+import dk.netbizz.vaadin.resource.ui.view.ResourceView;
 
 import java.util.List;
 
@@ -28,15 +29,13 @@ import java.util.List;
 public class TreeGridRichContent extends VerticalLayout {
 
     private final ResourceDataService resourceDataService;
-    private final CostDataService costDataService;
     private final PersonDataService personDataService;
     private List<Person> managers;
 
 
-    public TreeGridRichContent(PersonDataService personDataService, ResourceDataService resourceDataService,  CostDataService costDataService) {
+    public TreeGridRichContent(PersonDataService personDataService, ResourceDataService resourceDataService) {
         this.personDataService = personDataService;
         this.resourceDataService = resourceDataService;
-        this.costDataService = costDataService;
         managers = personDataService.findAll();
         setSizeFull();
 
@@ -105,24 +104,8 @@ public class TreeGridRichContent extends VerticalLayout {
         // end::snippet[]
 
         treeGrid.addComponentColumn(person -> {
-/*
-            Grid<Cost> costGrid = new Grid<Cost>();
-            costGrid.removeAllColumns();
-            costGrid.addClassName("vaadin-tree-subgrid");
-            costGrid.setEmptyStateText("No items found.");
-            costGrid.addThemeVariants(GridVariant.LUMO_COMPACT, GridVariant.LUMO_ROW_STRIPES, GridVariant.LUMO_NO_BORDER);
-
-            costGrid.addColumn(Cost::getDescription)
-                    .setHeader("Description") ;
-            costGrid.addColumn(Cost::getYearlyCost)
-                    .setHeader("Yearly cost");
-            costGrid.setItems(costDataService.findAll(person.getId()));
-            costGrid.setHeight("100px");
-            return costGrid;
-*/
             ResourceView resourceView = new ResourceView(resourceDataService);
-            resourceView.genericGrid.setHeight("200px");
-            resourceView.genericGrid.addClassName("vaadin-subgrid-generator");
+            resourceView.setHeightClassName("200px", "vaadin-subgrid-generator");
             return resourceView;
 
         })

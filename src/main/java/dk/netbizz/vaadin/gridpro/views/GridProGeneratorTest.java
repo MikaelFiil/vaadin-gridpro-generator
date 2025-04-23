@@ -8,7 +8,9 @@ import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.router.Menu;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
-import dk.netbizz.vaadin.gridpro.service.ItemDataService;
+import dk.netbizz.vaadin.MainLayout;
+import dk.netbizz.vaadin.item.service.ItemDataService;
+import dk.netbizz.vaadin.item.ui.view.ItemSubView;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -43,12 +45,12 @@ public class GridProGeneratorTest extends VerticalLayout {
         timer.setFractions(true);
         timer.addTimerEndEvent(ev-> {
             System.out.println("tick");
-            itemSubView.genericGrid.recalculateColumnWidths();      // Now it works
+            itemSubView.recalculateColumnWidths();      // Now it works
         });
 
         startYear.addValueChangeListener(evt -> {
             itemSubView.resetGrid(makeParams());
-            itemSubView.genericGrid.recalculateColumnWidths();      // Doesn't work
+            itemSubView.recalculateColumnWidths();      // Doesn't work
 
             timer.setStartTime(3);
             timer.start();
@@ -56,14 +58,14 @@ public class GridProGeneratorTest extends VerticalLayout {
 
         endYear.addValueChangeListener(evt -> {
             itemSubView.resetGrid(makeParams());
-            itemSubView.genericGrid.recalculateColumnWidths();      // Doesn't work
+            itemSubView.recalculateColumnWidths();      // Doesn't work
 
             timer.setStartTime(3);
             timer.start();
         });
 
         refreshBtn.addClickListener(evt -> {
-            itemSubView.genericGrid.recalculateColumnWidths();      // Now it works
+            itemSubView.recalculateColumnWidths();      // Now it works
         });
 
     }
