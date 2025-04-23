@@ -18,8 +18,8 @@ import java.math.BigDecimal;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@EqualsAndHashCode(onlyExplicitlyIncluded = true)
-public class Risk implements BaseEntity {
+@EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = false)
+public class Risk extends BaseEntity {
 
     @EqualsAndHashCode.Include
     private Integer id;                            // Must be immutable

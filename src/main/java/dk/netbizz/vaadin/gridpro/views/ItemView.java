@@ -1,5 +1,6 @@
 package dk.netbizz.vaadin.gridpro.views;
 
+import com.flowingcode.vaadin.addons.gridhelpers.GridHelper;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.router.Menu;
 import com.vaadin.flow.router.PageTitle;
@@ -7,14 +8,16 @@ import com.vaadin.flow.router.Route;
 import dk.netbizz.vaadin.gridpro.entity.Item;
 import dk.netbizz.vaadin.gridpro.service.ItemDataService;
 import dk.netbizz.vaadin.gridpro.utils.StandardNotifications;
+import lombok.experimental.ExtensionMethod;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 @PageTitle("GridPro Inline")
-@Menu(order = 0, icon = "line-awesome/svg/home-solid.svg")
+@Menu(order = 1, icon = "line-awesome/svg/home-solid.svg")
 @Route(value = "", layout = MainLayout.class)
+@ExtensionMethod(GridHelper.class)
 public class ItemView extends GenericGridProEditView<Item> {
 
     private final ItemDataService dataService;
@@ -26,7 +29,7 @@ public class ItemView extends GenericGridProEditView<Item> {
         // Create parameters specifically for the arrays
         // The point is that it is dynamic as to the count and headers of the array columns
         Map<String , String> params = new HashMap<>();
-        params.put("price.hidden", "");                         // Don't show price column in this view, only the key is used
+        // params.put("price.hidden", "");                         // Don't show price column in this view, only the key is used
 
         params.put("yearlyAmount.arrayEndIdx", "2");            // Indexes are zero based
         params.put("yearlyAmount.header0", "Year 2024");
@@ -47,8 +50,10 @@ public class ItemView extends GenericGridProEditView<Item> {
         genericGrid.setHeight("500px");
         genericGrid.setMaxHeight("500px");
         genericGrid.setEmptyStateText("No items found.");
-        genericGrid.addThemeVariants(GridVariant.LUMO_COMPACT, GridVariant.LUMO_ROW_STRIPES); //, GridVariant.LUMO_NO_BORDER);
+        genericGrid.addThemeVariants(GridVariant.LUMO_COMPACT, GridVariant.LUMO_ROW_STRIPES);       //, GridVariant.LUMO_NO_BORDER);
+        // genericGrid.addThemeVariants(GridProVariant.LUMO_HIGHLIGHT_READ_ONLY_CELLS);
         genericGrid.addClassName("vaadin-grid-generator");
+        // genericGrid.setSelectionFilter(Item::getActive);
 
         // with the dataService set we can now continue the generic setup
         setupGrid(params);
@@ -56,6 +61,13 @@ public class ItemView extends GenericGridProEditView<Item> {
         refreshGrid();
     }
 
+    @Override
+    protected boolean isEditableEntity(Item entity) {
+        return entity.getActive();
+    }
+
+    @Override
+    protected boolean canAddEntity() { return true; }
 
     // Constructing a new entity is domain specific
     @Override
@@ -76,6 +88,9 @@ public class ItemView extends GenericGridProEditView<Item> {
     protected void setSystemError(String classname, String columName, Exception e) {
         StandardNotifications.showTempSystemError();
     }
+
+    @Override
+    protected boolean validUpdate(Item entity, String colName, Object  newColValue) { return true; }
 
     @Override
     protected void saveEntity(Item entity) {
@@ -100,4 +115,11 @@ public class ItemView extends GenericGridProEditView<Item> {
     @Override
     public <S>List<S> getItemsForSelect(String colName) { return dataService.getItemsForSelect(colName); }
 
+    @Override
+    protected String getFixedCalculatedText(Item item, String colName) {
+        return "";
+    }
+
+    @Override
+    protected String getCssClassName(String aCssClass) { return "NA"; }
 }

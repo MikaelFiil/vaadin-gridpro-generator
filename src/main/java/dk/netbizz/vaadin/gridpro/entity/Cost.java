@@ -16,8 +16,8 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@EqualsAndHashCode(onlyExplicitlyIncluded = true)
-public class Cost implements BaseEntity {
+@EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = false)
+public class Cost extends BaseEntity {
 
     @EqualsAndHashCode.Include
     private Integer id;                            // Must be immutable

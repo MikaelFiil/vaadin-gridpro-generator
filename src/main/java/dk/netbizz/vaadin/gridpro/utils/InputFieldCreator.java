@@ -1,6 +1,8 @@
 package dk.netbizz.vaadin.gridpro.utils;
 
 import com.vaadin.flow.component.Html;
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.*;
 
@@ -244,5 +246,27 @@ public class InputFieldCreator {
         cb.setMaxWidth("5rem");
         return cb;
     }
+
+
+    /**************************************************************************************
+     *  C H E C K B O X    F I E L D
+     */
+
+    public static Checkbox createCheckbox(boolean initialValue, boolean readonly) {
+        Checkbox cb  = new Checkbox(initialValue);
+        cb.setReadOnly(readonly);
+        return cb;
+    }
+
+
+    /**************************************************************************************
+     *  C H E C K B O X    F I E L D
+     */
+
+    public static Button createRichTextEditorButton(String label, String initialValue) {
+        Button button = new Button(label);
+        return button;
+    }
+
 
 }

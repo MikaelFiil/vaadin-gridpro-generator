@@ -17,7 +17,7 @@ import java.util.Map;
 
 
 @PageTitle("GridPro Generator Test")
-@Menu(order = 1, icon = "line-awesome/svg/home-solid.svg")
+@Menu(order = 2, icon = "line-awesome/svg/home-solid.svg")
 @Route(value = "gridpro-gen-test", layout = MainLayout.class)
 public class GridProGeneratorTest extends VerticalLayout {
 

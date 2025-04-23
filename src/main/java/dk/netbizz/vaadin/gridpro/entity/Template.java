@@ -18,8 +18,8 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@EqualsAndHashCode(onlyExplicitlyIncluded = true)
-public class Template implements BaseEntity {
+@EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = false)
+public class Template extends BaseEntity {
 
     @EqualsAndHashCode.Include
     private Integer id;                            // Must be immutable

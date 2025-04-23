@@ -22,9 +22,9 @@ import dk.netbizz.vaadin.gridpro.service.ResourceDataService;
 import java.util.List;
 
 
-// @PageTitle("Tree Grid experimental")
-// @Menu(order = 2, icon = "line-awesome/svg/home-solid.svg")
-// @Route(value = "tree-grid-rich-content", layout = MainLayout.class)
+@PageTitle("Tree Grid experimental")
+@Menu(order = 3, icon = "line-awesome/svg/home-solid.svg")
+@Route(value = "tree-grid-rich-content", layout = MainLayout.class)
 public class TreeGridRichContent extends VerticalLayout {
 
     private final ResourceDataService resourceDataService;
@@ -44,6 +44,7 @@ public class TreeGridRichContent extends VerticalLayout {
         treeGrid.setSizeFull();
         treeGrid.addThemeVariants(GridVariant.LUMO_COMPACT, GridVariant.LUMO_ROW_STRIPES, GridVariant.LUMO_NO_BORDER);
         treeGrid.addClassName("vaadin-tree-grid");
+        treeGrid.addClassName("viavea-zero-margin-padding");
         treeGrid.setItems(managers, this::getStaff);
 
         // tag::snippet[]
@@ -61,12 +62,14 @@ public class TreeGridRichContent extends VerticalLayout {
 
             VerticalLayout column = new VerticalLayout(fullName, profession);
             column.getStyle().set("line-height", "var(--lumo-line-height-m)");
+            column.addClassName("viavea-zero-margin-padding");
             column.setPadding(false);
             column.setSpacing(false);
 
             HorizontalLayout row = new HorizontalLayout(avatar, column);
             row.setAlignItems(FlexComponent.Alignment.CENTER);
-            row.setSpacing(true);
+            row.setSpacing(false);
+            row.addClassName("viavea-zero-margin-padding");
             return row;
         })
         .setFlexGrow(1)
@@ -94,6 +97,7 @@ public class TreeGridRichContent extends VerticalLayout {
                     .set("line-height", "var(--lumo-line-height-m)");
             column.setPadding(false);
             column.setSpacing(false);
+            column.addClassName("viavea-zero-margin-padding");
             return column;
         })
         .setFlexGrow(1)
@@ -117,7 +121,7 @@ public class TreeGridRichContent extends VerticalLayout {
             return costGrid;
 */
             ResourceView resourceView = new ResourceView(resourceDataService);
-            resourceView.genericGrid.setHeight("250px");
+            resourceView.genericGrid.setHeight("200px");
             resourceView.genericGrid.addClassName("vaadin-subgrid-generator");
             return resourceView;
 

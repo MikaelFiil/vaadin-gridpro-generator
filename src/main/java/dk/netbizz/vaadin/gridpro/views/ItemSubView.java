@@ -5,8 +5,6 @@ import dk.netbizz.vaadin.gridpro.entity.Item;
 import dk.netbizz.vaadin.gridpro.service.ItemDataService;
 import dk.netbizz.vaadin.gridpro.utils.StandardNotifications;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -35,6 +33,13 @@ public class ItemSubView extends GenericGridProEditView<Item> {
         setupGrid(params);
     }
 
+    @Override
+    protected boolean isEditableEntity(Item entity) {
+        return true;
+    }
+
+    @Override
+    protected boolean canAddEntity() { return true; }
 
     // Constructing a new entity is domain specific
     @Override
@@ -55,6 +60,9 @@ public class ItemSubView extends GenericGridProEditView<Item> {
     protected void setSystemError(String classname, String columName, Exception e) {
         StandardNotifications.showTempSystemError();
     }
+
+    @Override
+    protected boolean validUpdate(Item entity, String colName, Object  newColValue) { return true; }
 
     @Override
     protected void saveEntity(Item entity) {
@@ -79,4 +87,11 @@ public class ItemSubView extends GenericGridProEditView<Item> {
     @Override
     protected <S>List<S> getItemsForSelect(String colName) { return dataService.getItemsForSelect(colName); }
 
+    @Override
+    protected String getFixedCalculatedText(Item item, String colName) {
+        return "";
+    }
+
+    @Override
+    protected String getCssClassName(String aCssClass) { return "NA"; }
 }

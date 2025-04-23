@@ -34,17 +34,23 @@ package dk.netbizz.vaadin.gridpro.views;
 
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
+import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.ColumnTextAlign;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.gridpro.GridPro;
+import com.vaadin.flow.component.html.H4;
+import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.popover.Popover;
 import com.vaadin.flow.component.popover.PopoverPosition;
 import com.vaadin.flow.component.popover.PopoverVariant;
-import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
+import com.vaadin.flow.component.richtexteditor.RichTextEditor;
+import com.vaadin.flow.component.richtexteditor.RichTextEditorVariant;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.renderer.IconRenderer;
@@ -68,7 +74,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 
-@SuppressWarnings("unused")
 public abstract class GenericGridProEditView<T extends BaseEntity> extends VerticalLayout {
 
     protected final GridPro<T> genericGrid;
@@ -83,19 +88,12 @@ public abstract class GenericGridProEditView<T extends BaseEntity> extends Verti
         this.genericGrid.setEditOnClick(true);
         setupLayout();
         // Further setup initialization done via subclass
+        addClassName("viavea-zero-margin-padding");
     }
 
     private void setupLayout() {
         setSizeFull();
         add(genericGrid);
-
-        btnAdd.setClassName("icon-plus");
-        Icon plus = new Icon(VaadinIcon.PLUS);
-        plus.setSize("24px");
-        plus.getStyle().set("padding", "0");
-        btnAdd.setIcon(plus);
-        btnAdd.addClickListener(evt -> addNew());
-        addPopover("Add row", btnAdd);
     }
 
     // Abstract methods to be implemented by specific domain views
@@ -107,7 +105,11 @@ public abstract class GenericGridProEditView<T extends BaseEntity> extends Verti
     protected abstract void deleteEntity(T entity);
     protected abstract void selectEntity(T entity);                                                 // Seldom used, GridPro makes row selection obsolete - I think.
     protected abstract <S> List<S> getItemsForSelect(String colName);
-
+    protected abstract String getFixedCalculatedText(T entity, String colName);
+    protected abstract boolean validUpdate(T entity, String colName, Object  newColValue);
+    protected abstract boolean isEditableEntity(T entity);
+    protected abstract boolean canAddEntity();                      // Should be based on user profile rights
+    protected abstract String getCssClassName(String aCssClass);
 
     protected void setupGridEventHandlers() {
         // genericGrid.setSelectionMode(Grid.SelectionMode.SINGLE);  // Set this if you really want to be able to select a row
@@ -162,16 +164,16 @@ public abstract class GenericGridProEditView<T extends BaseEntity> extends Verti
 
                     default:                                // Simple Method
                         setStandardColumnProperties(
-                                genericGrid.addColumn(item -> {
-                                    try {
-                                        Object value = columnInfo.method().invoke(item);
-                                        return formatValue(value, columnInfo);
-                                    } catch (Exception e) {
-                                        setSystemError(item.getClass().getName().getClass().getName(), columnInfo.propertyName(), e);
-                                        return null;
-                                    }
-                                })
-                                , columnInfo, null);
+                            genericGrid.addColumn(item -> {
+                                try {
+                                    Object value = columnInfo.method().invoke(item);
+                                    return formatValue(value, columnInfo);
+                                } catch (Exception e) {
+                                    setSystemError(item.getClass().getName().getClass().getName(), columnInfo.propertyName(), e);
+                                    return null;
+                                }
+                            })
+                            , columnInfo, null);
                 }
                 colIdx++;
 
@@ -180,24 +182,22 @@ public abstract class GenericGridProEditView<T extends BaseEntity> extends Verti
                 if (columnInfo.editorClass == null) { // For un-editable field-based columns
                     if (isTemporalType(columnInfo.type()) && !columnInfo.format().isEmpty()) {
                         setStandardColumnProperties(
-                                genericGrid.addColumn(item -> {
-                                    try {
-                                        Field field = entityClass.getDeclaredField(columnInfo.propertyName());
-                                        field.setAccessible(true);
-                                        Object value = field.get(item);
-                                        return formatValue(value, columnInfo);
-                                    } catch (Exception e) {
-                                        setSystemError(item.getClass().getName(), columnInfo.propertyName(), e);
-                                        return null;
-                                    }
-                                })
-                                , columnInfo, null);
-                        colIdx++;
-
+                            genericGrid.addColumn(item -> {
+                                try {
+                                    Field field = entityClass.getDeclaredField(columnInfo.propertyName());
+                                    field.setAccessible(true);
+                                    Object value = field.get(item);
+                                    return formatValue(value, columnInfo);
+                                } catch (Exception e) {
+                                    setSystemError(item.getClass().getName(), columnInfo.propertyName(), e);
+                                    return null;
+                                }
+                            })
+                            , columnInfo, null);
                     } else {
                         setStandardColumnProperties(genericGrid.addColumn(columnInfo.propertyName()), columnInfo, null);      // Plain vanilla display only column
-                        colIdx++;
                     }
+                    colIdx++;
 
                 } else { // For field based editable columns
 
@@ -227,7 +227,7 @@ public abstract class GenericGridProEditView<T extends BaseEntity> extends Verti
                             break;
 
                         case "com.vaadin.flow.component.select.Select":
-                            setStandardColumnProperties(makeSelectFieldColumn(columnInfo, camelName, columnInfo.type), columnInfo, null);
+                            setStandardColumnProperties(makeSelectFieldColumn(columnInfo, camelName), columnInfo, null);
                             colIdx++;
                             break;
 
@@ -238,6 +238,16 @@ public abstract class GenericGridProEditView<T extends BaseEntity> extends Verti
 
                         case "dk.netbizz.vaadin.gridpro.views.components.TrafficLight":
                             setStandardColumnProperties(makeTrafficlightFieldColumn(columnInfo, camelName), columnInfo, null);
+                            colIdx++;
+                            break;
+
+                        case "com.vaadin.flow.component.richtexteditor.RichTextEditor":
+                            makeRichTextFieldColumn(columnInfo, camelName);
+                            colIdx++;
+                            break;
+
+                        case "dk.netbizz.tendernisse.views.utils.gridprogenerator.FixedCalculatedText":
+                            setStandardColumnProperties(makeFixedCalculatedTextColumn(columnInfo, camelName), columnInfo, null);
                             colIdx++;
                             break;
 
@@ -274,203 +284,250 @@ public abstract class GenericGridProEditView<T extends BaseEntity> extends Verti
             genericGrid.setColumnOrder(nextColumns);
         }
 
-        // Add delete column icon
+        // Add delete or lock column icon
         genericGrid.addColumn(new IconRenderer<>(item -> {
-                    Button btnRemove = new Button();
-                    btnRemove.setClassName("icon-trash");
-                    Icon iconTrash = new Icon(VaadinIcon.TRASH);
-                    iconTrash.setSize("20px");
-                    iconTrash.getStyle().set("padding", "0");
-                    btnRemove.setIcon(iconTrash);
-                    addPopover("Delete row", btnRemove);
-                    btnRemove.addClickListener(elem -> {            // No DB changes yet, only when updating the BidRequest as a whole
-                        btnRemove.getStyle().set("color", "red");
-                        ConfirmationDialog.confirm("Warning", "You are deleting the row, continue?", () -> btnRemove.getStyle().remove("color"))
-                                .addConfirmListener(event -> {
-                                    deleteEntity(item);
-                                    refreshGrid();
-                                });
-                    });
-                    return btnRemove;
-                },item -> ""))
-                .setHeader(btnAdd)
-                .setAutoWidth(true)
-                .setFlexGrow(0)
-                .setResizable(false)
-                .setTextAlign(ColumnTextAlign.END);
+            Button btnRemove = new Button();
+            btnRemove.addClassName("viavea-zero-margin-padding");
+            Icon iconTrashLock;
+            if (isEditableEntity(item)) {
+                iconTrashLock = new Icon(VaadinIcon.TRASH);
+                addPopover("Delete row", btnRemove);
+                btnRemove.addClickListener(elem -> {            // No DB changes yet, only when updating the BidRequest as a whole
+                    iconTrashLock.getStyle().set("color", "red");
+                    ConfirmationDialog.confirm("Warning", "You are deleting the row, continue?", () -> iconTrashLock.getStyle().remove("color"))
+                        .addConfirmListener(event -> {
+                            deleteEntity(item);
+                            refreshGrid();
+                        });
+                });
+            } else {
+                iconTrashLock = new Icon(VaadinIcon.LOCK);
+                addPopover("Row is read only", btnRemove);
+            }
+            iconTrashLock.addClassName("viavea-grid-trash-icon");
+            btnRemove.setIcon(iconTrashLock);
+            return btnRemove;
+        },item -> ""))
+        .setHeader(getAddRowHeader())
+        .setAutoWidth(true)
+        .setFlexGrow(0)
+        .setResizable(false)
+        .setTextAlign(ColumnTextAlign.END);
     }
 
+    private Component getAddRowHeader() {
+        if (canAddEntity()) {
+            Icon plus = new Icon(VaadinIcon.PLUS);
+            plus.addClassName("viavea-grid-plus-icon");
+            btnAdd.setIcon(plus);
+            btnAdd.addClickListener(evt -> addNew());
+            btnAdd.addClassName("viavea-zero-margin-padding");
+            addPopover("Add row", btnAdd);
+            return btnAdd;
+        } else {
+            return new Span("");
+        }
+    }
 
     private void addFieldColumns(List<GridColumnInfo> gridColumns) {
         // Add field-based columns
         Arrays.stream(entityClass.getDeclaredFields())
-                .filter(field -> field.isAnnotationPresent(GridEditColumn.class))
-                .forEach(field -> {
-                    GridEditColumn annotation = field.getAnnotation(GridEditColumn.class);
-                    gridColumns.add(new GridColumnInfo(
-                            field.getName(),
-                            annotation.header().isEmpty() ? field.getName() : annotation.header(),
-                            annotation.order(),
-                            annotation.sortable(),
-                            field.getType(),
-                            null,
-                            annotation.format(),
-                            annotation.editorClass(),
-                            annotation.labelGenerator(),
-                            annotation.fieldLength(),
-                            annotation.minValue(),
-                            annotation.maxValue(),
-                            annotation.textAlign(),
-                            annotation.arrayEndIdx(),
-                            annotation.alternatingCol()
-                    ));
-                });
+            .filter(field -> field.isAnnotationPresent(GridEditColumn.class))
+            .forEach(field -> {
+                GridEditColumn annotation = field.getAnnotation(GridEditColumn.class);
+                gridColumns.add(new GridColumnInfo(
+                    field.getName(),
+                    annotation.header().isEmpty() ? field.getName() : annotation.header(),
+                    annotation.order(),
+                    annotation.sortable(),
+                    field.getType(),
+                    null,
+                    annotation.format(),
+                    annotation.editorClass(),
+                    annotation.labelGenerator(),
+                    annotation.fieldLength(),
+                    annotation.minValue(),
+                    annotation.maxValue(),
+                    annotation.textAlign(),
+                    annotation.arrayEndIdx(),
+                    annotation.alternatingCol()
+                ));
+            });
     }
 
 
     private void addMethodColumns(List<GridColumnInfo> gridColumns) {
         // Add method-based columns
         Arrays.stream(entityClass.getDeclaredMethods())
-                .filter(method -> method.isAnnotationPresent(GridEditColumn.class))
-                .forEach(method -> {
-                    GridEditColumn annotation = method.getAnnotation(GridEditColumn.class);
-                    String propertyName = method.getName();
-                    if (propertyName.startsWith("get")) {
-                        propertyName = propertyName.substring(3, 4).toLowerCase() + propertyName.substring(4);
-                    }
-                    gridColumns.add(new GridColumnInfo(
-                            propertyName,
-                            annotation.header().isEmpty() ? propertyName : annotation.header(),
-                            annotation.order(),
-                            annotation.sortable(),
-                            method.getReturnType(),
-                            method,
-                            annotation.format(),
-                            annotation.editorClass(),
-                            annotation.labelGenerator(),
-                            annotation.fieldLength(),
-                            annotation.minValue(),
-                            annotation.maxValue(),
-                            annotation.textAlign(),
-                            annotation.arrayEndIdx(),
-                            annotation.alternatingCol()
-                    ));
-                });
+            .filter(method -> method.isAnnotationPresent(GridEditColumn.class))
+            .forEach(method -> {
+                GridEditColumn annotation = method.getAnnotation(GridEditColumn.class);
+                String propertyName = method.getName();
+                if (propertyName.startsWith("get")) {
+                    propertyName = propertyName.substring(3, 4).toLowerCase() + propertyName.substring(4);
+                }
+                gridColumns.add(new GridColumnInfo(
+                    propertyName,
+                    annotation.header().isEmpty() ? propertyName : annotation.header(),
+                    annotation.order(),
+                    annotation.sortable(),
+                    method.getReturnType(),
+                    method,
+                    annotation.format(),
+                    annotation.editorClass(),
+                    annotation.labelGenerator(),
+                    annotation.fieldLength(),
+                    annotation.minValue(),
+                    annotation.maxValue(),
+                    annotation.textAlign(),
+                    annotation.arrayEndIdx(),
+                    annotation.alternatingCol()
+                ));
+            });
     }
 
     // All or some of these props could come from the annotations as well
     private void setStandardColumnProperties(Grid.Column<T> column, GridColumnInfo columnInfo, String header) {
         column
-                .setFlexGrow(1)
-                .setAutoWidth(true)
-                .setResizable(true)
-                .setHeader((header != null ? header : columnInfo.header()))
-                .setSortable(columnInfo.sortable())
-                .setTextAlign(columnInfo.textAlign());
+            .setFlexGrow(1)
+            .setAutoWidth(true)
+            .setResizable(true)
+            .setHeader((header != null ? header : columnInfo.header()))
+            .setSortable(columnInfo.sortable())
+            .setTextAlign(columnInfo.textAlign());
     }
 
     /**
      * Below are the different column editor types
      */
 
+    private Grid.Column<T> makeFixedCalculatedTextColumn(GridColumnInfo columnInfo, String camelName) {
+        return genericGrid.addColumn(columnInfo.propertyName())
+            .setRenderer(new TextRenderer<>(item -> {
+                try {
+                    return getFixedCalculatedText(item, columnInfo.propertyName());
+                } catch (Exception e) {
+                    setSystemError(item.getClass().getName(),  columnInfo.propertyName(), e);
+                }
+                return "";
+            }));
+    }
+
     private Grid.Column<T> makeStandardTextFieldColumn(GridColumnInfo columnInfo, String camelName) {
         return genericGrid.addEditColumn(columnInfo.propertyName())
-                .custom(InputFieldCreator.createStandardTextField(columnInfo.fieldLength()), (item, newValue) -> {
-                    String setterMethod = "set" + camelName;
-                    try {
+            .withCellEditableProvider(this::isEditableEntity)
+            .custom(InputFieldCreator.createStandardTextField(columnInfo.fieldLength()), (item, newValue) -> {
+                String setterMethod = "set" + camelName;
+                try {
+                    if (validUpdate(item, columnInfo.propertyName(), newValue)) {
                         entityClass.getMethod(setterMethod, columnInfo.type).invoke(item, newValue);
                         saveEntity(item);
-                    } catch (Exception e) {
-                        setSystemError(item.getClass().getName(),  columnInfo.propertyName(), e);
                     }
-                });
+                } catch (Exception e) {
+                    setSystemError(item.getClass().getName(),  columnInfo.propertyName(), e);
+                }
+            });
     }
 
     private Grid.Column<T> makeShortTextFieldColumn(GridColumnInfo columnInfo, String camelName) {
         return genericGrid.addEditColumn(columnInfo.propertyName())
-                .custom(InputFieldCreator.createShortTextField(columnInfo.fieldLength()), (item, newValue) -> {
-                    String setterMethod = "set" + camelName;
-                    try {
+            .withCellEditableProvider(this::isEditableEntity)
+            .custom(InputFieldCreator.createShortTextField(columnInfo.fieldLength()), (item, newValue) -> {
+                String setterMethod = "set" + camelName;
+                try {
+                    if (validUpdate(item, columnInfo.propertyName(), newValue)) {
                         entityClass.getMethod(setterMethod, columnInfo.type).invoke(item, newValue);
                         saveEntity(item);
-                    } catch (Exception e) {
-                        setSystemError(item.getClass().getName().getClass().getName(),  columnInfo.propertyName(), e);
                     }
-                });
+                } catch (Exception e) {
+                    setSystemError(item.getClass().getName().getClass().getName(),  columnInfo.propertyName(), e);
+                }
+            });
     }
 
     private Grid.Column<T> makeIntegerFieldColumn(GridColumnInfo columnInfo, String camelName) {
         return genericGrid.addEditColumn(columnInfo.propertyName())
-                .custom(InputFieldCreator.createShortIntegerField("", (long) columnInfo.minValue(), (long) columnInfo.maxValue(), 1), (item, newValue) -> {
-                    String setterMethod = "set" + camelName;
-                    try {
-                        if (newValue == null || newValue < columnInfo.minValue() || newValue > columnInfo.maxValue()) {
-                            setValidationError(item, camelName, "Value must be between " + columnInfo.minValue() + " and " + columnInfo.maxValue());     // Let domain view handle UI messaging
-                            return;
-                        }
+            .withCellEditableProvider(this::isEditableEntity)
+            .custom(InputFieldCreator.createShortIntegerField("", (long) columnInfo.minValue(), (long) columnInfo.maxValue(), 1), (item, newValue) -> {
+                String setterMethod = "set" + camelName;
+                try {
+                    if (newValue == null || newValue < columnInfo.minValue() || newValue > columnInfo.maxValue()) {
+                        setValidationError(item, camelName, "Value must be between " + columnInfo.minValue() + " and " + columnInfo.maxValue());     // Let domain view handle UI messaging
+                        return;
+                    }
+                    if (validUpdate(item, columnInfo.propertyName(), newValue)) {
                         entityClass.getMethod(setterMethod, columnInfo.type).invoke(item, newValue);
                         saveEntity(item);
-                    } catch (Exception e) {
-                        setSystemError(item.getClass().getName(),  columnInfo.propertyName(), e);
                     }
-                })
-                .setRenderer(new TextRenderer<>(item -> {
-                    try {
-                        return String.format(columnInfo.format() , entityClass.getMethod("get" + camelName).invoke(item));
-                    } catch (Exception e) {
-                        setSystemError(item.getClass().getName(),  columnInfo.propertyName(), e);
-                    }
-                    return "";
-                }));
+                } catch (Exception e) {
+                    setSystemError(item.getClass().getName(),  columnInfo.propertyName(), e);
+                }
+            })
+            .setRenderer(new TextRenderer<>(item -> {
+                try {
+                    return String.format(columnInfo.format() , entityClass.getMethod("get" + camelName).invoke(item));
+                } catch (Exception e) {
+                    setSystemError(item.getClass().getName(),  columnInfo.propertyName(), e);
+                }
+                return "";
+            }));
     }
 
     private Grid.Column<T> makeBigDecimalFieldColumn(GridColumnInfo columnInfo, String camelName) {
         return genericGrid.addEditColumn(columnInfo.propertyName())
-                .custom(InputFieldCreator.createShortBigDecimalField(""), (item, newValue) -> {
-                    String setterMethod = "set" + camelName;
-                    try {
-                        if (newValue == null || newValue.doubleValue() < columnInfo.minValue() || newValue.doubleValue() > columnInfo.maxValue()) {
-                            setValidationError(item, camelName, "Value must be between " + columnInfo.minValue() + " and " + columnInfo.maxValue());     // Let domain view handle UI messaging
-                            return;
-                        }
+            .withCellEditableProvider(this::isEditableEntity)
+            .custom(InputFieldCreator.createShortBigDecimalField(""), (item, newValue) -> {
+                String setterMethod = "set" + camelName;
+                try {
+                    if (newValue == null || newValue.doubleValue() < columnInfo.minValue() || newValue.doubleValue() > columnInfo.maxValue()) {
+                        setValidationError(item, camelName, "Value must be between " + columnInfo.minValue() + " and " + columnInfo.maxValue());     // Let domain view handle UI messaging
+                        return;
+                    }
+                    if (validUpdate(item, columnInfo.propertyName(), newValue)) {
                         entityClass.getMethod(setterMethod, columnInfo.type).invoke(item, newValue);
                         saveEntity(item);
-                    } catch (Exception e) {
-                        setSystemError(item.getClass().getName(),  columnInfo.propertyName(), e);
                     }
-                })
-                .setRenderer(new TextRenderer<>(item -> {
-                    try {
-                        return String.format(columnInfo.format() , entityClass.getMethod("get" + camelName).invoke(item));
-                    } catch (Exception e) {
-                        setSystemError(item.getClass().getName(),  columnInfo.propertyName(), e);
-                    }
-                    return "";
-                }));
+                } catch (Exception e) {
+                    setSystemError(item.getClass().getName(),  columnInfo.propertyName(), e);
+                }
+            })
+            .setRenderer(new TextRenderer<>(item -> {
+                try {
+                    return String.format(columnInfo.format() , entityClass.getMethod("get" + camelName).invoke(item));
+                } catch (Exception e) {
+                    setSystemError(item.getClass().getName(),  columnInfo.propertyName(), e);
+                }
+                return "";
+            }));
     }
 
     private Grid.Column<T> makeBooleanFieldColumn(GridColumnInfo columnInfo, String camelName) {
         return genericGrid.addEditColumn(columnInfo.propertyName())
-                .custom(new Checkbox(), (item, newValue) -> {
-                    try {
+            .withCellEditableProvider(this::isEditableEntity)
+            .custom(new Checkbox(), (item, newValue) -> {
+                try {
+                    if (validUpdate(item, columnInfo.propertyName(), newValue)) {
                         entityClass.getMethod("set" + camelName, columnInfo.type).invoke(item, newValue);
                         saveEntity(item);
-                    } catch (Exception e) {
-                        setSystemError(item.getClass().getName(),  columnInfo.propertyName(), e);
                     }
-                })
-                .setRenderer(new ComponentRenderer<>(item -> {
-                    try {
-                        return new Checkbox((boolean) entityClass.getMethod("get" + camelName).invoke(item));
-                    } catch (Exception e) {
-                        setSystemError(item.getClass().getName(),  columnInfo.propertyName(), e);
-                    }
-                    return null;
-                }));
+                } catch (Exception e) {
+                    setSystemError(item.getClass().getName(),  columnInfo.propertyName(), e);
+                }
+            })
+            .setRenderer(new ComponentRenderer<>(item -> {
+                try {
+                    return InputFieldCreator.createCheckbox((boolean) entityClass.getMethod("get" + camelName).invoke(item), !isEditableEntity(item));
+                } catch (Exception e) {
+                    setSystemError(item.getClass().getName(),  columnInfo.propertyName(), e);
+                }
+                return null;
+            }));
     }
 
-    private <S> Grid.Column<T> makeSelectFieldColumn(GridColumnInfo columnInfo, String camelName, S s) {
-        Select<S> selectEditorComponent = new Select<S>();
+    private <S> Grid.Column<T> makeSelectFieldColumn(GridColumnInfo columnInfo, String camelName) {
+        Select<S> selectEditorComponent = new Select<>();
+        selectEditorComponent.addClassName(getCssClassName("viavea-select-class"));
+        selectEditorComponent.setOverlayClassName(getCssClassName("viavea-select-class"));
         selectEditorComponent.setItems(getItemsForSelect(columnInfo.propertyName()));
 
         if (!columnInfo.labelGenerator.isEmpty()) {
@@ -485,147 +542,240 @@ public abstract class GenericGridProEditView<T extends BaseEntity> extends Verti
         }
 
         return genericGrid.addEditColumn(columnInfo.propertyName())
-                .custom(selectEditorComponent, (item, newValue) -> {
-                    try {
+            .withCellEditableProvider(this::isEditableEntity)
+            .custom(selectEditorComponent, (item, newValue) -> {
+                try {
+                    if (validUpdate(item, columnInfo.propertyName(), newValue)) {
                         entityClass.getMethod("set" + camelName, columnInfo.type).invoke(item, newValue);
                         saveEntity(item);
-                    } catch (Exception e) {
-                        setSystemError(item.getClass().getName(),  columnInfo.propertyName(), e);
                     }
-                });
+                } catch (Exception e) {
+                    setSystemError(item.getClass().getName(),  columnInfo.propertyName(), e);
+                }
+            });
     }
 
 
     private Grid.Column<T> makeDatePickerFieldColumn(GridColumnInfo columnInfo, String camelName) {
         return genericGrid.addEditColumn(columnInfo.propertyName())
-                .custom(DateTimePickerCreator.createDatePicker("", columnInfo.format, true), (item, newValue) -> {
-                    try {
+            .withCellEditableProvider(this::isEditableEntity)
+            .custom(DateTimePickerCreator.createDatePicker("", columnInfo.format, true), (item, newValue) -> {
+                try {
+                    if (validUpdate(item, columnInfo.propertyName(), newValue)) {
                         entityClass.getMethod("set" + camelName, columnInfo.type).invoke(item, newValue);
                         saveEntity(item);
-                    } catch (Exception e) {
-                        setSystemError(item.getClass().getName(),  columnInfo.propertyName(), e);
                     }
-                })
-                .setRenderer(new TextRenderer<>(item -> {
-                    try {
-                        return (String)formatValue(entityClass.getMethod("get" + camelName).invoke(item), columnInfo);
-                    } catch (Exception e) {
-                        setSystemError(item.getClass().getName(),  columnInfo.propertyName(), e);
-                    }
-                    return "";
-                }));
+                } catch (Exception e) {
+                    setSystemError(item.getClass().getName(),  columnInfo.propertyName(), e);
+                }
+            })
+            .setRenderer(new TextRenderer<>(item -> {
+                try {
+                    return (String)formatValue(entityClass.getMethod("get" + camelName).invoke(item), columnInfo);
+                } catch (Exception e) {
+                    setSystemError(item.getClass().getName(),  columnInfo.propertyName(), e);
+                }
+                return "";
+            }));
     }
 
     private Grid.Column<T> makeTrafficlightFieldColumn(GridColumnInfo columnInfo, String camelName) {
         Select<String> trafficlightEditorComponent =  new Select<>(); // InputFieldCreator.createStandardSelect("", null, null);
-        trafficlightEditorComponent.setItems(TrafficLight.TRAFFICLIGHT_NORMAL);
+        if (columnInfo.format.equalsIgnoreCase("reverse")) {
+            trafficlightEditorComponent.setItems(TrafficLight.TRAFFICLIGHT_REVERSE);
+        } else {
+            trafficlightEditorComponent.setItems(TrafficLight.TRAFFICLIGHT_NORMAL);
+        }
 
         return genericGrid.addEditColumn(columnInfo.propertyName())
-                .custom(trafficlightEditorComponent, (item, newValue) -> {
-                    try {
+            .withCellEditableProvider(this::isEditableEntity)
+            .custom(trafficlightEditorComponent, (item, newValue) -> {
+                try {
+                    if (validUpdate(item, columnInfo.propertyName(), newValue)) {
                         entityClass.getMethod("set" + camelName, columnInfo.type).invoke(item, newValue);
                         saveEntity(item);
-                    } catch (Exception e) {
-                        setSystemError(item.getClass().getName(),  columnInfo.propertyName(), e);
                     }
-                })
-                .setRenderer(new ComponentRenderer<>(item -> {
+                } catch (Exception e) {
+                    setSystemError(item.getClass().getName(),  columnInfo.propertyName(), e);
+                }
+            })
+            .setRenderer(new ComponentRenderer<>(item -> {
+                try {
+                    if (columnInfo.format.equalsIgnoreCase("reverse")) {
+                        return TrafficLight.createRadioButtonGroup("", TrafficLight.TRAFFICLIGHT_REVERSE, (String) entityClass.getMethod("get" + camelName).invoke(item), !isEditableEntity(item), RadioButtonTheme.TRAFFICLIGHT);
+                    } else {
+                        return TrafficLight.createRadioButtonGroup("", TrafficLight.TRAFFICLIGHT_NORMAL, (String) entityClass.getMethod("get" + camelName).invoke(item), !isEditableEntity(item), RadioButtonTheme.TRAFFICLIGHT);
+                    }
+                } catch (Exception e) {
+                    setSystemError(item.getClass().getName(), columnInfo.propertyName(), e);
+                }
+                return null;
+            }));
+    }
+
+    private void makeRichTextFieldColumn(GridColumnInfo columnInfo, String camelName) {
+
+        genericGrid.addColumn(new IconRenderer<>(item -> {
+            Button btnEditor = new Button();
+            btnEditor.setClassName("icon-trash");
+            Icon iconEditor;
+            iconEditor = new Icon(VaadinIcon.EDIT);
+            addPopover("Edit text", btnEditor);
+            btnEditor.addClickListener(elem -> {            // No DB changes yet, only when updating the BidRequest as a whole
+                Dialog dialog = new Dialog();
+                dialog.setModal(true);
+                dialog.setDraggable(true);
+                dialog.setWidth("50rem");
+                dialog.setHeight("30rem");
+                btnEditor.getStyle().set("color", "green");
+
+                RichTextEditor rte = new RichTextEditor();
+                rte.addThemeVariants(RichTextEditorVariant.LUMO_COMPACT);
+                rte.setSizeFull();
+
+                try {
+                    rte.setValue((String)entityClass.getMethod("get" + camelName).invoke(item));
+                } catch (Exception ex) {
+                    setSystemError(item.getClass().getName().getClass().getName(), columnInfo.propertyName(), ex);
+                }
+                Button saveButton = new Button("Save");
+                Button cancelButton = new Button("Cancel");
+                saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+                HorizontalLayout buttonLayout = new HorizontalLayout();
+                VerticalLayout verticalLayout = new VerticalLayout();
+                verticalLayout.setSizeFull();
+                verticalLayout.setPadding(false);
+                verticalLayout.setMargin(false);
+
+                if (isEditableEntity(item)) {
+                    buttonLayout.add(saveButton, cancelButton);
+                    verticalLayout.add(new H4("Edit description"), rte, buttonLayout);
+                    rte.setReadOnly(false);
+                } else {
+                    buttonLayout.add(cancelButton);
+                    verticalLayout.add(new H4("View description"), rte, buttonLayout);
+                    rte.setReadOnly(true);
+                }
+                dialog.add(verticalLayout);
+                dialog.addDialogCloseActionListener(event -> {
+                    // prevent closing by clicking outside
+                });
+                dialog.open();
+
+                saveButton.addClickListener(e -> {
                     try {
-                        RadioButtonGroup<String> prop = TrafficLight.createRadioButtonGroup("", TrafficLight.TRAFFICLIGHT_NORMAL, RadioButtonTheme.TRAFFICLIGHT);
-                        prop.setValue((String) entityClass.getMethod("get" + camelName).invoke(item));
-                        return prop;
-                    } catch (Exception e) {
-                        setSystemError(item.getClass().getName(), columnInfo.propertyName(), e);
+                        entityClass.getMethod("set" + camelName, columnInfo.type).invoke(item, rte.getValue());
+                        saveEntity(item);
+                    } catch (Exception ex) {
+                        setSystemError(item.getClass().getName().getClass().getName(), columnInfo.propertyName(), ex);
                     }
-                    return null;
-                }));
+                    btnEditor.getStyle().remove("color");
+                    dialog.close();
+                });
+
+                cancelButton.addClickListener(e -> {
+                    btnEditor.getStyle().remove("color");
+                    dialog.close();
+                });
+
+            });
+            iconEditor.setSize("20px");
+            iconEditor.getStyle().set("padding", "0");
+            btnEditor.setIcon(iconEditor);
+
+            return btnEditor;
+        }, item -> ""))
+        .setHeader("Description")
+        .setAutoWidth(true)
+        .setFlexGrow(0)
+        .setResizable(false)
+        .setTextAlign(ColumnTextAlign.END);
     }
 
     private Grid.Column<T> makeArrayIntegerFieldColumns(GridColumnInfo columnInfo, int idx, String camelName) {
         return genericGrid.addEditColumn((ValueProvider<T, ?>) item -> {
-                    try {
-                        return (Integer) entityClass.getMethod("get" + camelName, Integer.TYPE).invoke(item, idx);  }
-                    catch (Exception e) {
-                        setValidationError(item, camelName, "Value must be between " + columnInfo.minValue() + " and " + columnInfo.maxValue());
-                        return null;
+            try {
+                return (Integer) entityClass.getMethod("get" + camelName, Integer.TYPE).invoke(item, idx);
+            } catch (Exception e) {
+                setValidationError(item, camelName, "Value must be between " + columnInfo.minValue() + " and " + columnInfo.maxValue());
+                return null;
+            }})
+            .withCellEditableProvider(this::isEditableEntity)
+            .custom(InputFieldCreator.createShortIntegerField("", Math.round(columnInfo.minValue()), Math.round(columnInfo.maxValue()), 1), (item, newValue) -> {
+                try {
+                    if (newValue == null || newValue < columnInfo.minValue() || newValue > columnInfo.maxValue()) {
+                        setValidationError(item, camelName, "Value must be between " + columnInfo.minValue() + " and " + columnInfo.maxValue());     // Let domain view handle UI messaging
+                        return;
                     }
-                })
-                .custom(InputFieldCreator.createShortIntegerField("", Math.round(columnInfo.minValue()), Math.round(columnInfo.maxValue()), 1), (item, newValue) -> {
-                    try {
-                        if (newValue == null || newValue < columnInfo.minValue() || newValue > columnInfo.maxValue()) {
-                            setValidationError(item, camelName, "Value must be between " + columnInfo.minValue() + " and " + columnInfo.maxValue());     // Let domain view handle UI messaging
-                            return;
-                        }
-                        Method method = entityClass.getMethod("set" + camelName, Integer.TYPE, Integer.class);
-                        method.invoke(item, idx, newValue);
+                    if (validUpdate(item, columnInfo.propertyName(), newValue)) {
+                        entityClass.getMethod("set" + camelName, Integer.TYPE, Integer.class).invoke(item, idx, newValue);
                         saveEntity(item);
-                    } catch (Exception e) {
-                        setSystemError(item.getClass().getName(),  columnInfo.propertyName(), e);
                     }
-                })
-                .setRenderer(new TextRenderer<>(item -> {
-                    try {
-                        return String.format(columnInfo.format() , entityClass.getMethod("get" + camelName, Integer.TYPE).invoke(item, idx));
-                    } catch (Exception e) {
-                        setSystemError(item.getClass().getName(),  columnInfo.propertyName(), e);
-                    }
-                    return "";
-                }));
+                } catch (Exception e) {
+                    setSystemError(item.getClass().getName(),  columnInfo.propertyName(), e);
+                }
+            })
+            .setRenderer(new TextRenderer<>(item -> {
+                try {
+                    return String.format(columnInfo.format() , entityClass.getMethod("get" + camelName, Integer.TYPE).invoke(item, idx));
+                } catch (Exception e) {
+                    setSystemError(item.getClass().getName(),  columnInfo.propertyName(), e);
+                }
+                return "";
+            }));
     }
 
     private Grid.Column<T> makeArrayBigDecimalFieldColumns(GridColumnInfo columnInfo, int idx, String camelName) {
         return genericGrid.addEditColumn((ValueProvider<T, ?>) item -> {
-                    try {
-                        return entityClass.getMethod("get" + camelName, Integer.TYPE).invoke(item, idx);  }
-                    catch (Exception e) {
-                        setValidationError(item, camelName, "Value must be between " + columnInfo.minValue() + " and " + columnInfo.maxValue());
-                        return null;
+            try {
+                return entityClass.getMethod("get" + camelName, Integer.TYPE).invoke(item, idx);
+            } catch (Exception e) {
+                setValidationError(item, camelName, "Value must be between " + columnInfo.minValue() + " and " + columnInfo.maxValue());
+                return null;
+            }})
+            .withCellEditableProvider(this::isEditableEntity)
+            .custom(InputFieldCreator.createShortBigDecimalField(""), (item, newValue) -> {
+                try {
+                    if (newValue == null || newValue.doubleValue() < columnInfo.minValue() || newValue.doubleValue() > columnInfo.maxValue()) {
+                        setValidationError(item, camelName, "Value must be between " + columnInfo.minValue() + " and " + columnInfo.maxValue());     // Let domain view handle UI messaging
+                        return;
                     }
-                })
-                .custom(InputFieldCreator.createShortBigDecimalField(""), (item, newValue) -> {
-                    try {
-                        if (newValue == null || newValue.doubleValue() < columnInfo.minValue() || newValue.doubleValue() > columnInfo.maxValue()) {
-                            setValidationError(item, camelName, "Value must be between " + columnInfo.minValue() + " and " + columnInfo.maxValue());     // Let domain view handle UI messaging
-                            return;
-                        }
-                        Method method = entityClass.getMethod("set" + camelName, Integer.TYPE, java.math.BigDecimal.class);
-                        method.invoke(item, idx, newValue);
+                    if (validUpdate(item, columnInfo.propertyName(), newValue)) {
+                        entityClass.getMethod("set" + camelName, Integer.TYPE, java.math.BigDecimal.class).invoke(item, idx, newValue);
                         saveEntity(item);
-                    } catch (Exception e) {
-                        setSystemError(item.getClass().getName(),  columnInfo.propertyName(), e);
                     }
-                })
-                .setRenderer(new TextRenderer<>(item -> {
-                    try {
-                        return String.format(columnInfo.format() , entityClass.getMethod("get" + camelName, Integer.TYPE).invoke(item, idx));
-                    } catch (Exception e) {
-                        setSystemError(item.getClass().getName(),  columnInfo.propertyName(), e);
-                    }
-                    return "";
-                }));
+                } catch (Exception e) {
+                    setSystemError(item.getClass().getName(),  columnInfo.propertyName(), e);
+                }
+            })
+            .setRenderer(new TextRenderer<>(item -> {
+                try {
+                    return String.format(columnInfo.format() , entityClass.getMethod("get" + camelName, Integer.TYPE).invoke(item, idx));
+                } catch (Exception e) {
+                    setSystemError(item.getClass().getName(),  columnInfo.propertyName(), e);
+                }
+                return "";
+            }));
     }
 
 
     private Grid.Column<T> makeArrayCalculatorColumns(GridColumnInfo columnInfo, int idx, String camelName) {
-
         return genericGrid.addColumn(item -> {
-                    try {
-                        Object value = columnInfo.method().invoke(item, idx);
-                        return formatValue(value, columnInfo);
-                    } catch (Exception e) {
-                        setSystemError(item.getClass().getName(), columnInfo.propertyName(), e);
-                        return null;
-                    }
-                })
-                .setRenderer(new TextRenderer<>(item -> {
-                    try {
-                        return String.format(columnInfo.format() , entityClass.getMethod("get" + camelName, Integer.TYPE).invoke(item, idx));
-                    } catch (Exception e) {
-                        setSystemError(item.getClass().getName(),  columnInfo.propertyName(), e);
-                    }
-                    return "";
-                }));
-
+            try {
+                Object value = columnInfo.method().invoke(item, idx);
+                return formatValue(value, columnInfo);
+            } catch (Exception e) {
+                setSystemError(item.getClass().getName(), columnInfo.propertyName(), e);
+                return null;
+            }})
+            .setRenderer(new TextRenderer<>(item -> {
+                try {
+                    return String.format(columnInfo.format() , entityClass.getMethod("get" + camelName, Integer.TYPE).invoke(item, idx));
+                } catch (Exception e) {
+                    setSystemError(item.getClass().getName(),  columnInfo.propertyName(), e);
+                }
+                return "";
+            }));
     }
 
     private void addPopover(String text, Component target) {
@@ -641,8 +791,8 @@ public abstract class GenericGridProEditView<T extends BaseEntity> extends Verti
 
     private boolean isTemporalType(Class<?> type) {
         return LocalDateTime.class.isAssignableFrom(type) ||
-                LocalDate.class.isAssignableFrom(type) ||
-                Date.class.isAssignableFrom(type);
+            LocalDate.class.isAssignableFrom(type) ||
+            Date.class.isAssignableFrom(type);
     }
 
     private Object formatValue(Object value, GridColumnInfo columnInfo) {
@@ -667,20 +817,20 @@ public abstract class GenericGridProEditView<T extends BaseEntity> extends Verti
     }
 
     private record GridColumnInfo(
-            String propertyName,
-            String header,
-            int order,
-            boolean sortable,
-            Class<?> type,
-            Method method,
-            String format,
-            Class<?> editorClass,
-            String labelGenerator,
-            int fieldLength,
-            double minValue,
-            double maxValue,
-            ColumnTextAlign textAlign,
-            int arrayEndIdx,
-            boolean alternatingCol) {
+        String propertyName,
+        String header,
+        int order,
+        boolean sortable,
+        Class<?> type,
+        Method method,
+        String format,
+        Class<?> editorClass,
+        String labelGenerator,
+        int fieldLength,
+        double minValue,
+        double maxValue,
+        ColumnTextAlign textAlign,
+        int arrayEndIdx,
+        boolean alternatingCol) {
     }
 }

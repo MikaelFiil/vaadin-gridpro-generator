@@ -52,42 +52,101 @@ vaadin-side-nav-item vaadin-icon {
 }
 
 
-.vaadin-tree-grid {
-
-}
-
-
 .vaadin-grid-generator {
     padding: 0;
     margin: 0;
 }
 
 .vaadin-grid-generator::part(header-cell) {
-    background: #888888;
-    color: #000000;
+    background: #666666;
+    color: #dddddd;
     font-weight: bold;
     font-size: 16px;
 }
 
+.vaadin-subgrid-generator {
+    background: #888888;
+}
 
 .vaadin-subgrid-generator::part(header-cell) {
-    background: #777777;
-    color: #eeeeee;
+    background: #337799;
+    color: #white;
     font-weight: bold;
 }
+
+
+.vaadin-subgrid-generator::part(even-row-cell) {
+    background: #888888;
+    color: white;
+}
+
+.vaadin-subgrid-generator::part(odd-row-cell) {
+    background: #767676;
+    color: white;
+}
+
+vaadin-select-overlay.viavea-subgrid-select::part(overlay) {
+    background: #888888;
+    color: #white;
+}
+
+
+
 
 /*  TEST af grid selection   */
 
 vaadin-grid::part(selected-row-cell) {
+    border-top: #337799;
+    border-bottom: #337799;
+/*
     border-top: var(--selected-row-border);
     border-bottom: var(--selected-row-border);
+*/
 }
 
 vaadin-grid::part(selected-row-cell first-column-cell) {
-    border-left: var(--selected-row-border);
+    border-left: #337799;
+/*    border-left: var(--selected-row-border); */
 }
 vaadin-grid::part(selected-row-cell last-column-cell) {
-    border-right: var(--selected-row-border);
+/*    border-right: var(--selected-row-border); */
+    border-left: #337799;
+}
+
+
+/* Editable CSS style of GridPro cells  */
+
+vaadin-grid-pro.editable-custom-effect::part(editable-cell):hover,
+vaadin-grid-pro.editable-custom-effect::part(editable-cell focused-cell) {
+  background: var(--lumo-contrast-10pct);
+}
+
+vaadin-grid-pro.editable-custom-effect::part(editable-cell) {
+  background: var(--lumo-contrast-5pct);
+}
+
+
+.viavea-on-top {
+    position: relative;
+    z-index: 1000;
+}
+
+.viavea-zero-margin-padding {
+    margin: 0px;
+    padding: 0px;
+}
+
+.viavea-grid-plus-icon {
+    color: #dddddd;
+    margin: 0px;
+    padding: 0px;
+}
+
+
+.viavea-grid-trash-icon {
+    color: #dddddd;
+    margin: 0px;
+    padding: 0px;
 }
 
 

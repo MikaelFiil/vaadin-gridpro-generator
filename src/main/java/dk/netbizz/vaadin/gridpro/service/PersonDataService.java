@@ -17,6 +17,10 @@ public class PersonDataService {
         // Must be stateless, even in a demo ;-)
     }
 
+    public void resetIdx() {
+        idx = 1;
+    }
+
     public List<String> getItemsForSelect(String colName) {
         List<String> list = new ArrayList<>();
 
@@ -48,7 +52,7 @@ public class PersonDataService {
     }
 
     public List<Person> findStaffById(Integer id) {
-        if (id > 30) return new ArrayList<>();
+        if (id > 10) { return new ArrayList<>(); }
         return List.of(
                 new Person(idx++, "Hans Hansen", "Doctor", "pep@company.com", new Address(1, "Elisevej", "3", "4130", "12345678"), ""),
                 new Person(idx++, "Katrine Katrinsen", "Psychologist", "lol@company.com", new Address(2, "Hannavej", "4", "4130", "12345678"), ""),

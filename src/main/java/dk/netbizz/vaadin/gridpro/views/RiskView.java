@@ -32,6 +32,14 @@ public class RiskView extends GenericGridProEditView<Risk> {
     }
 
 
+    @Override
+    protected boolean isEditableEntity(Risk entity) {
+        return true;
+    }
+
+    @Override
+    protected boolean canAddEntity() { return true; }
+
     // Constructing a new entity is domain specific
     @Override
     protected void addNew() {
@@ -50,6 +58,9 @@ public class RiskView extends GenericGridProEditView<Risk> {
     protected void setSystemError(String classname, String columName, Exception e) {
         StandardNotifications.showTempSystemError();
     }
+
+    @Override
+    protected boolean validUpdate(Risk entity, String colName, Object  newColValue) { return true; }
 
     @Override
     protected void saveEntity(Risk entity) {
@@ -73,5 +84,14 @@ public class RiskView extends GenericGridProEditView<Risk> {
 
     @Override
     public List<String> getItemsForSelect(String colName) { return dataService.getItemsForSelect(colName); };
+
+    @Override
+    protected String getFixedCalculatedText(Risk item, String colName) {
+        return "";
+    }
+
+    @Override
+    protected String getCssClassName(String aCssClass) { return "NA"; }
+
 
 }

@@ -35,6 +35,14 @@ public class TemplateView extends GenericGridProEditView<Template> {
     }
 
 
+    @Override
+    protected boolean isEditableEntity(Template entity) {
+        return true;
+    }
+
+    @Override
+    protected boolean canAddEntity() { return true; }
+
     // Constructing a new entity is domain specific
     @Override
     protected void addNew() {
@@ -53,6 +61,9 @@ public class TemplateView extends GenericGridProEditView<Template> {
     protected void setSystemError(String classname, String columName, Exception e) {
         StandardNotifications.showTempSystemError();
     }
+
+    @Override
+    protected boolean validUpdate(Template entity, String colName, Object  newColValue) { return true; }
 
     @Override
     protected void saveEntity(Template entity) {
@@ -80,4 +91,11 @@ public class TemplateView extends GenericGridProEditView<Template> {
         return new ArrayList<>();
     };
 
+    @Override
+    protected String getFixedCalculatedText(Template item, String colName) {
+        return "";
+    }
+
+    @Override
+    protected String getCssClassName(String aCssClass) { return "NA"; }
 }

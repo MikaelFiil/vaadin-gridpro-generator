@@ -31,6 +31,13 @@ public class CostView extends GenericGridProEditView<Cost> {
         refreshGrid();
     }
 
+    @Override
+    protected boolean isEditableEntity(Cost entity) {
+        return true;
+    }
+
+    @Override
+    protected boolean canAddEntity() { return true; }
 
     // Constructing a new entity is domain specific
     @Override
@@ -50,6 +57,9 @@ public class CostView extends GenericGridProEditView<Cost> {
     protected void setSystemError(String classname, String columName, Exception e) {
         StandardNotifications.showTempSystemError();
     }
+
+    @Override
+    protected boolean validUpdate(Cost entity, String colName, Object  newColValue) { return true; }
 
     @Override
     protected void saveEntity(Cost entity) {
@@ -74,4 +84,11 @@ public class CostView extends GenericGridProEditView<Cost> {
     @Override
     public List<String> getItemsForSelect(String colName) {return dataService.getItemsForSelect(colName); };
 
+    @Override
+    protected String getFixedCalculatedText(Cost item, String colName) {
+        return "";
+    }
+
+    @Override
+    protected String getCssClassName(String aCssClass) { return "NA"; }
 }

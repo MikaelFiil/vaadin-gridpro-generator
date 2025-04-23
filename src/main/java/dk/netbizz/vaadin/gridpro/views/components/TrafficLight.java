@@ -16,11 +16,11 @@ public class TrafficLight extends Component {
     public static final List<String> TRAFFICLIGHT_REVERSE = Arrays.asList("High", "Medium", "Low");
 
     public static RadioButtonGroup<String> createRadioButtonTrafficlight() {
-        return createRadioButtonGroup("", TRAFFICLIGHT_NORMAL, RadioButtonTheme.TRAFFICLIGHT);
+        return createRadioButtonGroup("", TRAFFICLIGHT_NORMAL, TRAFFICLIGHT_NORMAL.getFirst(), false, RadioButtonTheme.TRAFFICLIGHT);
     }
 
 
-    public static RadioButtonGroup<String> createRadioButtonGroup(String label, List<String> greenYellowRedValues, String... themeNames) {
+    public static RadioButtonGroup<String> createRadioButtonGroup(String label, List<String> greenYellowRedValues, String initialValue, boolean readonly, String... themeNames) {
         RadioButtonGroup<String> group = new RadioButtonGroup(label);
         group.addThemeNames(themeNames);
         group.setItems(greenYellowRedValues);
@@ -44,6 +44,8 @@ public class TrafficLight extends Component {
         rbRed.getElement().getThemeList().add(RadioButtonTheme.TRAFFICLIGHT_RED);
         rbRed.getElement().setProperty("value", "Red");
 
+        group.setValue(initialValue);
+        group.setReadOnly(readonly);
         return group;
     }
 

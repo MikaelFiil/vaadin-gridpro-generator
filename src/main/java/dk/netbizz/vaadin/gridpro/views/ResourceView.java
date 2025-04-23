@@ -4,7 +4,6 @@ import com.vaadin.flow.component.grid.GridVariant;
 import dk.netbizz.vaadin.gridpro.entity.Resource;
 import dk.netbizz.vaadin.gridpro.service.ResourceDataService;
 import dk.netbizz.vaadin.gridpro.utils.StandardNotifications;
-import lombok.Getter;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -27,13 +26,20 @@ public class ResourceView extends GenericGridProEditView<Resource> {
 
         genericGrid.setEmptyStateText("No entities found.");
         genericGrid.addThemeVariants(GridVariant.LUMO_COMPACT, GridVariant.LUMO_ROW_STRIPES, GridVariant.LUMO_NO_BORDER);
-
         // with the dataService set we can now continue the generic setup
         setupGrid(params);
         setupGridEventHandlers();
         refreshGrid();
     }
 
+
+    @Override
+    protected boolean isEditableEntity(Resource entity) {
+        return true;
+    }
+
+    @Override
+    protected boolean canAddEntity() { return true; }
 
     // Constructing a new entity is domain specific
     @Override
@@ -53,6 +59,9 @@ public class ResourceView extends GenericGridProEditView<Resource> {
     protected void setSystemError(String classname, String columName, Exception e) {
         StandardNotifications.showTempSystemError();
     }
+
+    @Override
+    protected boolean validUpdate(Resource entity, String colName, Object  newColValue) { return true; }
 
     @Override
     protected void saveEntity(Resource entity) {
@@ -76,5 +85,19 @@ public class ResourceView extends GenericGridProEditView<Resource> {
 
     @Override
     public List<String> getItemsForSelect(String colName) {return dataService.getItemsForSelect(colName); };
+
+    @Override
+    protected String getFixedCalculatedText(Resource item, String colName) {
+        return "";
+    }
+
+    @Override
+    protected String getCssClassName(String aCssClass) {
+        switch(aCssClass.toLowerCase()) {
+            case "viavea-select-class":
+                return "viavea-subgrid-select";
+            default: return "NA";
+        }
+    }
 
 }
