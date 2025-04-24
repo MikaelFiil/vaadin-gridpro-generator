@@ -14,9 +14,8 @@
 * ### Version 0.27 - 2024-12-04  - Support for embedded entities via the Select editor class. Take a look at the Warehouse in Item
 * ### Version 0.28 - 2024-12-05  - Bug fix - Removed constant recalculation of column widths, it interfered with automatic horizontal scrolling when the grid is wider than view port. 
 * ### Version 0.29 - 2024-12-19  - Added the possibility to hide specific columns by adding e.g. -  params.put("price.hidden", ""); - to hide the price column  
-* ### Version 0.30 - 2025-04-23  - Major changes to code structure and with enhancements to central class GenericGridProEditView. Added some performance tests behind the menus "Companies" and "Data generation" using H2 memory database.
-* ###                              H2 console is at http://localhost:8090/h2-console  - credentials: sa/password - try these:  select count(*) from tenant_company;   select count(*) from tenant_department;  select count(*) from application_user;  select count(*) from item;  
-* ###        
+* ### Version 0.30 - 2025-04-23  - Major changes to code structure and with enhancements to central class GenericGridProEditView. Added some performance tests behind the menu "Load and performance test" using H2 memory database.
+   
 ### Author Mikael Fiil - mikael.fiil@netbizz.dk
 ###
 
@@ -31,6 +30,8 @@
 ### Every edit of a single cell will cause a call to save the entity of the row.
 ### The application domain view must extend this class and replace the generic placeholder with the domain class for the grid and implement the abstract methods.
 ### Logning of validation and error messages refer to the domain view.
+### When using the Load and Performance test, the H2 console is at http://localhost:8090/h2-console  - credentials: sa/password - try these:  select count(*) from tenant_company;   select count(*) from tenant_department;  select count(*) from application_user;  select count(*) from item;
+
 ***
 ### There is room for some improvement and I will probably still do some myself, since I have only started to use it, but it serves my purpose now.
 * ### More field types or generic field types for the arrays

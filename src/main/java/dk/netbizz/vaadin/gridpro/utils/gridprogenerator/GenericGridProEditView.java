@@ -32,7 +32,9 @@ package dk.netbizz.vaadin.gridpro.utils.gridprogenerator;
  * Author mikael.fiil@netbizz.dk
  */
 
+
 import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
@@ -64,6 +66,7 @@ import dk.netbizz.vaadin.gridpro.utils.components.PopoverMessage;
 import dk.netbizz.vaadin.gridpro.utils.components.TrafficLight;
 import dk.netbizz.vaadin.gridpro.utils.inputcreators.DateTimePickerCreator;
 import dk.netbizz.vaadin.gridpro.utils.inputcreators.InputFieldCreator;
+import org.springframework.core.task.VirtualThreadTaskExecutor;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -83,18 +86,30 @@ public abstract class GenericGridProEditView<T extends BaseEntity> extends Verti
     private final Class<T> entityClass;
     private T selectedItem;                                     // This is not really useful with GridPro
     private final Button btnAdd = new Button();
+    protected Span floatingSpan = new Span();
+
 
     protected GenericGridProEditView(Class<T> entityClass) {
         this.entityClass = entityClass;
         this.genericGrid = new GridPro<>(entityClass);
         this.genericGrid.setSingleCellEdit(false);      // Default
         this.genericGrid.setEditOnClick(true);
+        genericGrid.setEmptyStateText("No rows found.");
+
         setupLayout();
         // Further setup initialization done via subclass
     }
 
     private void setupLayout() {
         setSizeFull();
+        floatingSpan.getStyle().set("position", "absolute");
+        floatingSpan.getStyle().set("top", "50%");              // Set position to center over genericGrid
+        floatingSpan.getStyle().set("left", "50%");
+        floatingSpan.getStyle().set("transform", "translate(-50%, -50%)");
+        floatingSpan.getStyle().set("z-index", "1");
+        floatingSpan.addClassName("loader");
+        floatingSpan.setVisible(false);
+        add(floatingSpan);
         add(genericGrid);
     }
 
@@ -119,23 +134,27 @@ public abstract class GenericGridProEditView<T extends BaseEntity> extends Verti
         GridUtils.setDeselectAllowed(genericGrid,false);
         // genericGrid.setSelectionMode(Grid.SelectionMode.NONE);      // If you use this, you cannot addSelectionListener below
 
-        // A selectionListener is a bit detached in GridPro you can easily have one selected row while editing another row !?
         genericGrid.addSelectionListener(event -> event.getFirstSelectedItem().ifPresent(item -> {
             selectedItem = item;
             selectEntity(selectedItem);
         }));
 
-        genericGrid.addItemClickListener(evt-> {
-            selectedItem = evt.getItem();
-            selectEntity(selectedItem);
-            genericGrid.select(selectedItem);
-        });
-
     }
 
     protected void refreshGrid() {
-        genericGrid.setItems(loadEntities());
-        genericGrid.recalculateColumnWidths();
+        floatingSpan.setVisible(true);
+        genericGrid.addClassName("dimmer");
+        genericGrid.setItems(new ArrayList<>());
+
+        UI ui = UI.getCurrent();
+        ui.access(()-> {
+            FeederThread feederThread = new FeederThread(ui,  this);
+            feederThread.executeFetch();
+        });
+
+        // FeederThreadFys feederThreadFys = new FeederThreadFys(ui, this);
+        // feederThreadFys.start();
+
     }
 
     protected void setupGrid(Map<String, String> dynamicParameters) {
@@ -1039,4 +1058,54 @@ public abstract class GenericGridProEditView<T extends BaseEntity> extends Verti
         int arrayEndIdx,
         boolean alternatingCol) {
     }
+
+
+    private static class FeederThread extends VirtualThreadTaskExecutor {
+        private final UI ui;
+        private final GenericGridProEditView<?> view;
+
+        public FeederThread(UI ui, GenericGridProEditView<?> view) {
+            this.ui = ui;
+            this.view = view;
+        }
+
+        public void executeFetch() {
+
+            this.execute(() -> {
+                List items = view.loadEntities();
+                // System.out.println("Fetched " + items.size() + " rows");
+
+                ui.access(()-> {    // Inform that we're done
+                    view.genericGrid.setItems(items);
+                    view.genericGrid.recalculateColumnWidths();
+                    view.genericGrid.removeClassName("dimmer");
+                    view.floatingSpan.setVisible(false);
+                });
+            });
+        }
+    }
+
+    private static class FeederThreadFys extends Thread {
+        private final UI ui;
+        private final GenericGridProEditView<?> view;
+
+        public FeederThreadFys(UI ui, GenericGridProEditView<?> view) {
+            this.ui = ui;
+            this.view = view;
+        }
+
+        @Override
+        public void run() {
+            List items = view.loadEntities();
+            // System.out.println("Fetched " + items.size() + " rows");
+
+            ui.access(()-> {    // Inform that we're done
+                view.genericGrid.setItems(items);
+                view.genericGrid.recalculateColumnWidths();
+                view.genericGrid.removeClassName("dimmer");
+                view.floatingSpan.setVisible(false);
+            });
+        }
+    }
+
 }

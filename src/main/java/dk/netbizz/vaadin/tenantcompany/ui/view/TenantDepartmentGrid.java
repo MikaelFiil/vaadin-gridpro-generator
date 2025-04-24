@@ -30,7 +30,6 @@ public class TenantDepartmentGrid extends GenericGridProEditView<TenantDepartmen
         setPadding(false);
         genericGrid.setWidth("100%");
         genericGrid.setHeight("300px");
-        genericGrid.setEmptyStateText("No items found.");
         genericGrid.addThemeVariants(GridVariant.LUMO_COMPACT, GridVariant.LUMO_ROW_STRIPES, GridVariant.LUMO_NO_BORDER);
         genericGrid.addClassName("vaadin-grid-generator");
 
@@ -55,13 +54,9 @@ public class TenantDepartmentGrid extends GenericGridProEditView<TenantDepartmen
 
     public void setTenantCompany(TenantCompany tenantCompany) {
         this.tenantCompany = tenantCompany;
-        refresh();
+        refreshGrid();
         tenantDepartmentEmployeeGrid.setTenantDepartment(null);
         signal.signal("CompanySelected", tenantCompany);
-    }
-
-    public void refresh() {
-        refreshGrid();
     }
 
     @Override

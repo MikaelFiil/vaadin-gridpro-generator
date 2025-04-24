@@ -3,7 +3,6 @@ package dk.netbizz.vaadin.tenantcompany.ui.view;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.details.Details;
 import com.vaadin.flow.component.html.Main;
-import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -236,6 +235,9 @@ public class TenantCompanyView extends Main implements Signal {
 
         return item;
     }
+
+
+    // See https://vaadin.com/docs/latest/flow/advanced/server-push  Broadcaster
     public void signal(String signalEvent, Object signal) {
         switch(signalEvent.toLowerCase()) {
             case "companyselected" -> {

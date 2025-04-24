@@ -23,7 +23,6 @@ public class TenantCompanyGrid extends GenericGridProEditView<TenantCompany> {
         setPadding(false);
         genericGrid.setWidth("100%");
         genericGrid.setHeight("300px");
-        genericGrid.setEmptyStateText("No items found.");
         genericGrid.addThemeVariants(GridVariant.LUMO_COMPACT, GridVariant.LUMO_ROW_STRIPES, GridVariant.LUMO_NO_BORDER);
         genericGrid.addThemeVariants(GridVariant.LUMO_WRAP_CELL_CONTENT);
         genericGrid.addClassName("vaadin-grid-generator");
