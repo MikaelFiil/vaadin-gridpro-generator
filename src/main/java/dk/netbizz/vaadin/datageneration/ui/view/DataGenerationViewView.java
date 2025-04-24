@@ -26,9 +26,7 @@ import java.util.Random;
 
 import static java.lang.Math.*;
 
-@Route("data-generation")
-@PageTitle("Data generation")
-@Menu(order = 6, icon = "vaadin:clipboard-check", title = "Data generation")
+
 public class DataGenerationViewView extends Main  {
 
     List<String> catList = new ArrayList<>(List.of("Technical", "Quality", "Delivery", "Legal"));
@@ -170,7 +168,6 @@ public class DataGenerationViewView extends Main  {
                     <p style="text-align: center"><strong><u>Vaadin is fantastic</u></strong></p><p style="text-align: center"><a href="https://vaadin.com" rel="nofollow">https://vaadin.com</a></p>
                     <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
                 """;
-
 
         Random rand = new Random();
 
