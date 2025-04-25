@@ -58,6 +58,7 @@ import com.vaadin.flow.component.shared.SelectionPreservationMode;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.renderer.IconRenderer;
 import com.vaadin.flow.data.renderer.TextRenderer;
+import com.vaadin.flow.dom.Element;
 import com.vaadin.flow.function.ValueProvider;
 import dk.netbizz.vaadin.gridpro.utils.themes.RadioButtonTheme;
 import dk.netbizz.vaadin.gridpro.utils.components.ConfirmationDialog;
@@ -67,6 +68,7 @@ import dk.netbizz.vaadin.gridpro.utils.components.TrafficLight;
 import dk.netbizz.vaadin.gridpro.utils.inputcreators.DateTimePickerCreator;
 import dk.netbizz.vaadin.gridpro.utils.inputcreators.InputFieldCreator;
 import org.springframework.core.task.VirtualThreadTaskExecutor;
+import org.vaadin.firitin.util.JsPromise;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -77,6 +79,8 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static java.lang.Math.round;
 
 
 @SuppressWarnings("tree")
@@ -102,11 +106,13 @@ public abstract class GenericGridProEditView<T extends BaseEntity> extends Verti
 
     private void setupLayout() {
         setSizeFull();
+
         floatingSpan.getStyle().set("position", "absolute");
         floatingSpan.getStyle().set("transform", "translate(-50%, -50%)");
         floatingSpan.getStyle().set("z-index", "1");
         floatingSpan.addClassName("loader");
         floatingSpan.setVisible(false);
+
         add(floatingSpan);
         add(genericGrid);
     }
@@ -140,22 +146,7 @@ public abstract class GenericGridProEditView<T extends BaseEntity> extends Verti
     }
 
     protected void refreshGrid() {
-        floatingSpan.getStyle().set("top", "50%");              // find out to Set position to center over genericGrid
-        floatingSpan.getStyle().set("left", "50%");
-
-        floatingSpan.setVisible(true);
-        genericGrid.addClassName("dimmer");
-        // genericGrid.setItems(new ArrayList<>());
-
-        UI ui = UI.getCurrent();
-        ui.access(()-> {
-            FeederThread feederThread = new FeederThread(ui,  this);
-            feederThread.executeFetch();
-        });
-
-        // FeederThreadFys feederThreadFys = new FeederThreadFys(ui, this);
-        // feederThreadFys.start();
-
+        returRectWithJsPromiseCompute(genericGrid.getElement());
     }
 
     protected void setupGrid(Map<String, String> dynamicParameters) {
@@ -848,7 +839,7 @@ public abstract class GenericGridProEditView<T extends BaseEntity> extends Verti
                 }
             })
             .withCellEditableProvider(this::isEditableEntity)
-            .custom(InputFieldCreator.createShortIntegerField("", Math.round(columnInfo.minValue()), Math.round(columnInfo.maxValue()), 1), (item, newValue) -> {
+            .custom(InputFieldCreator.createShortIntegerField("", round(columnInfo.minValue()), round(columnInfo.maxValue()), 1), (item, newValue) -> {
                  try {
                     if (newValue == null || newValue < columnInfo.minValue() || newValue > columnInfo.maxValue()) {
                         setValidationError(item, camelName, "Value must be between " + columnInfo.minValue() + " and " + columnInfo.maxValue());     // Let domain view handle UI messaging
@@ -1002,7 +993,6 @@ public abstract class GenericGridProEditView<T extends BaseEntity> extends Verti
         }));
     }
 
-
     private void addPopover(String text, Component target) {
         Popover popover = new Popover();
         popover.add(text);
@@ -1041,6 +1031,54 @@ public abstract class GenericGridProEditView<T extends BaseEntity> extends Verti
         return value;
     }
 
+    private void returRectWithJsPromiseCompute(Element element) {
+        JsPromise.compute("""
+            const el = $0; // closure to element
+            const rect2 = el.getBoundingClientRect();
+            const rect = {top: rect2.top, right: rect2.right, bottom: rect2.bottom, left: rect2.left};
+            return rect;
+            """,
+            RectDto.class, element)
+            .thenAccept(this::setRectDto);
+    }
+
+    private void setRectDto(RectDto dto) {
+        floatingSpan.getStyle().set("top",  dto.top + ((dto.bottom - dto.top) / 2) + "px");              // find out to Set position to center over genericGrid
+        floatingSpan.getStyle().set("left", dto.left + ((dto.right - dto.left) / 2) + "px");              // find out to Set position to center over genericGrid
+        floatingSpan.setVisible(true);
+        genericGrid.addClassName("dimmer");
+
+        UI ui = UI.getCurrent();
+        ui.access(()-> {
+            FeederThread feederThread = new FeederThread(ui,  this);
+            feederThread.executeFetch();
+        });
+    }
+
+    private static class FeederThread extends VirtualThreadTaskExecutor {
+        private final UI ui;
+        private final GenericGridProEditView<?> view;
+
+        public FeederThread(UI ui, GenericGridProEditView<?> view) {
+            this.ui = ui;
+            this.view = view;
+        }
+
+        public void executeFetch() {
+
+            this.execute(() -> {
+                List items = view.loadEntities();
+                ui.access(()-> {    // Inform that we're done
+                    view.genericGrid.setItems(items);
+                    view.genericGrid.recalculateColumnWidths();
+                    view.genericGrid.removeClassName("dimmer");
+                    view.floatingSpan.setVisible(false);
+                });
+            });
+        }
+    }
+
+
     private record GridColumnInfo(
         String propertyName,
         String header,
@@ -1060,53 +1098,6 @@ public abstract class GenericGridProEditView<T extends BaseEntity> extends Verti
         boolean alternatingCol) {
     }
 
-
-    private static class FeederThread extends VirtualThreadTaskExecutor {
-        private final UI ui;
-        private final GenericGridProEditView<?> view;
-
-        public FeederThread(UI ui, GenericGridProEditView<?> view) {
-            this.ui = ui;
-            this.view = view;
-        }
-
-        public void executeFetch() {
-
-            this.execute(() -> {
-                List items = view.loadEntities();
-                // System.out.println("Fetched " + items.size() + " rows");
-
-                ui.access(()-> {    // Inform that we're done
-                    view.genericGrid.setItems(items);
-                    view.genericGrid.recalculateColumnWidths();
-                    view.genericGrid.removeClassName("dimmer");
-                    view.floatingSpan.setVisible(false);
-                });
-            });
-        }
-    }
-
-    private static class FeederThreadFys extends Thread {
-        private final UI ui;
-        private final GenericGridProEditView<?> view;
-
-        public FeederThreadFys(UI ui, GenericGridProEditView<?> view) {
-            this.ui = ui;
-            this.view = view;
-        }
-
-        @Override
-        public void run() {
-            List items = view.loadEntities();
-            // System.out.println("Fetched " + items.size() + " rows");
-
-            ui.access(()-> {    // Inform that we're done
-                view.genericGrid.setItems(items);
-                view.genericGrid.recalculateColumnWidths();
-                view.genericGrid.removeClassName("dimmer");
-                view.floatingSpan.setVisible(false);
-            });
-        }
-    }
+    record RectDto(int top, int right, int bottom, int left) {  }
 
 }
