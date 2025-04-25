@@ -103,8 +103,6 @@ public abstract class GenericGridProEditView<T extends BaseEntity> extends Verti
     private void setupLayout() {
         setSizeFull();
         floatingSpan.getStyle().set("position", "absolute");
-        floatingSpan.getStyle().set("top", "50%");              // Set position to center over genericGrid
-        floatingSpan.getStyle().set("left", "50%");
         floatingSpan.getStyle().set("transform", "translate(-50%, -50%)");
         floatingSpan.getStyle().set("z-index", "1");
         floatingSpan.addClassName("loader");
@@ -142,9 +140,12 @@ public abstract class GenericGridProEditView<T extends BaseEntity> extends Verti
     }
 
     protected void refreshGrid() {
+        floatingSpan.getStyle().set("top", "50%");              // find out to Set position to center over genericGrid
+        floatingSpan.getStyle().set("left", "50%");
+
         floatingSpan.setVisible(true);
         genericGrid.addClassName("dimmer");
-        genericGrid.setItems(new ArrayList<>());
+        // genericGrid.setItems(new ArrayList<>());
 
         UI ui = UI.getCurrent();
         ui.access(()-> {
