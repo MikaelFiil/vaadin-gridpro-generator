@@ -6,11 +6,19 @@ import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.*;
 
 
+@SuppressWarnings("unused")
 public class InputFieldCreator {
 
+    private static final String WIDE_FIELD = "42rem";
+    private static final String MEDIUM_FIELD = "20rem";
+    private static final String SHORT_FIELD = "4.5rem";
+    private static final String STANDARD_FIELD = "9.5rem";
+
+    private InputFieldCreator() {}
+
     private static TextField setTextFieldStd(TextField tf, int maxLength) {
-        tf.setWidth("20rem");
-        tf.setMaxWidth("20rem");
+        tf.setWidth(MEDIUM_FIELD);
+        tf.setMaxWidth(MEDIUM_FIELD);
         tf.setMaxLength(maxLength);
         return tf;
     }
@@ -34,8 +42,8 @@ public class InputFieldCreator {
 
     public static TextField createLongTextField(String label, int maxLength, String content) {
         TextField tf = new TextField(label);
-        tf.setWidth("42rem");
-        tf.setMaxWidth("42rem");
+        tf.setWidth(WIDE_FIELD);
+        tf.setMaxWidth(WIDE_FIELD);
         tf.setMaxLength(maxLength);
         tf.setValue(content);
         return tf;
@@ -43,24 +51,24 @@ public class InputFieldCreator {
 
     public static TextField createLongTextField(String label, int maxLength) {
         TextField tf = new TextField(label);
-        tf.setWidth("42rem");
-        tf.setMaxWidth("42rem");
+        tf.setWidth(WIDE_FIELD);
+        tf.setMaxWidth(WIDE_FIELD);
         tf.setMaxLength(maxLength);
         return tf;
     }
 
     public static TextField createShortTextField(String label, int maxLength) {
         TextField tf = new TextField(label);
-        tf.setWidth("9rem");
-        tf.setMaxWidth("9rem");
+        tf.setWidth(STANDARD_FIELD);
+        tf.setMaxWidth(STANDARD_FIELD);
         tf.setMaxLength(maxLength);
         return tf;
     }
 
     public static TextField createShortTextField(int maxLength) {
         TextField tf = new TextField();
-        tf.setWidth("9rem");
-        tf.setMaxWidth("9rem");
+        tf.setWidth(STANDARD_FIELD);
+        tf.setMaxWidth(STANDARD_FIELD);
         tf.setMaxLength(maxLength);
         return tf;
     }
@@ -76,8 +84,8 @@ public class InputFieldCreator {
         } else {
             tf = new IntegerField();
         }
-        tf.setWidth("9.5rem");
-        tf.setMaxWidth("9.5rem");
+        tf.setWidth(STANDARD_FIELD);
+        tf.setMaxWidth(STANDARD_FIELD);
         tf.setStepButtonsVisible(false);
         return tf;
     }
@@ -113,8 +121,8 @@ public class InputFieldCreator {
         } else {
             tf = new IntegerField();
         }
-        tf.setWidth("4.5rem");
-        tf.setMaxWidth("4.5rem");
+        tf.setWidth(SHORT_FIELD);
+        tf.setMaxWidth(SHORT_FIELD);
         tf.setStepButtonsVisible(false);
         return tf;
     }
@@ -147,8 +155,8 @@ public class InputFieldCreator {
         } else {
             tf = new NumberField();
         }
-        tf.setWidth("4.5rem");
-        tf.setMaxWidth("4.5rem");
+        tf.setWidth(SHORT_FIELD);
+        tf.setMaxWidth(SHORT_FIELD);
         return tf;
     }
 
@@ -173,8 +181,8 @@ public class InputFieldCreator {
         } else {
             tf = new NumberField();
         }
-        tf.setWidth("4.5rem");
-        tf.setMaxWidth("4.5rem");
+        tf.setWidth(SHORT_FIELD);
+        tf.setMaxWidth(SHORT_FIELD);
         return tf;
     }
 
@@ -206,15 +214,15 @@ public class InputFieldCreator {
 
     public static BigDecimalField createShortBigDecimalField(String label) {
         BigDecimalField tf = createBigDecimalField(label);
-        tf.setWidth("4.5rem");
-        tf.setMaxWidth("4.5rem");
+        tf.setWidth(SHORT_FIELD);
+        tf.setMaxWidth(SHORT_FIELD);
         return tf;
     }
 
     public static BigDecimalField createStandardBigDecimalField(String label) {
         BigDecimalField tf = createBigDecimalField(label);
-        tf.setWidth("9.5rem");
-        tf.setMaxWidth("9.5rem");
+        tf.setWidth(STANDARD_FIELD);
+        tf.setMaxWidth(STANDARD_FIELD);
         return tf;
     }
 
@@ -252,7 +260,7 @@ public class InputFieldCreator {
 
 
     public static Html createDivider() {
-        return new Html("<hr class='viavea-hr'></hr>");
+        return new Html("</hr class='viavea-hr'>");
     }
 
     /**************************************************************************************
@@ -260,20 +268,20 @@ public class InputFieldCreator {
      */
 
     public static <T> Select<T> createStandardSelect(T t, String title, String placeholder) {
-        Select<T> cb  = new Select<T>();
+        Select<T> cb  = new Select<>();
         cb.setLabel(title);
         cb.setPlaceholder(placeholder);
-        cb.setWidth("10rem");
-        cb.setMaxWidth("10rem");
+        cb.setWidth(STANDARD_FIELD);
+        cb.setMaxWidth(STANDARD_FIELD);
         return cb;
     }
 
     public static <T> Select<T> createShortSelect(T t, String title, String placeholder) {
-        Select<T> cb  = new Select<T>();
+        Select<T> cb  = new Select<>();
         cb.setLabel(title);
         cb.setPlaceholder(placeholder);
-        cb.setWidth("5rem");
-        cb.setMaxWidth("5rem");
+        cb.setWidth(SHORT_FIELD);
+        cb.setMaxWidth(SHORT_FIELD);
         return cb;
     }
 

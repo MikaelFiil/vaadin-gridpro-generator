@@ -34,7 +34,6 @@ public class Item implements BaseEntity {
         this.itemName = itemName;
         this.category = category;
         this.price = price;
-        // this.warehouse = new AggregateReference.IdOnlyAggregateReference<Warehouse, Integer>(warehouse.getId());
         this.warehouse = warehouse;
         this.birthday = birthday;
         this.active = active;
@@ -51,7 +50,7 @@ public class Item implements BaseEntity {
     @GridEditColumn(header = "Item Name", order = 1, fieldLength = 15, editorClass = TextField.class)
     private String itemName = "New name ...";
 
-    @GridEditColumn(header = "Category", order = 2, sortable = false, editorClass = Select.class)
+    @GridEditColumn(header = "Category", order = 2, sortable = true, editorClass = Select.class)
     private String category = "";
 
     @GridEditColumn(header = "Kr./Liter", order = 3, sortable = false, maxValue = 25, format = "%,.2f", textAlign =  ColumnTextAlign.END, editorClass = BigDecimalField.class)
@@ -75,13 +74,13 @@ public class Item implements BaseEntity {
     @GridEditColumn(header = "Active", order = 8, editorClass = Checkbox.class)
     private Boolean active = false;
 
-    @GridEditColumn(header = "Critical", order = 9, sortable = false, editorClass = TrafficLight.class)
+    @GridEditColumn(header = "Critical", order = 9, sortable = true, editorClass = TrafficLight.class)
     private String criticality = "Low";
 
     @GridEditColumn(header = "Description", order = 10, sortable = false, editorClass = RichTextEditor.class)
     private String description = "";
 
-    @GridEditColumn(header = "Year", order = 11, fieldLength = 5, sortable = false, maxValue = 25000, format = "%d kg.", textAlign =  ColumnTextAlign.END, arrayEndIdx = 9, editorClass = ArrayIntegerEditor.class)
+    @GridEditColumn(header = "Year", order = 11, fieldLength = 5, sortable = true, maxValue = 25000, format = "%d kg.", textAlign =  ColumnTextAlign.END, arrayEndIdx = 9, editorClass = ArrayIntegerEditor.class)
     private Integer[] yearlyAmount = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};                // Up to 10 years, but can in principle be very long
     public Integer getYearlyAmount(int idx) { return yearlyAmount[idx]; }
     public void setYearlyAmount(int idx, Integer value) { yearlyAmount[idx] = value; }

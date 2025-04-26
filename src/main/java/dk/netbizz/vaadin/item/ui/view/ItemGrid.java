@@ -15,7 +15,7 @@ import java.util.Map;
 
 public class ItemGrid extends GenericGridProEditView<Item> {
 
-    private Signal signal;
+    private final transient Signal signal;
     private ApplicationUser applicationUser;
 
 
@@ -40,7 +40,7 @@ public class ItemGrid extends GenericGridProEditView<Item> {
         Item item = new Item();
         item.setApplicationUserId(applicationUser.getId());
         item.setItemName("Enter a name ...");
-        // item.setWarehouse(ServiceAccessPoint.getServiceAccessPointInstance().getWarehouseRepository().findAll().getFirst());
+        item.setWarehouse(ServiceAccessPoint.getServiceAccessPointInstance().getWarehouseRepository().findAll().getFirst());
         item.setActive(true);
         item.setDescription("");
         item.setPrice(0);
@@ -50,6 +50,7 @@ public class ItemGrid extends GenericGridProEditView<Item> {
 
     private Map<String, String> makeParams() {
         Map<String , String> params = new HashMap<>();
+        params.put("price.readonly", "true");
         params.put("yearlyAmount.arrayEndIdx", "3");            // Indexes are zero based
         params.put("yearlyAmount.header0", "Year 2024");
         params.put("yearlyAmount.header1", "Year 2025");
@@ -98,10 +99,8 @@ public class ItemGrid extends GenericGridProEditView<Item> {
     }
 
     @Override
-    protected void setSystemError(String classname, String columName, Exception e) {
+    protected void setSystemError(String className, String columName, Exception e) {
         StandardNotifications.showTempSystemError();
-        System.out.println("Class " + classname + " - column " + columName);
-        System.out.println(e.getMessage());
     }
 
     @Override
@@ -135,15 +134,21 @@ public class ItemGrid extends GenericGridProEditView<Item> {
 
     @Override
     protected void selectEntity(Item entity) {
-
+        // No dependencies
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     protected <S>List<S> getItemsForSelect(String colName) {
 
-        switch(colName.toLowerCase()) {
-            case "category" : { return (List<S>) new ArrayList<String>(List.of("Technical", "Quality", "Delivery", "Legal"));  }
-            case "warehouse" : return (List<S>) ServiceAccessPoint.getServiceAccessPointInstance().getWarehouseRepository().findAll();
+        switch (colName.toLowerCase()) {
+            case "category" -> {
+                return (List<S>) new ArrayList<>(List.of("Technical", "Quality", "Delivery", "Legal"));
+            }
+            case "warehouse" -> {
+                return (List<S>) ServiceAccessPoint.getServiceAccessPointInstance().getWarehouseRepository().findAll();
+            }
+            default -> { /* keep compiler happy */ }
         }
 
         return new ArrayList<>();
