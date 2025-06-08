@@ -90,6 +90,7 @@ public abstract class GenericGridProEditView<T extends BaseEntity> extends Verti
 
     protected final GridPro<T> genericGrid;
     private final Class<T> entityClass;
+    private T selectedItem;
     private final Button btnAdd = new Button();
     protected Span floatingSpan = new Span();
 
@@ -137,11 +138,31 @@ public abstract class GenericGridProEditView<T extends BaseEntity> extends Verti
         genericGrid.setSelectionMode(Grid.SelectionMode.SINGLE);  // Set this if you really want to be able to select a row
         genericGrid.setSelectionPreservationMode(SelectionPreservationMode.PRESERVE_EXISTING);
         GridUtils.setDeselectAllowed(genericGrid,false);
-        genericGrid.addSelectionListener(event -> event.getFirstSelectedItem().ifPresent(this::selectEntity));
+
+        // A selectionListener is a bit detached in GridPro you can easily have one selected row while editing another row
+        genericGrid.addSelectionListener(event -> event.getFirstSelectedItem().ifPresent(item -> {
+            if (selectedItem == null || !selectedItem.equals(item)) {
+                selectEntity(item);
+            }
+            selectedItem = item;
+        }));
+
+        genericGrid.addItemClickListener(evt-> {
+            if (selectedItem == null || !selectedItem.equals(evt.getItem())) {
+                genericGrid.select(evt.getItem());
+            }
+            selectedItem = evt.getItem();
+        });
+
+        // Also select item when tab to the row for editing
+        genericGrid.addCellEditStartedListener(evt -> {
+            genericGrid.select(evt.getItem());
+        });
+
     }
 
     protected void refreshGrid() {
-        returnRectOfElement(genericGrid.getElement());
+        showSpinnerDoAsyncFetch(genericGrid.getElement());
     }
 
     protected void setupGrid(Map<String, String> dynamicParameters) {
@@ -474,7 +495,7 @@ public abstract class GenericGridProEditView<T extends BaseEntity> extends Verti
                 genericGrid.select(item);
                 String setterMethod = "set" + camelName;
                 try {
-                    if (validUpdate(item, columnInfo.propertyName(), newValue)) {
+                    if (!entityClass.getMethod("get" + camelName).invoke(item).equals(newValue) && validUpdate(item, columnInfo.propertyName(), newValue)) {
                         entityClass.getMethod(setterMethod, columnInfo.type).invoke(item, newValue);
                         saveEntity(item);
                     }
@@ -491,7 +512,7 @@ public abstract class GenericGridProEditView<T extends BaseEntity> extends Verti
                 genericGrid.select(item);
                 String setterMethod = "set" + camelName;
                 try {
-                    if (validUpdate(item, columnInfo.propertyName(), newValue)) {
+                    if (!entityClass.getMethod("get" + camelName).invoke(item).equals(newValue) && validUpdate(item, columnInfo.propertyName(), newValue)) {
                         entityClass.getMethod(setterMethod, columnInfo.type).invoke(item, newValue);
                         saveEntity(item);
                     }
@@ -981,7 +1002,8 @@ public abstract class GenericGridProEditView<T extends BaseEntity> extends Verti
         return value;
     }
 
-    private void returnRectOfElement(Element element) {
+    private void showSpinnerDoAsyncFetch(Element element) {
+        // returnRectOfElement
         JsPromise.compute("""
             const el = $0; // closure to element
             const rect2 = el.getBoundingClientRect();
@@ -989,7 +1011,7 @@ public abstract class GenericGridProEditView<T extends BaseEntity> extends Verti
             return rect;
             """,
             RectDto.class, element)
-            .thenAccept(this::setRectDto);
+            .thenAccept(this::setRectDto);  // Continue when result is ready from JS invocation
     }
 
     private void setRectDto(RectDto dto) {
@@ -998,27 +1020,21 @@ public abstract class GenericGridProEditView<T extends BaseEntity> extends Verti
         floatingSpan.setVisible(true);
         genericGrid.addClassName("dimmer");
 
+        // Prepare for async fetch and server push of Vaadin update
         UI ui = UI.getCurrent();
-        ui.access(()-> {
-            FeederThread feederThread = new FeederThread(ui,  this);
-            feederThread.executeFetch();
+        ui.access(() -> {
+            FeederThread feederThread = new FeederThread();
+            feederThread.executeFetch(ui,  this);
         });
     }
 
     @SuppressWarnings("Unchecked")
     private static class FeederThread extends VirtualThreadTaskExecutor {
-        private final UI ui;
-        private final GenericGridProEditView<?> view;
 
-        public FeederThread(UI ui, GenericGridProEditView<?> view) {
-            this.ui = ui;
-            this.view = view;
-        }
 
-        public void executeFetch() {
-
-            this.execute(() -> {
-                List items = view.loadEntities();
+        public void executeFetch(UI ui, GenericGridProEditView<?> view) {
+            this.execute(() -> {                                        // This is where async starts
+                List items = view.loadEntities();                       // All the time consuming stuff should go before ui.access
                 ui.access(()-> {    // Inform that we're done
                     view.genericGrid.setItems(items);
                     view.genericGrid.recalculateColumnWidths();

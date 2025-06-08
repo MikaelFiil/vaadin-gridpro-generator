@@ -76,7 +76,7 @@ public @interface GridEditColumn {
 ```
 
 ## Code
-### The tool specific files are in the two packages
+### The tool specific files are in the package
 ###  - package dk.netbizz.vaadin.gridpro.utils;
 ### 
 

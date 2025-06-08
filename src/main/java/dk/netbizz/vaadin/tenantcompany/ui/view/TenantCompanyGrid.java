@@ -83,6 +83,7 @@ public class TenantCompanyGrid extends GenericGridProEditView<TenantCompany> {
 
     @Override
     protected void saveEntity(TenantCompany entity) {
+        System.out.println("Saving TenantCompany " + entity);
         ServiceAccessPoint.getServiceAccessPointInstance().getTenantCompanyRepository().save( entity);
     }
 
