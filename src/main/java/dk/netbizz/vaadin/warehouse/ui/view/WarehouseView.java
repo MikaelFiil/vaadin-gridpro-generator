@@ -6,6 +6,7 @@ import com.vaadin.flow.router.Menu;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import dk.netbizz.vaadin.signal.Signal;
+import dk.netbizz.vaadin.signal.SignalType;
 
 @Route("warehouse")
 @PageTitle("Warehouse list")
@@ -33,9 +34,9 @@ public class WarehouseView extends Main implements Signal {
 
     }
 
-    public void signal(String signalEvent, Object signal) {
-        switch(signalEvent.toLowerCase()) {
-            case "companyselected" -> {
+    public void signal(SignalType signalEvent, Object signal) {
+        switch(signalEvent) {
+            case SignalType.DOMAIN_ROOT_SELECTED -> {
             }
         }
     }

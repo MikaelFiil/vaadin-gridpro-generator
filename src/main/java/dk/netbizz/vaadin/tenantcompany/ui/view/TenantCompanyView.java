@@ -16,6 +16,7 @@ import dk.netbizz.vaadin.item.domain.Item;
 import dk.netbizz.vaadin.item.ui.view.ItemGrid;
 import dk.netbizz.vaadin.service.ServiceAccessPoint;
 import dk.netbizz.vaadin.signal.Signal;
+import dk.netbizz.vaadin.signal.SignalType;
 import dk.netbizz.vaadin.tenantcompany.domain.TenantCompany;
 import dk.netbizz.vaadin.tenantcompany.domain.TenantDepartment;
 import dk.netbizz.vaadin.user.domain.ApplicationUser;
@@ -56,7 +57,7 @@ public class TenantCompanyView extends Main implements Signal {
     ItemGrid itemGrid = new ItemGrid(this);
     TenantDepartmentEmployeeGrid tenantDepartmentEmployeeGrid = new TenantDepartmentEmployeeGrid(this, itemGrid);
     TenantDepartmentGrid tenantDepartmentGrid = new TenantDepartmentGrid(this, tenantDepartmentEmployeeGrid);
-    TenantCompanyGrid tenantCompanyGrid = new TenantCompanyGrid(tenantDepartmentGrid);
+    TenantCompanyGrid tenantCompanyGrid = new TenantCompanyGrid(this, tenantDepartmentGrid);
 
     Details departmentDetails = new Details("Departments");
     Details employeeDetails = new Details("Employees");
@@ -236,29 +237,27 @@ public class TenantCompanyView extends Main implements Signal {
         return item;
     }
 
+    private void clearSubHeadings() {
+        departmentDetails.setSummaryText("Departments");
+        employeeDetails.setSummaryText("Employees");
+        itemDetails.setSummaryText("Items");
+    }
 
     // See https://vaadin.com/docs/latest/flow/advanced/server-push  Broadcaster
-    public void signal(String signalEvent, Object signal) {
-        switch(signalEvent.toLowerCase()) {
-            case "companyselected" -> {
-                if (signal != null) {
-                    departmentDetails.setSummaryText("Departments of " + ((TenantCompany) signal).getCompanyName());
-                } else {
-                    departmentDetails.setSummaryText("Departments");
-                }
+    public void signal(SignalType signalEvent, Object signal) {
+        switch(signalEvent) {
+            case DOMAIN_ROOT_SELECTED -> {
+                departmentDetails.setSummaryText("Departments of " + ((TenantCompany) signal).getCompanyName());
+                tenantDepartmentGrid.setTenantCompany((TenantCompany)signal);
             }
-            case "departmentselected" -> {
-                if (signal != null) {
+            case DOMAIN_SUB_NODE_SELECTED -> {
+                if (signal instanceof TenantDepartment) {
                     employeeDetails.setSummaryText("Employees of " + ((TenantDepartment) signal).getDepartmentName());
-                } else {
-                    employeeDetails.setSummaryText("Employees");
+                    tenantDepartmentEmployeeGrid.setTenantDepartment((TenantDepartment) signal);
                 }
-            }
-            case "employeeselected" -> {
-                if (signal != null) {
+                if (signal instanceof ApplicationUser) {
                     itemDetails.setSummaryText("Items of " + ((ApplicationUser) signal).getFullname());
-                } else {
-                    itemDetails.setSummaryText("Items");
+                    itemGrid.setTenantDepartmentEmployee(((ApplicationUser) signal));
                 }
             }
         }

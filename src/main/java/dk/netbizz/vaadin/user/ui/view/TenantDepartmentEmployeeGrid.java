@@ -7,6 +7,7 @@ import dk.netbizz.vaadin.gridpro.utils.gridprogenerator.GenericGridProEditView;
 import dk.netbizz.vaadin.item.ui.view.ItemGrid;
 import dk.netbizz.vaadin.service.ServiceAccessPoint;
 import dk.netbizz.vaadin.signal.Signal;
+import dk.netbizz.vaadin.signal.SignalType;
 import dk.netbizz.vaadin.tenantcompany.domain.TenantDepartment;
 import dk.netbizz.vaadin.user.domain.ApplicationUser;
 
@@ -41,7 +42,7 @@ public class TenantDepartmentEmployeeGrid extends GenericGridProEditView<Applica
     }
 
 
-    private ApplicationUser createEmptyEmployee(TenantDepartment tenantDepartment) throws SQLException {
+    private ApplicationUser createEmptyEmployee(TenantDepartment tenantDepartment)  {
         ApplicationUser applicationUser = new ApplicationUser();
         applicationUser.setTenantDepartmentId(tenantDepartment.getId());
         applicationUser.setFullname("Enter a name ...");
@@ -61,7 +62,6 @@ public class TenantDepartmentEmployeeGrid extends GenericGridProEditView<Applica
         this.tenantDepartment = tenantDepartment;
         refreshGrid();
         itemGrid.setTenantDepartmentEmployee(null);
-        signal.signal("DepartmentSelected", tenantDepartment);
     }
 
 
@@ -76,13 +76,9 @@ public class TenantDepartmentEmployeeGrid extends GenericGridProEditView<Applica
     protected void addNew() {
         // Create empty instance and add to the current list here if need be
         ApplicationUser item = null;
-        try {
-            if (tenantDepartment != null) {
-                item = createEmptyEmployee(tenantDepartment);
-                saveEntity(item);
-            }
-        } catch (SQLException e) {
-            throw new ApplicationRuntimeException(e);
+        if (tenantDepartment != null) {
+            item = createEmptyEmployee(tenantDepartment);
+            saveEntity(item);
         }
         refreshGrid();
     }
@@ -110,7 +106,8 @@ public class TenantDepartmentEmployeeGrid extends GenericGridProEditView<Applica
     @Override
     protected List<ApplicationUser> loadEntities() {
         if ((tenantDepartment != null) && (tenantDepartment.getId() != null)) {
-            return ServiceAccessPoint.getServiceAccessPointInstance().getTenantDepartmentEmployeeRepository().findByTenantDepartmentId(tenantDepartment.getId());
+            return new ArrayList<>(tenantDepartment.getEmployees());
+            // return ServiceAccessPoint.getServiceAccessPointInstance().getTenantDepartmentEmployeeRepository().findByTenantDepartmentId(tenantDepartment.getId());
         } else {
             return new ArrayList<>();
         }
@@ -128,7 +125,8 @@ public class TenantDepartmentEmployeeGrid extends GenericGridProEditView<Applica
 
     @Override
     protected void selectEntity(ApplicationUser entity) {
-        itemGrid.setTenantDepartmentEmployee(entity);
+        signal.signal(SignalType.DOMAIN_SUB_NODE_SELECTED, entity);
+        // itemGrid.setTenantDepartmentEmployee(entity);
     }
 
     @Override

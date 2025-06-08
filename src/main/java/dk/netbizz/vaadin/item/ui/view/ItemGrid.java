@@ -6,6 +6,7 @@ import dk.netbizz.vaadin.gridpro.utils.gridprogenerator.GenericGridProEditView;
 import dk.netbizz.vaadin.item.domain.Item;
 import dk.netbizz.vaadin.service.ServiceAccessPoint;
 import dk.netbizz.vaadin.signal.Signal;
+import dk.netbizz.vaadin.signal.SignalType;
 import dk.netbizz.vaadin.user.domain.ApplicationUser;
 
 import java.util.ArrayList;
@@ -75,7 +76,7 @@ public class ItemGrid extends GenericGridProEditView<Item> {
     public void setTenantDepartmentEmployee(ApplicationUser applicationUser) {
         this.applicationUser = applicationUser;
         refreshGrid();
-        signal.signal("EmployeeSelected", applicationUser);
+        // signal.signal(SignalType.DOMAIN_SUB_NODE_SELECTED, applicationUser);
     }
 
     @Override
@@ -116,7 +117,8 @@ public class ItemGrid extends GenericGridProEditView<Item> {
     @Override
     protected List<Item> loadEntities() {
         if ((applicationUser != null) && (applicationUser.getId() != null)) {
-            return ServiceAccessPoint.getServiceAccessPointInstance().getItemRepository().findByApplicationUserId(applicationUser.getId());
+            return new ArrayList<>(applicationUser.getItems());
+            // return ServiceAccessPoint.getServiceAccessPointInstance().getItemRepository().findByApplicationUserId(applicationUser.getId());
         } else {
             return new ArrayList<>();
         }

@@ -16,6 +16,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
 import org.springframework.data.annotation.Version;
 
 import java.math.BigDecimal;
@@ -60,6 +61,7 @@ public class Item implements BaseEntity {
     private Integer price = 0;
 
     @GridEditColumn(header = "Warehouse", order = 5, labelGenerator = "getWarehouseName", editorClass = Select.class)
+    @Transient
     private Warehouse warehouse;
 
     @GridEditColumn(header = "Birthday", order = 6, format = "dd.MM.yyyy", editorClass = DatePicker.class)

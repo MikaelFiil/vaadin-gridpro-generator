@@ -155,9 +155,7 @@ public abstract class GenericGridProEditView<T extends BaseEntity> extends Verti
         });
 
         // Also select item when tab to the row for editing
-        genericGrid.addCellEditStartedListener(evt -> {
-            genericGrid.select(evt.getItem());
-        });
+        genericGrid.addCellEditStartedListener(evt -> genericGrid.select(evt.getItem()));
 
     }
 
@@ -996,7 +994,7 @@ public abstract class GenericGridProEditView<T extends BaseEntity> extends Verti
                 case Date date -> {
                     return new SimpleDateFormat(columnInfo.format()).format(date);
                 }
-                default -> { }  // Don't set to "" it will ruin display of calculated columns based og the date
+                default -> { }  // Don't set to "" it will ruin display of calculated columns based on the date
             }
         }
         return value;

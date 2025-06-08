@@ -4,6 +4,8 @@ import com.vaadin.flow.component.grid.GridVariant;
 import dk.netbizz.vaadin.gridpro.utils.components.StandardNotifications;
 import dk.netbizz.vaadin.gridpro.utils.gridprogenerator.GenericGridProEditView;
 import dk.netbizz.vaadin.service.ServiceAccessPoint;
+import dk.netbizz.vaadin.signal.Signal;
+import dk.netbizz.vaadin.signal.SignalType;
 import dk.netbizz.vaadin.tenantcompany.domain.TenantCompany;
 
 import java.util.ArrayList;
@@ -13,10 +15,12 @@ import java.util.Map;
 
 public class TenantCompanyGrid extends GenericGridProEditView<TenantCompany> {
 
+    private Signal signal;
     private  TenantDepartmentGrid tenantDepartmentGrid;
 
-    public TenantCompanyGrid(TenantDepartmentGrid tenantDepartmentGrid) {
+    public TenantCompanyGrid(Signal signal, TenantDepartmentGrid tenantDepartmentGrid) {
         super(TenantCompany.class);
+        this.signal = signal;
         this.tenantDepartmentGrid = tenantDepartmentGrid;
         setWidthFull();
         setMargin(false);
@@ -63,6 +67,7 @@ public class TenantCompanyGrid extends GenericGridProEditView<TenantCompany> {
         TenantCompany item = null;
         item = createEmptyTenantCompany();
         saveEntity(item);
+        signal.signal(SignalType.DOMAIN_ROOT_SELECTED, item);
         refreshGrid();
     }
 
@@ -83,13 +88,13 @@ public class TenantCompanyGrid extends GenericGridProEditView<TenantCompany> {
 
     @Override
     protected void saveEntity(TenantCompany entity) {
-        System.out.println("Saving TenantCompany " + entity);
         ServiceAccessPoint.getServiceAccessPointInstance().getTenantCompanyRepository().save( entity);
     }
 
     @Override
     protected List<TenantCompany> loadEntities() {
-        return ServiceAccessPoint.getServiceAccessPointInstance().getTenantCompanyRepository().findAll();
+        List<TenantCompany> list =  ServiceAccessPoint.getServiceAccessPointInstance().getTenantCompanyRepository().findAll();          // TODO How about LAZY loading ???  - AND WHICH REPOS are actually USED !?!?
+        return  list;
     }
 
     @Override
@@ -104,7 +109,8 @@ public class TenantCompanyGrid extends GenericGridProEditView<TenantCompany> {
 
     @Override
     protected void selectEntity(TenantCompany entity) {
-        tenantDepartmentGrid.setTenantCompany(entity);
+        signal.signal(SignalType.DOMAIN_ROOT_SELECTED, entity);
+        // tenantDepartmentGrid.setTenantCompany(entity);
     }
 
     @Override

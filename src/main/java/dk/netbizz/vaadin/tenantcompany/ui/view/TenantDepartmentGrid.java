@@ -5,14 +5,12 @@ import dk.netbizz.vaadin.gridpro.utils.components.StandardNotifications;
 import dk.netbizz.vaadin.gridpro.utils.gridprogenerator.GenericGridProEditView;
 import dk.netbizz.vaadin.service.ServiceAccessPoint;
 import dk.netbizz.vaadin.signal.Signal;
+import dk.netbizz.vaadin.signal.SignalType;
 import dk.netbizz.vaadin.tenantcompany.domain.TenantCompany;
 import dk.netbizz.vaadin.tenantcompany.domain.TenantDepartment;
 import dk.netbizz.vaadin.user.ui.view.TenantDepartmentEmployeeGrid;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class TenantDepartmentGrid extends GenericGridProEditView<TenantDepartment> {
 
@@ -56,7 +54,6 @@ public class TenantDepartmentGrid extends GenericGridProEditView<TenantDepartmen
         this.tenantCompany = tenantCompany;
         refreshGrid();
         tenantDepartmentEmployeeGrid.setTenantDepartment(null);
-        signal.signal("CompanySelected", tenantCompany);
     }
 
     @Override
@@ -101,8 +98,10 @@ public class TenantDepartmentGrid extends GenericGridProEditView<TenantDepartmen
     @Override
     protected List<TenantDepartment> loadEntities() {
         if ((tenantCompany != null) && (tenantCompany.getId() != null)) {
-            return ServiceAccessPoint.getServiceAccessPointInstance().getTenantDepartmentRepository().findByTenantCompanyId(tenantCompany.getId());
+            return new ArrayList<>(tenantCompany.getDepartments());
+            // return ServiceAccessPoint.getServiceAccessPointInstance().getTenantDepartmentRepository().findByTenantCompanyId(tenantCompany.getId());
         } else {
+            // return Collections.EMPTY_SET;
             return new ArrayList<>();
         }
     }
@@ -119,7 +118,8 @@ public class TenantDepartmentGrid extends GenericGridProEditView<TenantDepartmen
 
     @Override
     protected void selectEntity(TenantDepartment entity) {
-        tenantDepartmentEmployeeGrid.setTenantDepartment(entity);
+        signal.signal(SignalType.DOMAIN_SUB_NODE_SELECTED, entity);
+        // tenantDepartmentEmployeeGrid.setTenantDepartment(entity);
     }
 
     @Override

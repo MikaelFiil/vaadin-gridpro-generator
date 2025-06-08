@@ -5,7 +5,9 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import dk.netbizz.vaadin.gridpro.utils.gridprogenerator.BaseEntity;
 import dk.netbizz.vaadin.gridpro.utils.gridprogenerator.GridEditColumn;
+import dk.netbizz.vaadin.item.domain.Item;
 import dk.netbizz.vaadin.secutiry.domain.SecurityRole;
+import dk.netbizz.vaadin.tenantcompany.domain.TenantDepartment;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -13,6 +15,7 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.annotation.Version;
+import org.springframework.data.relational.core.mapping.MappedCollection;
 
 import java.io.Serializable;
 import java.time.LocalDate;
@@ -58,6 +61,9 @@ public class ApplicationUser implements BaseEntity, Serializable {
     private Boolean isDisabled = false;                   //  when an employee is terminated
     private String description = "";                    // Max 250 characters
     private byte[] picture;                        // bytea in database column
+
+    @MappedCollection(idColumn = "APPLICATION_USER_ID", keyColumn = "ID")
+    private Set<Item> items;
 
     @Version
     private Integer version;
