@@ -46,6 +46,9 @@ public class ResourceView extends GenericGridProEditView<Resource> {
     @Override
     protected boolean canAddEntity() { return true; }
 
+    @Override
+    protected boolean canDeleteEntities() { return true; }
+
     // Constructing a new entity is domain specific
     @Override
     protected void addNew() {

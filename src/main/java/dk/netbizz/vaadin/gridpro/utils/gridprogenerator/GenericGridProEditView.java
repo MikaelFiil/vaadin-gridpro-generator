@@ -59,13 +59,13 @@ import com.vaadin.flow.data.renderer.IconRenderer;
 import com.vaadin.flow.data.renderer.TextRenderer;
 import com.vaadin.flow.dom.Element;
 import com.vaadin.flow.function.ValueProvider;
-import dk.netbizz.vaadin.gridpro.utils.themes.RadioButtonTheme;
 import dk.netbizz.vaadin.gridpro.utils.components.ConfirmationDialog;
 import dk.netbizz.vaadin.gridpro.utils.components.GridUtils;
 import dk.netbizz.vaadin.gridpro.utils.components.PopoverMessage;
 import dk.netbizz.vaadin.gridpro.utils.components.TrafficLight;
 import dk.netbizz.vaadin.gridpro.utils.inputcreators.DateTimePickerCreator;
 import dk.netbizz.vaadin.gridpro.utils.inputcreators.InputFieldCreator;
+import dk.netbizz.vaadin.gridpro.utils.themes.RadioButtonTheme;
 import org.springframework.core.task.VirtualThreadTaskExecutor;
 import org.vaadin.firitin.util.JsPromise;
 
@@ -77,6 +77,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+
 import static java.lang.Math.round;
 
 
@@ -133,6 +134,7 @@ public abstract class GenericGridProEditView<T extends BaseEntity> extends Verti
     protected abstract boolean validUpdate(T entity, String colName, Object newColValue);
     protected abstract boolean isEditableEntity(T entity);          // Should be based on user ownership
     protected abstract boolean canAddEntity();                      // Should be based on user profile rights
+    protected abstract boolean canDeleteEntities();                      // Should be based on user profile rights
 
     protected void setupGridEventHandlers() {
         genericGrid.setSelectionMode(Grid.SelectionMode.SINGLE);  // Set this if you really want to be able to select a row
@@ -229,8 +231,23 @@ public abstract class GenericGridProEditView<T extends BaseEntity> extends Verti
                                 }
                             })
                             , columnInfo, null);
-                    } else {
-                        setStandardColumnProperties(genericGrid.addColumn(columnInfo.propertyName()), columnInfo, null);      // Plain vanilla display only column
+                    }
+                    else if (columnInfo.format().trim().length() > 0) {     // Is there a format?
+                        setStandardColumnProperties(
+                            genericGrid
+                                .addColumn(columnInfo.propertyName())
+                                .setRenderer(new TextRenderer<>(item -> {
+                                    try {
+                                        return String.format(columnInfo.format(), entityClass.getMethod("get" + camelName).invoke(item));
+                                    } catch (Exception e) {
+                                        setSystemError(item.getClass().getName(), columnInfo.propertyName(), e);
+                                    }
+                                    return "";
+                                }))
+                            , columnInfo, null);      // Plain vanilla display only column
+                        }
+                    else {
+                        setStandardColumnProperties(genericGrid.addColumn(columnInfo.propertyName()), columnInfo, null);
                     }
                     colIdx++;
                 } else { // For field based editable columns
@@ -353,7 +370,7 @@ public abstract class GenericGridProEditView<T extends BaseEntity> extends Verti
         }
 
         // Add delete column icon if not read only of entire table
-        if (dynamicParameters.get("readonly") == null) {
+        if (dynamicParameters.get("readonly") == null && canDeleteEntities()) {
             genericGrid.addColumn(new IconRenderer<>(item -> {
                 Button btnRemove = new Button();
                 btnRemove.setClassName("icon-trash");

@@ -4,7 +4,7 @@ import com.vaadin.flow.component.grid.GridVariant;
 import dk.netbizz.vaadin.gridpro.utils.components.StandardNotifications;
 import dk.netbizz.vaadin.gridpro.utils.gridprogenerator.GenericGridProEditView;
 import dk.netbizz.vaadin.warehouse.domain.Warehouse;
-import dk.netbizz.vaadin.service.ServiceAccessPoint;
+import dk.netbizz.vaadin.service.ServicePoint;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -54,6 +54,9 @@ public class WarehouseGrid extends GenericGridProEditView<Warehouse> {
     @Override
     protected boolean canAddEntity() { return true; }
 
+    @Override
+    protected boolean canDeleteEntities() { return true; }
+
     // Constructing a new entity is domain specific
     @Override
     protected void addNew() {
@@ -80,12 +83,12 @@ public class WarehouseGrid extends GenericGridProEditView<Warehouse> {
 
     @Override
     protected void saveEntity(Warehouse entity) {
-        ServiceAccessPoint.getServiceAccessPointInstance().getWarehouseRepository().save( entity);
+        ServicePoint.getInstance().getWarehouseRepository().save( entity);
     }
 
     @Override
     protected List<Warehouse> loadEntities() {
-        return ServiceAccessPoint.getServiceAccessPointInstance().getWarehouseRepository().findAll();
+        return ServicePoint.getInstance().getWarehouseRepository().findAll();
     }
 
     @Override
@@ -95,7 +98,7 @@ public class WarehouseGrid extends GenericGridProEditView<Warehouse> {
 
     @Override
     protected void deleteEntity(Warehouse entity) {
-        ServiceAccessPoint.getServiceAccessPointInstance().getWarehouseRepository().delete(entity);
+        ServicePoint.getInstance().getWarehouseRepository().delete(entity);
     }
 
     @Override

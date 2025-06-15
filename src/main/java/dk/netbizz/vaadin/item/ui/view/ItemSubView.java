@@ -47,6 +47,9 @@ public class ItemSubView extends GenericGridProEditView<Item> {
     @Override
     protected boolean canAddEntity() { return true; }
 
+    @Override
+    protected boolean canDeleteEntities() { return true; }
+
     // Constructing a new entity is domain specific
     @Override
     protected void addNew() {

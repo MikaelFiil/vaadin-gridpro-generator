@@ -1,53 +1,48 @@
 package dk.netbizz.vaadin.tenantcompany.service;
 
-import dk.netbizz.vaadin.exception.ApplicationRuntimeException;
+import dk.netbizz.vaadin.service.ServicePoint;
 import dk.netbizz.vaadin.tenantcompany.domain.TenantCompany;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.sql.DataSource;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.Clock;
+import java.util.List;
+import java.util.Optional;
 
 @Service
 @Transactional(propagation = Propagation.REQUIRES_NEW)
 public class TenantCompanyService {
 
-    private static final String table = "tenant_company";
-    private DataSource dataSource;
-    private JdbcTemplate jdbcTemplate;
-    private final TenantCompanyRepository tenantCompanyRepository;
-    private final Clock clock;
 
-
-    TenantCompanyService(DataSource dataSource, TenantCompanyRepository tenantCompanyRepository, Clock clock) {
-        this.dataSource = dataSource;
-        this.tenantCompanyRepository = tenantCompanyRepository;
-        this.clock = clock;
-        this.jdbcTemplate = new JdbcTemplate(dataSource);
-    }
-
-    // When utilizing multiple repository updates
-    @Transactional
-    public void doCompundTransaction() {
-        for (TenantCompany company : tenantCompanyRepository.findAll()) {
-            company.setAddressStreet("Elisevej 3");
-            tenantCompanyRepository.save(company);
-        }
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void save(TenantCompany tenantCompany) {
+        ServicePoint.getInstance().getTenantCompanyRepository().save(tenantCompany);
     }
 
     @Transactional
-    public void failCompundTransaction() {
-        for (TenantCompany company : tenantCompanyRepository.findAll()) {
-            company.setAddressStreet("Præstevanget 1");
-            tenantCompanyRepository.save(company);
+    public TenantCompany findById(Integer id) {
+        Optional<TenantCompany> optionalTenantCompany = ServicePoint.getInstance().getTenantCompanyRepository().findById(id);
+        if (optionalTenantCompany.isPresent()) {
+            TenantCompany tenantCompany = optionalTenantCompany.get();
+            tenantCompany.setDepartments(ServicePoint.getInstance().getTenantDepartmentService().findByTenantCompanyId(tenantCompany.getId()));
+            return tenantCompany;
         }
-        throw new ApplicationRuntimeException("Failing on purpose");
+        return null;
     }
+
+
+    @Transactional
+    public List<TenantCompany> findAll() {
+        List<TenantCompany> tenantCompanyList = ServicePoint.getInstance().getTenantCompanyRepository().findAll();
+        for (TenantCompany tenantCompany : tenantCompanyList) {
+            tenantCompany.setDepartments(ServicePoint.getInstance().getTenantDepartmentService().findByTenantCompanyId(tenantCompany.getId()));
+        }
+        return tenantCompanyList;
+    }
+
 
 
     private static final class TenantCompanyMapper implements RowMapper<TenantCompany> {
@@ -61,5 +56,8 @@ public class TenantCompanyService {
             return tenantCompany;
         }
     }
+
+
+
 
 }

@@ -4,9 +4,8 @@ import com.vaadin.flow.component.grid.GridVariant;
 import dk.netbizz.vaadin.gridpro.utils.components.StandardNotifications;
 import dk.netbizz.vaadin.gridpro.utils.gridprogenerator.GenericGridProEditView;
 import dk.netbizz.vaadin.item.domain.Item;
-import dk.netbizz.vaadin.service.ServiceAccessPoint;
+import dk.netbizz.vaadin.service.ServicePoint;
 import dk.netbizz.vaadin.signal.Signal;
-import dk.netbizz.vaadin.signal.SignalType;
 import dk.netbizz.vaadin.user.domain.ApplicationUser;
 
 import java.util.ArrayList;
@@ -41,7 +40,7 @@ public class ItemGrid extends GenericGridProEditView<Item> {
         Item item = new Item();
         item.setApplicationUserId(applicationUser.getId());
         item.setItemName("Enter a name ...");
-        item.setWarehouse(ServiceAccessPoint.getServiceAccessPointInstance().getWarehouseRepository().findAll().getFirst());
+        item.setWarehouse(ServicePoint.getInstance().getWarehouseRepository().findAll().getFirst());
         item.setActive(true);
         item.setDescription("");
         item.setPrice(0);
@@ -85,6 +84,9 @@ public class ItemGrid extends GenericGridProEditView<Item> {
     @Override
     protected boolean canAddEntity() { return true; }
 
+    @Override
+    protected boolean canDeleteEntities() { return true; }
+
     // Constructing a new entity is domain specific
     @Override
     protected void addNew() {
@@ -111,7 +113,7 @@ public class ItemGrid extends GenericGridProEditView<Item> {
 
     @Override
     protected void saveEntity(Item entity) {
-        ServiceAccessPoint.getServiceAccessPointInstance().getItemRepository().save(entity);
+        ServicePoint.getInstance().getItemRepository().save(entity);
     }
 
     @Override
@@ -131,7 +133,7 @@ public class ItemGrid extends GenericGridProEditView<Item> {
 
     @Override
     protected void deleteEntity(Item entity) {
-        ServiceAccessPoint.getServiceAccessPointInstance().getItemRepository().delete(entity);
+        ServicePoint.getInstance().getItemRepository().delete(entity);
     }
 
     @Override
@@ -148,7 +150,7 @@ public class ItemGrid extends GenericGridProEditView<Item> {
                 return (List<S>) new ArrayList<>(List.of("Technical", "Quality", "Delivery", "Legal"));
             }
             case "warehouse" -> {
-                return (List<S>) ServiceAccessPoint.getServiceAccessPointInstance().getWarehouseRepository().findAll();
+                return (List<S>) ServicePoint.getInstance().getWarehouseRepository().findAll();
             }
             default -> { /* keep compiler happy */ }
         }

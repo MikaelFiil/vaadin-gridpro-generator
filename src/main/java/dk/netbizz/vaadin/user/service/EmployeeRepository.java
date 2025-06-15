@@ -10,8 +10,11 @@ import java.util.Optional;
 
 // Transactional is default for all methods
 @Repository
-public interface TenantDepartmentEmployeeRepository extends ListCrudRepository<ApplicationUser, Integer> {
+public interface EmployeeRepository extends ListCrudRepository<ApplicationUser, Integer> {
+
+    @Query("select * from application_user where tenant_department_id = :tenantDepartmentId")
     List<ApplicationUser> findByTenantDepartmentId(int tenantDepartmentId);
+
     Optional<ApplicationUser> findByFullnameIgnoreCase(String name);
 
     @Query("select * from application_user order by id limit 1000")

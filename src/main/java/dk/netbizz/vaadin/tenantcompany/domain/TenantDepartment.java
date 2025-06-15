@@ -8,10 +8,13 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.relational.core.mapping.MappedCollection;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 
@@ -40,11 +43,11 @@ public class TenantDepartment implements BaseEntity, Serializable {
     @GridEditColumn(header = "Description", order = 2, fieldLength = 50)
     private String description;
 
-    @MappedCollection(idColumn = "TENANT_DEPARTMENT_ID", keyColumn = "ID")
-    private Set<ApplicationUser> employees;
+    @Transient
+    private List<ApplicationUser> employees = new ArrayList<>();
 
     @Version
-    private Integer version;
+    private Integer version = null;
 
     @Override
     public String toString() {

@@ -54,7 +54,7 @@ public class Item implements BaseEntity {
     @GridEditColumn(header = "Category", order = 2, sortable = true, editorClass = Select.class)
     private String category = "";
 
-    @GridEditColumn(header = "Kr./Liter", order = 3, sortable = false, maxValue = 25, format = "%,.2f", textAlign =  ColumnTextAlign.END, editorClass = BigDecimalField.class)
+    @GridEditColumn(header = "Kr./Liter", order = 3, sortable = false, maxValue = 25, format = "%,.2f kr.", textAlign =  ColumnTextAlign.END, editorClass = BigDecimalField.class)
     private BigDecimal krPerLiter = BigDecimal.valueOf(0.0);
 
     @GridEditColumn(header = "Price", order = 4, fieldLength = 7, maxValue = 9999, format = "%d kr.", textAlign =  ColumnTextAlign.END, editorClass = IntegerField.class)

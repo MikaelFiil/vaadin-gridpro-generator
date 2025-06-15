@@ -3,12 +3,12 @@ package dk.netbizz.vaadin.tenantcompany.ui.view;
 import com.vaadin.flow.component.grid.GridVariant;
 import dk.netbizz.vaadin.gridpro.utils.components.StandardNotifications;
 import dk.netbizz.vaadin.gridpro.utils.gridprogenerator.GenericGridProEditView;
-import dk.netbizz.vaadin.service.ServiceAccessPoint;
+import dk.netbizz.vaadin.service.ServicePoint;
 import dk.netbizz.vaadin.signal.Signal;
 import dk.netbizz.vaadin.signal.SignalType;
 import dk.netbizz.vaadin.tenantcompany.domain.TenantCompany;
 import dk.netbizz.vaadin.tenantcompany.domain.TenantDepartment;
-import dk.netbizz.vaadin.user.ui.view.TenantDepartmentEmployeeGrid;
+import dk.netbizz.vaadin.user.ui.view.EmployeeGrid;
 
 import java.util.*;
 
@@ -16,9 +16,9 @@ public class TenantDepartmentGrid extends GenericGridProEditView<TenantDepartmen
 
     private Signal signal;
     private TenantCompany tenantCompany = null;
-    private TenantDepartmentEmployeeGrid tenantDepartmentEmployeeGrid;
+    private EmployeeGrid tenantDepartmentEmployeeGrid;
 
-    public TenantDepartmentGrid(Signal signal, TenantDepartmentEmployeeGrid tenantDepartmentEmployeeGrid) {
+    public TenantDepartmentGrid(Signal signal, EmployeeGrid tenantDepartmentEmployeeGrid) {
         super(TenantDepartment.class);
         this.signal = signal;
         this.tenantDepartmentEmployeeGrid = tenantDepartmentEmployeeGrid;
@@ -62,6 +62,9 @@ public class TenantDepartmentGrid extends GenericGridProEditView<TenantDepartmen
     @Override
     protected boolean canAddEntity() { return true; }
 
+    @Override
+    protected boolean canDeleteEntities() { return true; }
+
     // Constructing a new entity is domain specific
     @Override
     protected void addNew() {
@@ -92,7 +95,7 @@ public class TenantDepartmentGrid extends GenericGridProEditView<TenantDepartmen
     @Override
     protected void saveEntity(TenantDepartment entity) {
         System.out.println("Saving TenantDepartment " + entity);
-        ServiceAccessPoint.getServiceAccessPointInstance().getTenantDepartmentRepository().save( entity);
+        ServicePoint.getInstance().getTenantDepartmentRepository().save( entity);
     }
 
     @Override
@@ -113,7 +116,7 @@ public class TenantDepartmentGrid extends GenericGridProEditView<TenantDepartmen
 
     @Override
     protected void deleteEntity(TenantDepartment entity) {
-        ServiceAccessPoint.getServiceAccessPointInstance().getTenantDepartmentRepository().delete(entity);
+        ServicePoint.getInstance().getTenantDepartmentRepository().delete(entity);
     }
 
     @Override

@@ -20,6 +20,8 @@ import org.springframework.data.relational.core.mapping.MappedCollection;
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
@@ -62,8 +64,8 @@ public class ApplicationUser implements BaseEntity, Serializable {
     private String description = "";                    // Max 250 characters
     private byte[] picture;                        // bytea in database column
 
-    @MappedCollection(idColumn = "APPLICATION_USER_ID", keyColumn = "ID")
-    private Set<Item> items;
+    @Transient
+    private List<Item> items = new ArrayList<>();
 
     @Version
     private Integer version;

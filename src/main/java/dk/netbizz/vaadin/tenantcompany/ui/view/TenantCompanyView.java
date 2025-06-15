@@ -14,13 +14,13 @@ import dk.netbizz.vaadin.MainLayout;
 import dk.netbizz.vaadin.gridpro.utils.components.StandardNotifications;
 import dk.netbizz.vaadin.item.domain.Item;
 import dk.netbizz.vaadin.item.ui.view.ItemGrid;
-import dk.netbizz.vaadin.service.ServiceAccessPoint;
+import dk.netbizz.vaadin.service.ServicePoint;
 import dk.netbizz.vaadin.signal.Signal;
 import dk.netbizz.vaadin.signal.SignalType;
 import dk.netbizz.vaadin.tenantcompany.domain.TenantCompany;
 import dk.netbizz.vaadin.tenantcompany.domain.TenantDepartment;
 import dk.netbizz.vaadin.user.domain.ApplicationUser;
-import dk.netbizz.vaadin.user.ui.view.TenantDepartmentEmployeeGrid;
+import dk.netbizz.vaadin.user.ui.view.EmployeeGrid;
 import net.datafaker.Faker;
 
 import java.math.BigDecimal;
@@ -55,7 +55,7 @@ public class TenantCompanyView extends Main implements Signal {
 
     VerticalLayout verticalLayout = new VerticalLayout();
     ItemGrid itemGrid = new ItemGrid(this);
-    TenantDepartmentEmployeeGrid tenantDepartmentEmployeeGrid = new TenantDepartmentEmployeeGrid(this, itemGrid);
+    EmployeeGrid tenantDepartmentEmployeeGrid = new EmployeeGrid(this, itemGrid);
     TenantDepartmentGrid tenantDepartmentGrid = new TenantDepartmentGrid(this, tenantDepartmentEmployeeGrid);
     TenantCompanyGrid tenantCompanyGrid = new TenantCompanyGrid(this, tenantDepartmentGrid);
 
@@ -94,67 +94,61 @@ public class TenantCompanyView extends Main implements Signal {
     private void buildUX() {
         genDepartmentsButton.addClickListener(evt -> {
             Faker faker = new Faker();
-
             System.out.println("Generating departments ...");
-            for (int i = 1; i <= 1000; i++) {
-                Optional<TenantCompany> tenantCompany = ServiceAccessPoint.getServiceAccessPointInstance().getTenantCompanyRepository().findById(i);
-                tenantCompany.ifPresent(company -> {
-                    List<TenantDepartment> tenantDepartments = new ArrayList<>();
-                    for (int j = 0; j < 100; j++) {
-                        String depName = faker.company().buzzword() + " department - " + round(random() * 10000) + " - " + round(random() * 10000);
-                        depName = depName.substring(0, min(depName.length(), 50));
-                        String desc = faker.famousLastWords().lastWords();
-                        desc = desc.substring(0, min(desc.length(), 250));
-                        TenantDepartment tenantDepartment = new TenantDepartment(depName, desc);
-                        tenantDepartment.setTenantCompanyId(company.getId());
-                        tenantDepartments.add(tenantDepartment);
-                    }
-                    ServiceAccessPoint.getServiceAccessPointInstance().getTenantDepartmentRepository().saveAll(tenantDepartments);
-                });
+
+            List<TenantCompany> tenantCompanyList = ServicePoint.getInstance().getTenantCompanyRepository().findAll();
+            for(TenantCompany tenantCompany : tenantCompanyList) {
+
+                for (int j = 0; j < 100; j++) {
+                    String depName = faker.company().buzzword() + " department - " + round(random() * 10000) + " - " + round(random() * 10000);
+                    depName = depName.substring(0, min(depName.length(), 50));
+                    String desc = faker.famousLastWords().lastWords();
+                    desc = desc.substring(0, min(desc.length(), 250));
+                    TenantDepartment tenantDepartment = new TenantDepartment(depName, desc);
+                    tenantDepartment.setTenantCompanyId(tenantCompany.getId());
+                    ServicePoint.getInstance().getTenantDepartmentService().save(tenantDepartment);
+                    tenantCompany.getDepartments().add(tenantDepartment);
+                }
             }
+
             System.out.println("Finished Generating departments ...");
         });
 
         genEmployeesButton.addClickListener(evt -> {
             Faker faker = new Faker();
-
             System.out.println("Generating employees ...");
-            for (int i = 1; i <= 1000; i++) {
-                Optional<TenantCompany> tenantCompany = ServiceAccessPoint.getServiceAccessPointInstance().getTenantCompanyRepository().findById(i);
-                tenantCompany.ifPresent(company -> {
-                    List<TenantDepartment> tenantDepartments = ServiceAccessPoint.getServiceAccessPointInstance().getTenantDepartmentRepository().findByTenantCompanyId(company.getId());
-                    for (TenantDepartment tenantDepartment : tenantDepartments) {
-                        List<ApplicationUser> applicationUsers = new ArrayList<>();
 
-                        for (int j = 0; j < 10; j++) {
-                            ApplicationUser applicationUser = new ApplicationUser();
-                            applicationUser.setHashedPassword("$2a$10$7Uq5UoCp/txscI11yYpOkuqJ7ASjLEyjJZPsF25VVW9kTKoK2CaQS");
-                            applicationUser.setTenantDepartmentId(tenantDepartment.getId());
-                            applicationUser.setMustChangePwd(false);
+            List<TenantDepartment> tenantDepartments = ServicePoint.getInstance().getTenantDepartmentRepository().findAll();
+            for (TenantDepartment tenantDepartment : tenantDepartments) {
+                List<ApplicationUser> applicationUsers = new ArrayList<>();
 
-                            String fullName = faker.funnyName().name() + " " + faker.name().lastName();
-                            fullName = fullName.substring(0, min(fullName.length(), 50));
-                            applicationUser.setFullname(fullName);
+                for (int j = 0; j < 10; j++) {
+                    ApplicationUser applicationUser = new ApplicationUser();
+                    applicationUser.setHashedPassword("$2a$10$7Uq5UoCp/txscI11yYpOkuqJ7ASjLEyjJZPsF25VVW9kTKoK2CaQS");
+                    applicationUser.setTenantDepartmentId(tenantDepartment.getId());
+                    applicationUser.setMustChangePwd(false);
 
-                            applicationUser.setBirthday(faker.timeAndDate().birthday());
-                            applicationUser.setPhone(faker.phoneNumber().cellPhone());
+                    String fullName = faker.funnyName().name() + " " + faker.name().lastName();
+                    fullName = fullName.substring(0, min(fullName.length(), 50));
+                    applicationUser.setFullname(fullName);
 
-                            String email = faker.funnyName().name() + round(random() * 10000) + "@" + faker.company().name() + "-" + round(random() * 10000) + ".com";
-                            email = email.substring(0, min(email.length(), 100));
-                            applicationUser.setEmail(email);
-                            applicationUser.setEmailConfirmed(true);
-                            applicationUser.setCreated(LocalDateTime.now());
-                            applicationUser.setLastLogin(LocalDateTime.now());
-                            applicationUser.setIsLocked(false);
-                            applicationUser.setIsDisabled(false);
-                            applicationUser.setDescription(faker.famousLastWords().lastWords());
-                            applicationUsers.add(applicationUser);
-                        }
-                        ServiceAccessPoint.getServiceAccessPointInstance().getTenantDepartmentEmployeeRepository().saveAll(applicationUsers);
-                    }
+                    applicationUser.setBirthday(faker.timeAndDate().birthday());
+                    applicationUser.setPhone(faker.phoneNumber().cellPhone());
 
-                });
+                    String email = faker.funnyName().name() + round(random() * 10000) + "@" + faker.company().name() + "-" + round(random() * 10000) + ".com";
+                    email = email.substring(0, min(email.length(), 100));
+                    applicationUser.setEmail(email);
+                    applicationUser.setEmailConfirmed(true);
+                    applicationUser.setCreated(LocalDateTime.now());
+                    applicationUser.setLastLogin(LocalDateTime.now());
+                    applicationUser.setIsLocked(false);
+                    applicationUser.setIsDisabled(false);
+                    applicationUser.setDescription(faker.famousLastWords().lastWords());
+                    applicationUsers.add(applicationUser);
+                }
+                ServicePoint.getInstance().getEmployeeRepository().saveAll(applicationUsers);
             }
+
             System.out.println("Finished Generating employees ...");
         });
 
@@ -163,11 +157,11 @@ public class TenantCompanyView extends Main implements Signal {
             Random rand = new Random();
 
             System.out.println("Generating items ...");
-            List<ApplicationUser> applicationUserList = ServiceAccessPoint.getServiceAccessPointInstance().getTenantDepartmentEmployeeRepository().findFirst1000();
+            List<ApplicationUser> applicationUserList = ServicePoint.getInstance().getEmployeeRepository().findFirst1000();
             for (ApplicationUser applicationUser : applicationUserList) {
                 for(int i = 0; i < 100; i++) {
                     Item item = createItem(faker, applicationUser);
-                    ServiceAccessPoint.getServiceAccessPointInstance().getItemRepository().save(item);
+                    ServicePoint.getInstance().getItemRepository().save(item);
                 }
             }
             System.out.println("Finished generating items");
@@ -177,12 +171,12 @@ public class TenantCompanyView extends Main implements Signal {
             Faker faker = new Faker();
             Random rand = new Random();
 
-            ApplicationUser applicationUser = ServiceAccessPoint.getServiceAccessPointInstance().getTenantDepartmentEmployeeRepository().findById(applicatioUserIdField.getValue()).orElse(null);
+            ApplicationUser applicationUser = ServicePoint.getInstance().getEmployeeRepository().findById(applicatioUserIdField.getValue()).orElse(null);
             if (applicationUser != null) {
                 System.out.println("Generating items ...");
                 for(int i = 0; i < 10000; i++) {
                     Item item = createItem(faker, applicationUser);
-                    ServiceAccessPoint.getServiceAccessPointInstance().getItemRepository().save(item);
+                    ServicePoint.getInstance().getItemRepository().save(item);
                 }
                 System.out.println("Finished generating items");
             } else {
@@ -211,7 +205,7 @@ public class TenantCompanyView extends Main implements Signal {
         item.setCategory(catList.get(rand.nextInt(4)));
         item.setKrPerLiter(BigDecimal.valueOf(random() * 14));
         item.setPrice(rand.nextInt(1200));
-        item.setWarehouse(ServiceAccessPoint.getServiceAccessPointInstance().getWarehouseRepository().findAll().get(rand.nextInt(5)));
+        item.setWarehouse(ServicePoint.getInstance().getWarehouseRepository().findAll().get(rand.nextInt(5)));
         item.setBirthday(faker.timeAndDate().birthday());
         item.setActive(true);
         item.setCriticality(criticalList.get(rand.nextInt(3)));

@@ -37,11 +37,11 @@ public class TenantCompany implements BaseEntity, Serializable {
     @GridEditColumn(header = "Zip code and City", order = 3, fieldLength = 50)
     private String addressZipCity;
 
-    @MappedCollection(idColumn = "TENANT_COMPANY_ID", keyColumn = "ID")
-    private Set<TenantDepartment> departments;
+   @Transient
+    private List<TenantDepartment> departments = new ArrayList<>();
 
     @Version
-    private Integer version;
+    private Integer version = 0;
 
     @Override
     public String toString() {
@@ -52,4 +52,9 @@ public class TenantCompany implements BaseEntity, Serializable {
                 ", addressZipCity='" + addressZipCity + '\'' +
                 '}';
     }
+
+
+
+
+
 }

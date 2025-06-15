@@ -3,7 +3,7 @@ package dk.netbizz.vaadin.tenantcompany.ui.view;
 import com.vaadin.flow.component.grid.GridVariant;
 import dk.netbizz.vaadin.gridpro.utils.components.StandardNotifications;
 import dk.netbizz.vaadin.gridpro.utils.gridprogenerator.GenericGridProEditView;
-import dk.netbizz.vaadin.service.ServiceAccessPoint;
+import dk.netbizz.vaadin.service.ServicePoint;
 import dk.netbizz.vaadin.signal.Signal;
 import dk.netbizz.vaadin.signal.SignalType;
 import dk.netbizz.vaadin.tenantcompany.domain.TenantCompany;
@@ -60,6 +60,9 @@ public class TenantCompanyGrid extends GenericGridProEditView<TenantCompany> {
     @Override
     protected boolean canAddEntity() { return true; }
 
+    @Override
+    protected boolean canDeleteEntities() { return true; }
+
     // Constructing a new entity is domain specific
     @Override
     protected void addNew() {
@@ -88,12 +91,12 @@ public class TenantCompanyGrid extends GenericGridProEditView<TenantCompany> {
 
     @Override
     protected void saveEntity(TenantCompany entity) {
-        ServiceAccessPoint.getServiceAccessPointInstance().getTenantCompanyRepository().save( entity);
+        ServicePoint.getInstance().getTenantCompanyRepository().save( entity);
     }
 
     @Override
     protected List<TenantCompany> loadEntities() {
-        List<TenantCompany> list =  ServiceAccessPoint.getServiceAccessPointInstance().getTenantCompanyRepository().findAll();          // TODO How about LAZY loading ???  - AND WHICH REPOS are actually USED !?!?
+        List<TenantCompany> list =  ServicePoint.getInstance().getTenantCompanyService().findAll();          // TODO How about LAZY loading - could this be done by Aspect on access ???
         return  list;
     }
 
@@ -104,7 +107,7 @@ public class TenantCompanyGrid extends GenericGridProEditView<TenantCompany> {
 
     @Override
     protected void deleteEntity(TenantCompany entity) {
-        ServiceAccessPoint.getServiceAccessPointInstance().getTenantCompanyRepository().delete(entity);
+        ServicePoint.getInstance().getTenantCompanyRepository().delete(entity);
     }
 
     @Override
