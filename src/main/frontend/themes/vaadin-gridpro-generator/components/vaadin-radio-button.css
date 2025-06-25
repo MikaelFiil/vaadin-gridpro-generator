@@ -218,19 +218,20 @@
 }
 
 :host([theme~="trafficlight-green"][checked]) {
-    background-color: rgba(0,200,0,0.6);
+    background-color: rgba(68,220,68,0.7);
     box-shadow: var(--lumo-box-shadow-xs);
+    font-weight: 500;
 }
 
 :host([theme~="trafficlight-yellow"][checked]) {
-    background-color: rgba(220,220,0,0.7);
+    background-color: rgba(224,224,0,0.7);
     box-shadow: var(--lumo-box-shadow-xs);
+    font-weight: 500;
 }
 
 :host([theme~="trafficlight-red"][checked]) {
-    background-color: rgba(200,20,20,0.6);
+    background-color: rgba(255,60,60,0.7);
     box-shadow: var(--lumo-box-shadow-xs);
+    font-weight: 500;
 }
-
-
 

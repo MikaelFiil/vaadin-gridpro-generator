@@ -12,6 +12,7 @@ import java.lang.annotation.Target;
 @Target({ElementType.FIELD, ElementType.METHOD})
 public @interface GridEditColumn {
     String header() default "";
+    String dbColumnName() default "";
     int order() default 999;
     boolean sortable() default true;
     String format() default "";     // Is mandatory for dates
@@ -22,6 +23,9 @@ public @interface GridEditColumn {
     double minValue() default 0;
     double maxValue() default 1999999999;
     ColumnTextAlign textAlign() default ColumnTextAlign.START;
+    boolean autoWidth() default true;
+    boolean resizable() default true;
     int arrayEndIdx() default 0;         // Values from 0 to size of array
     boolean alternatingCol() default false;         // If there are multiple array columns they may alternate in the grid
 }
+

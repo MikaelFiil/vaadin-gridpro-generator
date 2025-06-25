@@ -1,44 +1,59 @@
 package dk.netbizz.vaadin.tenantcompany.ui.view;
 
 import com.vaadin.flow.component.grid.GridVariant;
+import com.vaadin.flow.component.grid.HeaderRow;
+import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.data.provider.DataProvider;
 import dk.netbizz.vaadin.gridpro.utils.components.StandardNotifications;
 import dk.netbizz.vaadin.gridpro.utils.gridprogenerator.GenericGridProEditView;
 import dk.netbizz.vaadin.service.ServicePoint;
-import dk.netbizz.vaadin.signal.Signal;
-import dk.netbizz.vaadin.signal.SignalType;
-import dk.netbizz.vaadin.tenantcompany.domain.TenantCompany;
+import dk.netbizz.vaadin.signal.domain.SignalHost;
 import dk.netbizz.vaadin.tenantcompany.domain.TenantDepartment;
-import dk.netbizz.vaadin.user.ui.view.EmployeeGrid;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class TenantDepartmentGrid extends GenericGridProEditView<TenantDepartment> {
 
-    private Signal signal;
-    private TenantCompany tenantCompany = null;
-    private EmployeeGrid tenantDepartmentEmployeeGrid;
 
-    public TenantDepartmentGrid(Signal signal, EmployeeGrid tenantDepartmentEmployeeGrid) {
+    private Integer tenantCompanyId = null;
+    private DataProvider<TenantDepartment, String> dataProvider;
+    private TextField tfDepartmentNameFilter;
+    private TextField tfDescriptionFilter;
+
+
+    public TenantDepartmentGrid() {
         super(TenantDepartment.class);
-        this.signal = signal;
-        this.tenantDepartmentEmployeeGrid = tenantDepartmentEmployeeGrid;
 
         setWidthFull();
         setMargin(false);
         setPadding(false);
         genericGrid.setWidth("100%");
-        genericGrid.setHeight("300px");
-        genericGrid.addThemeVariants(GridVariant.LUMO_COMPACT, GridVariant.LUMO_ROW_STRIPES, GridVariant.LUMO_NO_BORDER);
+        genericGrid.setHeight("600px");
+        genericGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES, GridVariant.LUMO_NO_BORDER);
         genericGrid.addClassName("vaadin-grid-generator");
+
+        dataProvider = DataProvider.fromFilteringCallbacks(
+            query -> (tenantCompanyId == null) ? new ArrayList<TenantDepartment>().stream() : ServicePoint.servicePointInstance().getTenantDepartmentService().findFromQuery(createWhere(), createOrderBy(query.getSortOrders()), query.getLimit(), query.getOffset()).stream(),
+            query -> (tenantCompanyId == null) ? 0 : ServicePoint.servicePointInstance().getTenantDepartmentService().countFromQueryFilter(createWhere())
+        );
 
         setupGrid(makeParams());
         setupGridEventHandlers();
+        genericGrid.setDataProvider(dataProvider);
+
+        HeaderRow headerRow = genericGrid.appendHeaderRow();
+        tfDepartmentNameFilter = createSearchField("name",headerRow.getCell(genericGrid.getColumnByKey("departmentName")));
+        tfDescriptionFilter = createSearchField("description",headerRow.getCell(genericGrid.getColumnByKey("description")));
+
+        setMaxGridHeight(10);
     }
 
-
-    private TenantDepartment createEmptyTenantDepartment(TenantCompany tenantCompany) {
+    private TenantDepartment createEmptyTenantDepartment(Integer tenantCompanyId) {
         TenantDepartment tenantDepartment = new TenantDepartment();
-        tenantDepartment.setTenantCompanyId(tenantCompany.getId());
+        tenantDepartment.setTenantCompanyId(tenantCompanyId);
         tenantDepartment.setDepartmentName("Enter a name ...");
         tenantDepartment.setDescription("");
         return tenantDepartment;
@@ -46,14 +61,24 @@ public class TenantDepartmentGrid extends GenericGridProEditView<TenantDepartmen
 
     private Map<String, String> makeParams() {
         Map<String , String> params = new HashMap<>();
-        params.put("id.readonly", "true");
+        params.put("readonly", "true");                         // Make entire grid readonly
         return params;
     }
 
-    public void setTenantCompany(TenantCompany tenantCompany) {
-        this.tenantCompany = tenantCompany;
+    public void setTenantCompanyId(Integer tenantCompanyId) {
+        if (tenantCompanyId == 0) {
+            this.tenantCompanyId = null;
+        } else {
+            this.tenantCompanyId = tenantCompanyId;
+        }
         refreshGrid();
-        tenantDepartmentEmployeeGrid.setTenantDepartment(null);
+    }
+
+    private String createWhere() {
+        StringBuilder where = new StringBuilder(" where tenant_company_id = " + tenantCompanyId);
+        where.append(tfDepartmentNameFilter.getValue().isEmpty() ? "" : (" and " + "lower(department_name) like '%" + tfDepartmentNameFilter.getValue().toLowerCase() + "%'"));
+        where.append(tfDescriptionFilter.getValue().isEmpty() ? "" : (" and " + "lower(description) like '%" + tfDescriptionFilter.getValue().toLowerCase() + "%'"));
+        return where.toString();
     }
 
     @Override
@@ -69,10 +94,11 @@ public class TenantDepartmentGrid extends GenericGridProEditView<TenantDepartmen
     @Override
     protected void addNew() {
         // Create empty instance and add to the current list here if need be
-        TenantDepartment item = null;
-        if (tenantCompany != null) {
-            item = createEmptyTenantDepartment(tenantCompany);
-            saveEntity(item);
+        if (tenantCompanyId != null) {
+            TenantDepartment entity = createEmptyTenantDepartment(tenantCompanyId);
+            saveEntity(entity);
+            genericGrid.select(entity);
+            SignalHost.signalHostInstance().getSignal("departmentId").value(entity.getId());
         }
         refreshGrid();
     }
@@ -94,20 +120,11 @@ public class TenantDepartmentGrid extends GenericGridProEditView<TenantDepartmen
 
     @Override
     protected void saveEntity(TenantDepartment entity) {
-        System.out.println("Saving TenantDepartment " + entity);
-        ServicePoint.getInstance().getTenantDepartmentRepository().save( entity);
+        ServicePoint.servicePointInstance().getTenantDepartmentRepository().save( entity);
     }
 
     @Override
-    protected List<TenantDepartment> loadEntities() {
-        if ((tenantCompany != null) && (tenantCompany.getId() != null)) {
-            return new ArrayList<>(tenantCompany.getDepartments());
-            // return ServiceAccessPoint.getServiceAccessPointInstance().getTenantDepartmentRepository().findByTenantCompanyId(tenantCompany.getId());
-        } else {
-            // return Collections.EMPTY_SET;
-            return new ArrayList<>();
-        }
-    }
+    protected void loadEntities() { dataProvider.refreshAll(); }
 
     @Override
     protected void clearEntities() {
@@ -116,13 +133,13 @@ public class TenantDepartmentGrid extends GenericGridProEditView<TenantDepartmen
 
     @Override
     protected void deleteEntity(TenantDepartment entity) {
-        ServicePoint.getInstance().getTenantDepartmentRepository().delete(entity);
+        ServicePoint.servicePointInstance().getTenantDepartmentRepository().delete(entity);
+        SignalHost.signalHostInstance().getSignal("departmentId").value(0);
     }
 
     @Override
     protected void selectEntity(TenantDepartment entity) {
-        signal.signal(SignalType.DOMAIN_SUB_NODE_SELECTED, entity);
-        // tenantDepartmentEmployeeGrid.setTenantDepartment(entity);
+        SignalHost.signalHostInstance().getSignal("departmentId").value(entity.getId());
     }
 
     @Override
@@ -132,7 +149,7 @@ public class TenantDepartmentGrid extends GenericGridProEditView<TenantDepartmen
     }
 
     @Override
-    protected String getFixedCalculatedText(TenantDepartment item, String colName) { return ""; }
+    protected String getFixedCalculatedText(TenantDepartment entity, String colName) { return ""; }
 
 
 }

@@ -1,12 +1,15 @@
 package dk.netbizz.vaadin.item.ui.view;
 
 import com.vaadin.flow.component.grid.GridVariant;
+import com.vaadin.flow.component.grid.HeaderRow;
+import com.vaadin.flow.component.select.Select;
+import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.data.provider.DataProvider;
 import dk.netbizz.vaadin.gridpro.utils.components.StandardNotifications;
 import dk.netbizz.vaadin.gridpro.utils.gridprogenerator.GenericGridProEditView;
 import dk.netbizz.vaadin.item.domain.Item;
 import dk.netbizz.vaadin.service.ServicePoint;
-import dk.netbizz.vaadin.signal.Signal;
-import dk.netbizz.vaadin.user.domain.ApplicationUser;
+import dk.netbizz.vaadin.warehouse.domain.Warehouse;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -15,32 +18,46 @@ import java.util.Map;
 
 public class ItemGrid extends GenericGridProEditView<Item> {
 
-    private final transient Signal signal;
-    private ApplicationUser applicationUser;
+    private Integer applicationUserId;
+    private DataProvider<Item, String> dataProvider;
+    private TextField tfItemNameFilter;
+    private Select<String> tfCriticalFilter;
+    private List<Warehouse> warehouseList;
 
 
-    public ItemGrid(Signal signal) {
+    public ItemGrid() {
         super(Item.class);
-        this.signal = signal;
+        warehouseList = ServicePoint.servicePointInstance().getWarehouseRepository().findAll();
 
         setWidthFull();
         setMargin(false);
         setPadding(false);
         genericGrid.setWidth("100%");
         genericGrid.setHeight("600px");
-        genericGrid.addThemeVariants(GridVariant.LUMO_COMPACT, GridVariant.LUMO_ROW_STRIPES, GridVariant.LUMO_NO_BORDER);
-        genericGrid.addThemeVariants(GridVariant.LUMO_WRAP_CELL_CONTENT);
+        genericGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES, GridVariant.LUMO_NO_BORDER);
         genericGrid.addClassName("vaadin-grid-generator");
+
+        dataProvider = DataProvider.fromFilteringCallbacks(
+            query -> (applicationUserId == null) ? new ArrayList<Item>().stream() : ServicePoint.servicePointInstance().getItemService().findFromQuery(warehouseList, createWhere(), createOrderBy(query.getSortOrders()), query.getLimit(), query.getOffset()).stream(),
+            query -> (applicationUserId == null) ? 0 : ServicePoint.servicePointInstance().getItemService().countFromQueryFilter(createWhere())
+        );
 
         setupGrid(makeParams());
         setupGridEventHandlers();
+        genericGrid.setDataProvider(dataProvider);
+
+        HeaderRow headerRow = genericGrid.appendHeaderRow();
+        tfItemNameFilter = createSearchField("itemname",headerRow.getCell(genericGrid.getColumnByKey("itemName")));
+        tfCriticalFilter = createSelectSearchField("critical",headerRow.getCell(genericGrid.getColumnByKey("criticality")), getItemsForSelect("criticality"));
+
+        setMaxGridHeight(15);
     }
 
     private Item createEmptyItem() {
         Item item = new Item();
-        item.setApplicationUserId(applicationUser.getId());
+        item.setApplicationUserId(applicationUserId);
         item.setItemName("Enter a name ...");
-        item.setWarehouse(ServicePoint.getInstance().getWarehouseRepository().findAll().getFirst());
+        item.setWarehouse(ServicePoint.servicePointInstance().getWarehouseRepository().findAll().getFirst());
         item.setActive(true);
         item.setDescription("");
         item.setPrice(0);
@@ -51,31 +68,41 @@ public class ItemGrid extends GenericGridProEditView<Item> {
     private Map<String, String> makeParams() {
         Map<String , String> params = new HashMap<>();
         params.put("price.readonly", "true");
+        params.put("criticality.readonly", "true");
         params.put("yearlyAmount.arrayEndIdx", "3");            // Indexes are zero based
         params.put("yearlyAmount.header0", "Year 2024");
         params.put("yearlyAmount.header1", "Year 2025");
         params.put("yearlyAmount.header2", "Year 2026");
         params.put("yearlyAmount.header3", "Year 2027");
 
-        params.put("impactAmount.arrayEndIdx", "2");
+        params.put("impactAmount.arrayEndIdx", "2");            // Indexes are zero based
         params.put("impactAmount.header0", "Impact 1");
         params.put("impactAmount.header1", "Impact 2");
         params.put("impactAmount.header2", "Impact 3");
 
-        params.put("likelihood.arrayEndIdx", "2");
+        params.put("likelihood.arrayEndIdx", "2");              // Indexes are zero based
         params.put("likelihood.header0", "likelihood 1");
         params.put("likelihood.header1", "likelihood 2");
         params.put("likelihood.header2", "likelihood 3");
 
-        params.put("calculatedImpact.arrayEndIdx", "2");
+        params.put("calculatedImpact.arrayEndIdx", "2");        // Indexes are zero based
         return params;
     }
 
-
-    public void setTenantDepartmentEmployee(ApplicationUser applicationUser) {
-        this.applicationUser = applicationUser;
+    public void setTenantDepartmentEmployee(Integer applicationUserId) {
+        if (applicationUserId == 0) {
+            this.applicationUserId = null;
+        } else {
+            this.applicationUserId = applicationUserId;
+        }
         refreshGrid();
-        // signal.signal(SignalType.DOMAIN_SUB_NODE_SELECTED, applicationUser);
+    }
+
+    private String createWhere() {
+        StringBuilder where = new StringBuilder(" where application_user_id = " + applicationUserId);
+        where.append(tfItemNameFilter.getValue().isEmpty() ? "" : (" and " + "lower(item_name) like '%" + tfItemNameFilter.getValue().toLowerCase() + "%'"));
+        where.append(tfCriticalFilter.getValue() == null || tfCriticalFilter.getValue().isEmpty() ? "" : (" and " + "lower(criticality) like '%" + tfCriticalFilter.getValue().toLowerCase() + "%'"));
+        return where.toString();
     }
 
     @Override
@@ -91,8 +118,12 @@ public class ItemGrid extends GenericGridProEditView<Item> {
     @Override
     protected void addNew() {
         // Create empty instance and add to the current list here if need be
-        Item item = createEmptyItem();
-        saveEntity(item);
+        if (applicationUserId != null) {
+            Item entity = createEmptyItem();
+            saveEntity(entity);
+            genericGrid.select(entity);
+
+        }
         refreshGrid();
     }
 
@@ -113,17 +144,12 @@ public class ItemGrid extends GenericGridProEditView<Item> {
 
     @Override
     protected void saveEntity(Item entity) {
-        ServicePoint.getInstance().getItemRepository().save(entity);
+        ServicePoint.servicePointInstance().getItemService().save(entity);
     }
 
     @Override
-    protected List<Item> loadEntities() {
-        if ((applicationUser != null) && (applicationUser.getId() != null)) {
-            return new ArrayList<>(applicationUser.getItems());
-            // return ServiceAccessPoint.getServiceAccessPointInstance().getItemRepository().findByApplicationUserId(applicationUser.getId());
-        } else {
-            return new ArrayList<>();
-        }
+    protected void loadEntities() {
+        dataProvider.refreshAll();
     }
 
     @Override
@@ -133,12 +159,12 @@ public class ItemGrid extends GenericGridProEditView<Item> {
 
     @Override
     protected void deleteEntity(Item entity) {
-        ServicePoint.getInstance().getItemRepository().delete(entity);
+        ServicePoint.servicePointInstance().getItemRepository().delete(entity);
     }
 
     @Override
     protected void selectEntity(Item entity) {
-        // No dependencies
+        // signal.signal(ViaveaSignalType.DOMAIN_SUB_NODE_SELECTED, entity);
     }
 
     @SuppressWarnings("unchecked")
@@ -150,7 +176,10 @@ public class ItemGrid extends GenericGridProEditView<Item> {
                 return (List<S>) new ArrayList<>(List.of("Technical", "Quality", "Delivery", "Legal"));
             }
             case "warehouse" -> {
-                return (List<S>) ServicePoint.getInstance().getWarehouseRepository().findAll();
+                return (List<S>) warehouseList;
+            }
+            case "criticality" -> {
+                return (List<S>) new ArrayList<>(List.of("", "Low", "Medium", "High"));
             }
             default -> { /* keep compiler happy */ }
         }

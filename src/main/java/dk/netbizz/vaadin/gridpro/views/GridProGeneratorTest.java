@@ -18,9 +18,11 @@ import java.util.List;
 import java.util.Map;
 
 
+/*
 @PageTitle("GridPro Generator Test")
 @Menu(order = 2, icon = "line-awesome/svg/home-solid.svg")
 @Route(value = "gridpro-gen-test", layout = MainLayout.class)
+ */
 public class GridProGeneratorTest extends VerticalLayout {
 
     ItemDataService dataService;

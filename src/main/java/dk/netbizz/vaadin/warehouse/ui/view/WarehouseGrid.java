@@ -83,12 +83,12 @@ public class WarehouseGrid extends GenericGridProEditView<Warehouse> {
 
     @Override
     protected void saveEntity(Warehouse entity) {
-        ServicePoint.getInstance().getWarehouseRepository().save( entity);
+        ServicePoint.servicePointInstance().getWarehouseRepository().save( entity);
     }
 
     @Override
-    protected List<Warehouse> loadEntities() {
-        return ServicePoint.getInstance().getWarehouseRepository().findAll();
+    protected void loadEntities() {
+        genericGrid.setItems(ServicePoint.servicePointInstance().getWarehouseRepository().findAll());
     }
 
     @Override
@@ -98,7 +98,7 @@ public class WarehouseGrid extends GenericGridProEditView<Warehouse> {
 
     @Override
     protected void deleteEntity(Warehouse entity) {
-        ServicePoint.getInstance().getWarehouseRepository().delete(entity);
+        ServicePoint.servicePointInstance().getWarehouseRepository().delete(entity);
     }
 
     @Override

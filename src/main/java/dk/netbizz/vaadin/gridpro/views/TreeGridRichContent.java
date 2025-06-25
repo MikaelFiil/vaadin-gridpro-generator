@@ -22,10 +22,11 @@ import dk.netbizz.vaadin.resource.ui.view.ResourceView;
 
 import java.util.List;
 
-
+/*
 @PageTitle("Tree Grid experimental")
 @Menu(order = 3, icon = "line-awesome/svg/home-solid.svg")
 @Route(value = "tree-grid-rich-content", layout = MainLayout.class)
+ */
 public class TreeGridRichContent extends VerticalLayout {
 
     private final ResourceDataService resourceDataService;

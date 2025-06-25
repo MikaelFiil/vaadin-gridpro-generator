@@ -2,6 +2,7 @@ package dk.netbizz.vaadin.gridpro.utils.components;
 
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
+import com.vaadin.flow.component.radiobutton.RadioGroupVariant;
 import dk.netbizz.vaadin.gridpro.utils.themes.RadioButtonTheme;
 
 import java.util.Arrays;

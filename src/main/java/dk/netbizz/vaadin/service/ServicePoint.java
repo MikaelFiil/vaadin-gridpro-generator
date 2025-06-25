@@ -2,6 +2,7 @@ package dk.netbizz.vaadin.service;
 
 
 import dk.netbizz.vaadin.item.service.ItemRepository;
+import dk.netbizz.vaadin.item.service.ItemService;
 import dk.netbizz.vaadin.tenantcompany.service.TenantCompanyRepository;
 import dk.netbizz.vaadin.tenantcompany.service.TenantCompanyService;
 import dk.netbizz.vaadin.tenantcompany.service.TenantDepartmentRepository;
@@ -35,15 +36,16 @@ public class ServicePoint {
     @Autowired
     private WarehouseRepository warehouseRepository;
     @Autowired
+    private ItemService itemService;
+    @Autowired
     private ItemRepository itemRepository;
-
 
 
     private ServicePoint() {
     }
 
     @Bean
-    public static synchronized ServicePoint getInstance() {
+    public static synchronized ServicePoint servicePointInstance() {
         if (instance == null) {
             instance = new ServicePoint();
         }

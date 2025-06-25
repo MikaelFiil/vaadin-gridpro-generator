@@ -13,6 +13,4 @@ public interface TenantDepartmentRepository extends ListCrudRepository<TenantDep
     @Query("select * from tenant_department where tenant_company_id = :tenantCompanyId")
     List<TenantDepartment> findByTenantCompanyId(int tenantCompanyId);
 
-
-
 }

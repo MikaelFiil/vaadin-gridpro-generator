@@ -5,13 +5,11 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Menu;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
-import dk.netbizz.vaadin.signal.Signal;
-import dk.netbizz.vaadin.signal.SignalType;
 
 @Route("warehouse")
 @PageTitle("Warehouse list")
 @Menu(order = 4, icon = "vaadin:clipboard-check", title = "Warehouses")
-public class WarehouseView extends Main implements Signal {
+public class WarehouseView extends Main {
 
     VerticalLayout verticalLayout = new VerticalLayout();
     WarehouseGrid warehouseGrid = new WarehouseGrid();
@@ -33,13 +31,5 @@ public class WarehouseView extends Main implements Signal {
     private void buildUX()  {
 
     }
-
-    public void signal(SignalType signalEvent, Object signal) {
-        switch(signalEvent) {
-            case SignalType.DOMAIN_ROOT_SELECTED -> {
-            }
-        }
-    }
-
 
 }

@@ -1,5 +1,6 @@
 package dk.netbizz.vaadin.tenantcompany.ui.view;
 
+import com.vaadin.flow.component.ComponentEffect;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.details.Details;
 import com.vaadin.flow.component.html.Main;
@@ -10,28 +11,28 @@ import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.router.Menu;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import com.vaadin.signals.ValueSignal;
 import dk.netbizz.vaadin.MainLayout;
 import dk.netbizz.vaadin.gridpro.utils.components.StandardNotifications;
 import dk.netbizz.vaadin.item.domain.Item;
 import dk.netbizz.vaadin.item.ui.view.ItemGrid;
 import dk.netbizz.vaadin.service.ServicePoint;
-import dk.netbizz.vaadin.signal.Signal;
-import dk.netbizz.vaadin.signal.SignalType;
+import dk.netbizz.vaadin.signal.domain.SignalHost;
 import dk.netbizz.vaadin.tenantcompany.domain.TenantCompany;
 import dk.netbizz.vaadin.tenantcompany.domain.TenantDepartment;
 import dk.netbizz.vaadin.user.domain.ApplicationUser;
 import dk.netbizz.vaadin.user.ui.view.EmployeeGrid;
+import dk.netbizz.vaadin.warehouse.domain.Warehouse;
 import net.datafaker.Faker;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.Random;
 
 import static java.lang.Math.*;
-import static java.lang.Math.random;
 
 // https://docs.spring.io/spring-data/jdbc/docs/2.4.15/reference/html/
 // https://docs.spring.io/spring-framework/docs/4.3.25.RELEASE/spring-framework-reference/html/jdbc.html
@@ -41,29 +42,39 @@ import static java.lang.Math.random;
 @PageTitle("Load & performance test")
 @Menu(order = 5, icon = "vaadin:clipboard-check", title = "Load & performance test")
 @Route(value = "loadtest", layout = MainLayout.class)
-public class TenantCompanyView extends Main implements Signal {
+public class TenantCompanyView extends Main  {
 
     List<String> catList = new ArrayList<>(List.of("Technical", "Quality", "Delivery", "Legal"));
     List<String> criticalList = new ArrayList<>(List.of("Low", "Medium", "High"));
 
-    Button genDepartmentsButton = new Button("Generate departments");
-    Button genEmployeesButton = new Button("Generate employees");
+    Button genDepartmentsButton = new Button("Generate 100 departments pre tenant company");
+    Button genEmployeesButton = new Button("Generate 10 employees per department");
     Button genItemsButton = new Button("Generate 100 items for first 1000 users ");
     Button genItems10000Button = new Button("Generate 10000 items for user with id: ");
     IntegerField applicatioUserIdField = new IntegerField("Enter Employee id");
 
+    ValueSignal<Integer> companyId = new ValueSignal<>(0);
+    ValueSignal<Integer> departmentId = new ValueSignal<>(0);
+    ValueSignal<Integer> employeeId = new ValueSignal<>(0);
+    ValueSignal<Integer> itemId = new ValueSignal<>(0);
 
-    VerticalLayout verticalLayout = new VerticalLayout();
-    ItemGrid itemGrid = new ItemGrid(this);
-    EmployeeGrid tenantDepartmentEmployeeGrid = new EmployeeGrid(this, itemGrid);
-    TenantDepartmentGrid tenantDepartmentGrid = new TenantDepartmentGrid(this, tenantDepartmentEmployeeGrid);
-    TenantCompanyGrid tenantCompanyGrid = new TenantCompanyGrid(this, tenantDepartmentGrid);
-
+    private VerticalLayout verticalLayout = new VerticalLayout();
+    private ItemGrid itemGrid;
+    private EmployeeGrid tenantDepartmentEmployeeGrid;
+    private TenantDepartmentGrid tenantDepartmentGrid;
+    private TenantCompanyGrid tenantCompanyGrid;
     Details departmentDetails = new Details("Departments");
     Details employeeDetails = new Details("Employees");
     Details itemDetails = new Details("Items");
 
+    @Autowired
     public TenantCompanyView() {
+        setupSignals();
+        itemGrid = new ItemGrid();
+        tenantDepartmentEmployeeGrid = new EmployeeGrid();
+        tenantDepartmentGrid = new TenantDepartmentGrid();
+        tenantCompanyGrid = new TenantCompanyGrid();
+
         setSizeFull();
         buildUI();
         buildUX();
@@ -74,6 +85,26 @@ public class TenantCompanyView extends Main implements Signal {
 
         add(verticalLayout);
         tenantCompanyGrid.refresh();
+        setupEffects();
+    }
+
+    private void setupSignals() {
+        SignalHost.signalHostInstance().addSignal("companyId", companyId);
+        SignalHost.signalHostInstance().addSignal("departmentId", departmentId);
+        SignalHost.signalHostInstance().addSignal("employeeId", employeeId);
+        SignalHost.signalHostInstance().addSignal("itemId", itemId);
+    }
+
+    private void setupEffects() {
+        ComponentEffect.effect(tenantDepartmentGrid, () -> {
+            tenantDepartmentGrid.setTenantCompanyId(companyId.value());
+        });
+        ComponentEffect.effect(tenantDepartmentEmployeeGrid, () -> {
+            tenantDepartmentEmployeeGrid.setTenantDepartmentId(departmentId.value());
+        });
+        ComponentEffect.effect(itemGrid, () -> {
+            itemGrid.setTenantDepartmentEmployee(employeeId.value());
+        });
     }
 
     private void buildUI() {
@@ -96,7 +127,7 @@ public class TenantCompanyView extends Main implements Signal {
             Faker faker = new Faker();
             System.out.println("Generating departments ...");
 
-            List<TenantCompany> tenantCompanyList = ServicePoint.getInstance().getTenantCompanyRepository().findAll();
+            List<TenantCompany> tenantCompanyList = ServicePoint.servicePointInstance().getTenantCompanyRepository().findAll();
             for(TenantCompany tenantCompany : tenantCompanyList) {
 
                 for (int j = 0; j < 100; j++) {
@@ -106,7 +137,7 @@ public class TenantCompanyView extends Main implements Signal {
                     desc = desc.substring(0, min(desc.length(), 250));
                     TenantDepartment tenantDepartment = new TenantDepartment(depName, desc);
                     tenantDepartment.setTenantCompanyId(tenantCompany.getId());
-                    ServicePoint.getInstance().getTenantDepartmentService().save(tenantDepartment);
+                    ServicePoint.servicePointInstance().getTenantDepartmentService().save(tenantDepartment);
                     tenantCompany.getDepartments().add(tenantDepartment);
                 }
             }
@@ -118,7 +149,7 @@ public class TenantCompanyView extends Main implements Signal {
             Faker faker = new Faker();
             System.out.println("Generating employees ...");
 
-            List<TenantDepartment> tenantDepartments = ServicePoint.getInstance().getTenantDepartmentRepository().findAll();
+            List<TenantDepartment> tenantDepartments = ServicePoint.servicePointInstance().getTenantDepartmentRepository().findAll();
             for (TenantDepartment tenantDepartment : tenantDepartments) {
                 List<ApplicationUser> applicationUsers = new ArrayList<>();
 
@@ -146,7 +177,7 @@ public class TenantCompanyView extends Main implements Signal {
                     applicationUser.setDescription(faker.famousLastWords().lastWords());
                     applicationUsers.add(applicationUser);
                 }
-                ServicePoint.getInstance().getEmployeeRepository().saveAll(applicationUsers);
+                ServicePoint.servicePointInstance().getEmployeeRepository().saveAll(applicationUsers);
             }
 
             System.out.println("Finished Generating employees ...");
@@ -157,11 +188,11 @@ public class TenantCompanyView extends Main implements Signal {
             Random rand = new Random();
 
             System.out.println("Generating items ...");
-            List<ApplicationUser> applicationUserList = ServicePoint.getInstance().getEmployeeRepository().findFirst1000();
+            List<ApplicationUser> applicationUserList = ServicePoint.servicePointInstance().getEmployeeRepository().findFirst1000();
             for (ApplicationUser applicationUser : applicationUserList) {
                 for(int i = 0; i < 100; i++) {
                     Item item = createItem(faker, applicationUser);
-                    ServicePoint.getInstance().getItemRepository().save(item);
+                    ServicePoint.servicePointInstance().getItemService().save(item);
                 }
             }
             System.out.println("Finished generating items");
@@ -171,12 +202,12 @@ public class TenantCompanyView extends Main implements Signal {
             Faker faker = new Faker();
             Random rand = new Random();
 
-            ApplicationUser applicationUser = ServicePoint.getInstance().getEmployeeRepository().findById(applicatioUserIdField.getValue()).orElse(null);
+            ApplicationUser applicationUser = ServicePoint.servicePointInstance().getEmployeeRepository().findById(applicatioUserIdField.getValue()).orElse(null);
             if (applicationUser != null) {
                 System.out.println("Generating items ...");
                 for(int i = 0; i < 10000; i++) {
                     Item item = createItem(faker, applicationUser);
-                    ServicePoint.getInstance().getItemRepository().save(item);
+                    ServicePoint.servicePointInstance().getItemService().save(item);
                 }
                 System.out.println("Finished generating items");
             } else {
@@ -194,6 +225,8 @@ public class TenantCompanyView extends Main implements Signal {
                     <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
                 """;
 
+        List<Warehouse> warehouseList = ServicePoint.servicePointInstance().getWarehouseRepository().findAll();
+        int whCount = warehouseList.size();
         Random rand = new Random();
 
         Item item = new Item();
@@ -205,7 +238,7 @@ public class TenantCompanyView extends Main implements Signal {
         item.setCategory(catList.get(rand.nextInt(4)));
         item.setKrPerLiter(BigDecimal.valueOf(random() * 14));
         item.setPrice(rand.nextInt(1200));
-        item.setWarehouse(ServicePoint.getInstance().getWarehouseRepository().findAll().get(rand.nextInt(5)));
+        item.setWarehouse(warehouseList.get(rand.nextInt(whCount)));  // ServicePoint.getInstance().getWarehouseRepository().findAll().get(rand.nextInt(5))
         item.setBirthday(faker.timeAndDate().birthday());
         item.setActive(true);
         item.setCriticality(criticalList.get(rand.nextInt(3)));
@@ -236,26 +269,5 @@ public class TenantCompanyView extends Main implements Signal {
         employeeDetails.setSummaryText("Employees");
         itemDetails.setSummaryText("Items");
     }
-
-    // See https://vaadin.com/docs/latest/flow/advanced/server-push  Broadcaster
-    public void signal(SignalType signalEvent, Object signal) {
-        switch(signalEvent) {
-            case DOMAIN_ROOT_SELECTED -> {
-                departmentDetails.setSummaryText("Departments of " + ((TenantCompany) signal).getCompanyName());
-                tenantDepartmentGrid.setTenantCompany((TenantCompany)signal);
-            }
-            case DOMAIN_SUB_NODE_SELECTED -> {
-                if (signal instanceof TenantDepartment) {
-                    employeeDetails.setSummaryText("Employees of " + ((TenantDepartment) signal).getDepartmentName());
-                    tenantDepartmentEmployeeGrid.setTenantDepartment((TenantDepartment) signal);
-                }
-                if (signal instanceof ApplicationUser) {
-                    itemDetails.setSummaryText("Items of " + ((ApplicationUser) signal).getFullname());
-                    itemGrid.setTenantDepartmentEmployee(((ApplicationUser) signal));
-                }
-            }
-        }
-    }
-
 
 }

@@ -229,21 +229,32 @@ public class InputFieldCreator {
     /**************************************************************************************
      *  T E X T A R E A    F I E L D
      */
+    private static String taWidth = "40rem";
 
-    public static TextArea createStandardTextArea(String label) {
-        TextArea ta = new TextArea(label);
-        ta.setSizeFull();
+    private static void styleTextArea(TextArea ta) {
+        ta.setWidth(taWidth);
+        ta.setMaxWidth(taWidth);
         ta.getStyle().set("resize", "both");
         ta.getStyle().set("overflow", "auto");
+        // ta.getStyle().set("white-space", "pre-wrap");
+    }
+
+    public static TextArea createStandardTextArea(int maxLength) {
+        TextArea ta = new TextArea();
+        ta.setMaxLength(maxLength);
+        styleTextArea(ta);
         return ta;
     }
 
+    public static TextArea createStandardTextArea(String label) {
+        TextArea ta = new TextArea(label);
+        styleTextArea(ta);
+        return ta;
+    }
 
     public static TextArea createStandardTextArea(String label, String content) {
         TextArea ta = new TextArea(label);
-        ta.setSizeFull();
-        ta.getStyle().set("resize", "both");
-        ta.getStyle().set("overflow", "auto");
+        styleTextArea(ta);
         ta.setValue(content);
         return ta;
     }
@@ -251,17 +262,13 @@ public class InputFieldCreator {
     public static TextArea createFullWidthTextArea(String label, int maxLength, String content) {
         TextArea ta = new TextArea(label);
         ta.setMaxLength(maxLength);
-        ta.setSizeFull();
-        ta.getStyle().set("resize", "both");
-        ta.getStyle().set("overflow", "auto");
+        styleTextArea(ta);
         ta.setValue(content);
         return ta;
     }
 
 
-    public static Html createDivider() {
-        return new Html("</hr class='viavea-hr'>");
-    }
+    public static Html createDivider() { return new Html("<hr class='viavea-hr'></hr>"); }
 
     /**************************************************************************************
      *  S E L E C T     F I E L D

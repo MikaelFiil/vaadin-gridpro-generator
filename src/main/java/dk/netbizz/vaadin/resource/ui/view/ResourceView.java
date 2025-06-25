@@ -77,8 +77,8 @@ public class ResourceView extends GenericGridProEditView<Resource> {
     }
 
     @Override
-    protected List<Resource> loadEntities() {
-        return entityList;
+    protected void loadEntities() {
+        genericGrid.setItems(entityList);
     }
 
     @Override

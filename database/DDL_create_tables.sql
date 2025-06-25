@@ -48,7 +48,7 @@ create table if not exists netbizz.tenant_company (
     version integer
 );
 alter sequence tenant_company_id_seq restart with 1000;
-create index on netbizz.tenant_company(company_name);
+create index on netbizz.tenant_company(lower(trim(company_name)));
 
 -- VIEAVEA customers departments. This is only created by VIAVEA administrators
 

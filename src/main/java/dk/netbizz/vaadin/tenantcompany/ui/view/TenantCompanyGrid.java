@@ -1,11 +1,14 @@
 package dk.netbizz.vaadin.tenantcompany.ui.view;
 
 import com.vaadin.flow.component.grid.GridVariant;
+import com.vaadin.flow.component.grid.HeaderRow;
+import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.data.provider.DataProvider;
+
 import dk.netbizz.vaadin.gridpro.utils.components.StandardNotifications;
 import dk.netbizz.vaadin.gridpro.utils.gridprogenerator.GenericGridProEditView;
 import dk.netbizz.vaadin.service.ServicePoint;
-import dk.netbizz.vaadin.signal.Signal;
-import dk.netbizz.vaadin.signal.SignalType;
+import dk.netbizz.vaadin.signal.domain.SignalHost;
 import dk.netbizz.vaadin.tenantcompany.domain.TenantCompany;
 
 import java.util.ArrayList;
@@ -13,26 +16,47 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * To avoid loading too many rows at once we need pagination and lazy loading
+ * Also we should have filtering applied to certain columns and it should work in combination with pagination
+ *
+ * Filtering done right:  https://github.com/mstahv/grid-filtering-example/blob/master/src/main/java/org/example/views/GridColumnFiltering.java
+ */
+
+
 public class TenantCompanyGrid extends GenericGridProEditView<TenantCompany> {
 
-    private Signal signal;
-    private  TenantDepartmentGrid tenantDepartmentGrid;
+    private DataProvider<TenantCompany, String> dataProvider;
+    private TextField tfCompanyNameFilter;
+    private TextField tfAddressStreetFilter;
+    private TextField tfAddressZipCityFilter;
 
-    public TenantCompanyGrid(Signal signal, TenantDepartmentGrid tenantDepartmentGrid) {
+    public TenantCompanyGrid() {
         super(TenantCompany.class);
-        this.signal = signal;
-        this.tenantDepartmentGrid = tenantDepartmentGrid;
         setWidthFull();
         setMargin(false);
         setPadding(false);
         genericGrid.setWidth("100%");
-        genericGrid.setHeight("300px");
-        genericGrid.addThemeVariants(GridVariant.LUMO_COMPACT, GridVariant.LUMO_ROW_STRIPES, GridVariant.LUMO_NO_BORDER);
+        genericGrid.setHeight("600px");
+        genericGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES, GridVariant.LUMO_NO_BORDER);
         genericGrid.addThemeVariants(GridVariant.LUMO_WRAP_CELL_CONTENT);
         genericGrid.addClassName("vaadin-grid-generator");
 
+        dataProvider = DataProvider.fromFilteringCallbacks(
+            query -> ServicePoint.servicePointInstance().getTenantCompanyService().findFromQuery(createWhere(), createOrderBy(query.getSortOrders()), query.getLimit(), query.getOffset()).stream(),
+            query -> ServicePoint.servicePointInstance().getTenantCompanyService().countFromQueryFilter(createWhere())
+        );
+
         setupGrid(makeParams());
         setupGridEventHandlers();
+        genericGrid.setDataProvider(dataProvider);
+
+        HeaderRow headerRow = genericGrid.appendHeaderRow();
+        tfCompanyNameFilter = createSearchField("name",headerRow.getCell(genericGrid.getColumnByKey("companyName")));
+        tfAddressStreetFilter = createSearchField("Street",headerRow.getCell(genericGrid.getColumnByKey("addressStreet")));
+        tfAddressZipCityFilter = createSearchField("City",headerRow.getCell(genericGrid.getColumnByKey("addressZipCity")));
+
+        setMaxGridHeight(10);
     }
 
     private TenantCompany createEmptyTenantCompany() {
@@ -49,6 +73,26 @@ public class TenantCompanyGrid extends GenericGridProEditView<TenantCompany> {
         return params;
     }
 
+    // This is entity/table specific so must go in each subclass of GenericGridProEditView
+    private String createWhere() {
+        StringBuilder where = new StringBuilder();
+        where.append(tfCompanyNameFilter.getValue().isEmpty() ? "" : (" " + "lower(company_name) like '%" + tfCompanyNameFilter.getValue().toLowerCase() + "%'"));
+
+        if (!tfAddressStreetFilter.getValue().isEmpty() && !where.isEmpty()) {
+            where.append(" and ");
+        }
+        where.append(tfAddressStreetFilter.getValue().isEmpty() ? "" : (" " + "lower(address_street) like '%" + tfAddressStreetFilter.getValue().toLowerCase() + "%'"));
+
+        if (!tfAddressZipCityFilter.getValue().isEmpty() && !where.isEmpty()) {
+            where.append(" and ");
+        }
+        where.append(tfAddressZipCityFilter.getValue().isEmpty() ? "" : (" " + "lower(address_zip_city) like '%" + tfAddressZipCityFilter.getValue().toLowerCase() + "%'"));
+
+        if (where.isEmpty()) {
+            return "";
+        }
+        return " where " + where.toString();
+    }
 
     public void refresh() {
         refreshGrid();
@@ -67,11 +111,11 @@ public class TenantCompanyGrid extends GenericGridProEditView<TenantCompany> {
     @Override
     protected void addNew() {
         // Create empty instance and add to the current list here if need be
-        TenantCompany item = null;
-        item = createEmptyTenantCompany();
-        saveEntity(item);
-        signal.signal(SignalType.DOMAIN_ROOT_SELECTED, item);
+        TenantCompany entity = createEmptyTenantCompany();
+        saveEntity(entity);
         refreshGrid();
+        genericGrid.select(entity);
+        SignalHost.signalHostInstance().getSignal("companyId").value(entity.getId());
     }
 
     @Override
@@ -91,13 +135,12 @@ public class TenantCompanyGrid extends GenericGridProEditView<TenantCompany> {
 
     @Override
     protected void saveEntity(TenantCompany entity) {
-        ServicePoint.getInstance().getTenantCompanyRepository().save( entity);
+        ServicePoint.servicePointInstance().getTenantCompanyRepository().save( entity);
     }
 
     @Override
-    protected List<TenantCompany> loadEntities() {
-        List<TenantCompany> list =  ServicePoint.getInstance().getTenantCompanyService().findAll();          // TODO How about LAZY loading - could this be done by Aspect on access ???
-        return  list;
+    protected void loadEntities() {
+        dataProvider.refreshAll();
     }
 
     @Override
@@ -107,13 +150,13 @@ public class TenantCompanyGrid extends GenericGridProEditView<TenantCompany> {
 
     @Override
     protected void deleteEntity(TenantCompany entity) {
-        ServicePoint.getInstance().getTenantCompanyRepository().delete(entity);
+        ServicePoint.servicePointInstance().getTenantCompanyRepository().delete(entity);
+        SignalHost.signalHostInstance().getSignal("companyId").value(0);
     }
 
     @Override
     protected void selectEntity(TenantCompany entity) {
-        signal.signal(SignalType.DOMAIN_ROOT_SELECTED, entity);
-        // tenantDepartmentGrid.setTenantCompany(entity);
+        SignalHost.signalHostInstance().getSignal("companyId").value(entity.getId());
     }
 
     @Override
@@ -123,7 +166,7 @@ public class TenantCompanyGrid extends GenericGridProEditView<TenantCompany> {
     }
 
     @Override
-    protected String getFixedCalculatedText(TenantCompany item, String colName) { return ""; }
+    protected String getFixedCalculatedText(TenantCompany entity, String colName) { return ""; }
 
 
 }

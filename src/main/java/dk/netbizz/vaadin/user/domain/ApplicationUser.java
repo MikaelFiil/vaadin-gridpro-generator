@@ -7,7 +7,6 @@ import dk.netbizz.vaadin.gridpro.utils.gridprogenerator.BaseEntity;
 import dk.netbizz.vaadin.gridpro.utils.gridprogenerator.GridEditColumn;
 import dk.netbizz.vaadin.item.domain.Item;
 import dk.netbizz.vaadin.secutiry.domain.SecurityRole;
-import dk.netbizz.vaadin.tenantcompany.domain.TenantDepartment;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -15,7 +14,6 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.annotation.Version;
-import org.springframework.data.relational.core.mapping.MappedCollection;
 
 import java.io.Serializable;
 import java.time.LocalDate;
@@ -30,7 +28,7 @@ import java.util.Set;
 @AllArgsConstructor
 public class ApplicationUser implements BaseEntity, Serializable {
 
-    @GridEditColumn(header = "Id", order = 0)
+    @GridEditColumn(header = "Id", dbColumnName = "id", order = 0)
     @EqualsAndHashCode.Include
     @Id
     private Integer id;
@@ -42,27 +40,27 @@ public class ApplicationUser implements BaseEntity, Serializable {
 
     private Boolean mustChangePwd = false;
 
-    @GridEditColumn(header = "Full name", order = 1, fieldLength = 50)
+    @GridEditColumn(header = "Full name", order = 1, dbColumnName = "fullname", fieldLength = 50)
     private String fullname = "";
 
-    @GridEditColumn(header = "Email", order = 2, fieldLength = 150)
+    @GridEditColumn(header = "Email", order = 2, dbColumnName = "email", fieldLength = 150)
     private String email = "";
 
     private Boolean emailConfirmed = false;
     private String emailConfirmationString = "";
 
-    @GridEditColumn(header = "Birthday", order = 3, format = "dd.MM.yyyy", editorClass = DatePicker.class)
+    @GridEditColumn(header = "Birthday", order = 3, dbColumnName = "birthday", format = "dd.MM.yyyy", editorClass = DatePicker.class)
     private LocalDate birthday;
 
-    @GridEditColumn(header = "Phone", order = 4, fieldLength = 20)
+    @GridEditColumn(header = "Phone", order = 4, dbColumnName = "phone", fieldLength = 15)
     private String phone = "";
 
     private LocalDateTime created;
     private LocalDateTime lastLogin;
-    private Boolean isLocked = false;                     //  used for spring security  boolean isAccountNonLocked();
-    private Boolean isDisabled = false;                   //  when an employee is terminated
-    private String description = "";                    // Max 250 characters
-    private byte[] picture;                        // bytea in database column
+    private Boolean isLocked = false;                       //  used for spring security  boolean isAccountNonLocked();
+    private Boolean isDisabled = false;                     //  when an employee is terminated
+    private String description = "";                        // Max 250 characters
+    private byte[] picture;                                 // bytea in database column
 
     @Transient
     private List<Item> items = new ArrayList<>();
@@ -71,7 +69,7 @@ public class ApplicationUser implements BaseEntity, Serializable {
     private Integer version;
 
     @Transient
-    private Set<SecurityRole> securityRoles;            // Used by Spring security
+    private Set<SecurityRole> securityRoles;                // Used by Spring security
 
     @Override
     public String toString() {

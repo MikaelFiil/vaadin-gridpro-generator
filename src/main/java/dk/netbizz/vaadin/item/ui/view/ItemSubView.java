@@ -79,8 +79,8 @@ public class ItemSubView extends GenericGridProEditView<Item> {
     }
 
     @Override
-    protected List<Item> loadEntities() {
-        return dataService.getItemList();
+    protected void loadEntities() {
+        genericGrid.setItems(dataService.getItemList());
     }
 
     @Override

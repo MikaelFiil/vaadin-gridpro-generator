@@ -55,7 +55,11 @@ vaadin-side-nav-item vaadin-icon {
 /* ********************************************************************************* */
 .vaadin-grid-generator {
     padding: 0;
-    margin: 0;
+    margin-right: 20px;
+    margin-left: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+
 }
 
 .vaadin-grid-generator::part(header-cell) {
@@ -135,17 +139,23 @@ vaadin-grid-pro.editable-custom-effect::part(editable-cell) {
     padding: 0px;
 }
 
-.viavea-grid-plus-icon {
+.search-field {
+    margin: 0px;
+    padding: 0px;
+}
+
+.icon-plus {
     color: #dddddd;
     margin: 0px;
     padding: 0px;
 }
 
-
-.viavea-grid-trash-icon {
+.icon-trash {
     color: #dddddd;
     margin: 0px;
     padding: 0px;
+    height: 22px;
+    width: 22px;
 }
 
 
