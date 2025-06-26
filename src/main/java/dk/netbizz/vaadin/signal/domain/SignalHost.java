@@ -6,6 +6,7 @@ import lombok.Getter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -19,7 +20,7 @@ public class SignalHost {
     public static final String ITEM_ID = "itemId";
 
     private static dk.netbizz.vaadin.signal.domain.SignalHost instance;
-    private Map<String, ValueSignal<Integer>> signalMap = new HashMap<>();
+    private Map<String, ValueSignal<Integer>> signalMap = Collections.synchronizedMap(new HashMap<>());
 
 
     private SignalHost() {
