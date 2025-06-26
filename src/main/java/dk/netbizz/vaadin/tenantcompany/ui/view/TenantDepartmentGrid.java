@@ -1,9 +1,11 @@
 package dk.netbizz.vaadin.tenantcompany.ui.view;
 
+import com.vaadin.flow.component.ComponentEffect;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.grid.HeaderRow;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.provider.DataProvider;
+import com.vaadin.signals.ValueSignal;
 import dk.netbizz.vaadin.gridpro.utils.components.StandardNotifications;
 import dk.netbizz.vaadin.gridpro.utils.gridprogenerator.GenericGridProEditView;
 import dk.netbizz.vaadin.service.ServicePoint;
@@ -22,7 +24,7 @@ public class TenantDepartmentGrid extends GenericGridProEditView<TenantDepartmen
     private DataProvider<TenantDepartment, String> dataProvider;
     private TextField tfDepartmentNameFilter;
     private TextField tfDescriptionFilter;
-
+    private ValueSignal<Integer> departmentIdSignal= new ValueSignal<>(0);
 
     public TenantDepartmentGrid() {
         super(TenantDepartment.class);
@@ -49,6 +51,12 @@ public class TenantDepartmentGrid extends GenericGridProEditView<TenantDepartmen
         tfDescriptionFilter = createSearchField("description",headerRow.getCell(genericGrid.getColumnByKey("description")));
 
         setMaxGridHeight(10);
+
+        SignalHost.signalHostInstance().addSignal(SignalHost.DEPARTMENT_ID, departmentIdSignal);
+        ComponentEffect.effect(this, () -> {
+            setTenantCompanyId(SignalHost.signalHostInstance().getSignal(SignalHost.COMPANY_ID).value());
+            // departmentIdSignal.value(0);    // TODO - This fails with:   java.lang.IllegalStateException: Cannot make changes in a read-only transaction.
+        });
     }
 
     private TenantDepartment createEmptyTenantDepartment(Integer tenantCompanyId) {
@@ -98,7 +106,7 @@ public class TenantDepartmentGrid extends GenericGridProEditView<TenantDepartmen
             TenantDepartment entity = createEmptyTenantDepartment(tenantCompanyId);
             saveEntity(entity);
             genericGrid.select(entity);
-            SignalHost.signalHostInstance().getSignal("departmentId").value(entity.getId());
+            departmentIdSignal.value(entity.getId());
         }
         refreshGrid();
     }
@@ -134,12 +142,12 @@ public class TenantDepartmentGrid extends GenericGridProEditView<TenantDepartmen
     @Override
     protected void deleteEntity(TenantDepartment entity) {
         ServicePoint.servicePointInstance().getTenantDepartmentRepository().delete(entity);
-        SignalHost.signalHostInstance().getSignal("departmentId").value(0);
+        departmentIdSignal.value(0);
     }
 
     @Override
     protected void selectEntity(TenantDepartment entity) {
-        SignalHost.signalHostInstance().getSignal("departmentId").value(entity.getId());
+        departmentIdSignal.value(entity.getId());
     }
 
     @Override

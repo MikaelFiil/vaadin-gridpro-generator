@@ -1,9 +1,11 @@
 package dk.netbizz.vaadin.user.ui.view;
 
+import com.vaadin.flow.component.ComponentEffect;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.grid.HeaderRow;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.provider.DataProvider;
+import com.vaadin.signals.ValueSignal;
 import dk.netbizz.vaadin.gridpro.utils.components.StandardNotifications;
 import dk.netbizz.vaadin.gridpro.utils.gridprogenerator.GenericGridProEditView;
 import dk.netbizz.vaadin.service.ServicePoint;
@@ -22,7 +24,7 @@ public class EmployeeGrid extends GenericGridProEditView<ApplicationUser> {
     private Integer tenantDepartmentId = null;
     private TextField tfFullNameFilter;
     private TextField tfEmailFilter;
-
+    private ValueSignal<Integer> employeeIdSignal = new ValueSignal<>(0);
 
     public EmployeeGrid() {
         super(ApplicationUser.class);
@@ -49,6 +51,13 @@ public class EmployeeGrid extends GenericGridProEditView<ApplicationUser> {
         tfEmailFilter = createSearchField("email",headerRow.getCell(genericGrid.getColumnByKey("email")));
 
         setMaxGridHeight(10);
+
+        SignalHost.signalHostInstance().addSignal(SignalHost.EMPLOYEE_ID, employeeIdSignal);
+        ComponentEffect.effect(this, () -> {
+            setTenantDepartmentId(SignalHost.signalHostInstance().getSignal(SignalHost.DEPARTMENT_ID).value());
+            // employeeIdSignal.value(0);  // TODO - This fails with:   java.lang.IllegalStateException: Cannot make changes in a read-only transaction.
+        });
+
     }
 
     private ApplicationUser createEmptyEmployee(Integer tenantDepartmentId)  {
@@ -91,7 +100,7 @@ public class EmployeeGrid extends GenericGridProEditView<ApplicationUser> {
     protected boolean canAddEntity() { return true; }                               // TODO You may add new rows
 
     @Override
-    protected boolean canDeleteEntities() { return false; }                         // You cannot delete entire row, but you may edit it
+    protected boolean canDeleteEntities() { return false; }                         // You cannot delete entire row, but you may edit it or part of it
 
     // Constructing a new entity is domain specific
     @Override
@@ -101,7 +110,7 @@ public class EmployeeGrid extends GenericGridProEditView<ApplicationUser> {
             ApplicationUser entity = createEmptyEmployee(tenantDepartmentId);
             saveEntity(entity);
             genericGrid.select(entity);
-            SignalHost.signalHostInstance().getSignal("employeeId").value(entity.getId());
+            employeeIdSignal.value(entity.getId());
         }
         refreshGrid();
     }
@@ -137,12 +146,12 @@ public class EmployeeGrid extends GenericGridProEditView<ApplicationUser> {
     @Override
     protected void deleteEntity(ApplicationUser entity) {
         ServicePoint.servicePointInstance().getEmployeeRepository().delete(entity);
-        SignalHost.signalHostInstance().getSignal("employeeId").value(0);
+        employeeIdSignal.value(0);
     }
 
     @Override
     protected void selectEntity(ApplicationUser entity) {
-        SignalHost.signalHostInstance().getSignal("employeeId").value(entity.getId());
+        employeeIdSignal.value(entity.getId());
     }
 
     @Override

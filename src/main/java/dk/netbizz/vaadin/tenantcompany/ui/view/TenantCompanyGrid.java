@@ -5,6 +5,7 @@ import com.vaadin.flow.component.grid.HeaderRow;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.provider.DataProvider;
 
+import com.vaadin.signals.ValueSignal;
 import dk.netbizz.vaadin.gridpro.utils.components.StandardNotifications;
 import dk.netbizz.vaadin.gridpro.utils.gridprogenerator.GenericGridProEditView;
 import dk.netbizz.vaadin.service.ServicePoint;
@@ -30,6 +31,7 @@ public class TenantCompanyGrid extends GenericGridProEditView<TenantCompany> {
     private TextField tfCompanyNameFilter;
     private TextField tfAddressStreetFilter;
     private TextField tfAddressZipCityFilter;
+    private ValueSignal<Integer> companyIdSignal = new ValueSignal<>(0);
 
     public TenantCompanyGrid() {
         super(TenantCompany.class);
@@ -57,6 +59,7 @@ public class TenantCompanyGrid extends GenericGridProEditView<TenantCompany> {
         tfAddressZipCityFilter = createSearchField("City",headerRow.getCell(genericGrid.getColumnByKey("addressZipCity")));
 
         setMaxGridHeight(10);
+        SignalHost.signalHostInstance().addSignal(SignalHost.COMPANY_ID, companyIdSignal);
     }
 
     private TenantCompany createEmptyTenantCompany() {
@@ -115,7 +118,7 @@ public class TenantCompanyGrid extends GenericGridProEditView<TenantCompany> {
         saveEntity(entity);
         refreshGrid();
         genericGrid.select(entity);
-        SignalHost.signalHostInstance().getSignal("companyId").value(entity.getId());
+        companyIdSignal.value(entity.getId());
     }
 
     @Override
@@ -151,12 +154,12 @@ public class TenantCompanyGrid extends GenericGridProEditView<TenantCompany> {
     @Override
     protected void deleteEntity(TenantCompany entity) {
         ServicePoint.servicePointInstance().getTenantCompanyRepository().delete(entity);
-        SignalHost.signalHostInstance().getSignal("companyId").value(0);
+        companyIdSignal.value(0);
     }
 
     @Override
     protected void selectEntity(TenantCompany entity) {
-        SignalHost.signalHostInstance().getSignal("companyId").value(entity.getId());
+        companyIdSignal.value(entity.getId());
     }
 
     @Override

@@ -1,14 +1,17 @@
 package dk.netbizz.vaadin.item.ui.view;
 
+import com.vaadin.flow.component.ComponentEffect;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.grid.HeaderRow;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.provider.DataProvider;
+import com.vaadin.signals.ValueSignal;
 import dk.netbizz.vaadin.gridpro.utils.components.StandardNotifications;
 import dk.netbizz.vaadin.gridpro.utils.gridprogenerator.GenericGridProEditView;
 import dk.netbizz.vaadin.item.domain.Item;
 import dk.netbizz.vaadin.service.ServicePoint;
+import dk.netbizz.vaadin.signal.domain.SignalHost;
 import dk.netbizz.vaadin.warehouse.domain.Warehouse;
 
 import java.util.ArrayList;
@@ -23,7 +26,7 @@ public class ItemGrid extends GenericGridProEditView<Item> {
     private TextField tfItemNameFilter;
     private Select<String> tfCriticalFilter;
     private List<Warehouse> warehouseList;
-
+    private ValueSignal<Integer> itemIdSignal = new ValueSignal<>(0);
 
     public ItemGrid() {
         super(Item.class);
@@ -51,6 +54,12 @@ public class ItemGrid extends GenericGridProEditView<Item> {
         tfCriticalFilter = createSelectSearchField("critical",headerRow.getCell(genericGrid.getColumnByKey("criticality")), getItemsForSelect("criticality"));
 
         setMaxGridHeight(15);
+
+        SignalHost.signalHostInstance().addSignal(SignalHost.ITEM_ID, itemIdSignal);
+        ComponentEffect.effect(this, () -> {
+            setTenantDepartmentEmployee(SignalHost.signalHostInstance().getSignal(SignalHost.EMPLOYEE_ID).value());
+            // itemIdSignal.value(0);  // TODO - This fails with:   java.lang.IllegalStateException: Cannot make changes in a read-only transaction.
+        });
     }
 
     private Item createEmptyItem() {
@@ -122,7 +131,7 @@ public class ItemGrid extends GenericGridProEditView<Item> {
             Item entity = createEmptyItem();
             saveEntity(entity);
             genericGrid.select(entity);
-
+            itemIdSignal.value(entity.getId());
         }
         refreshGrid();
     }
@@ -160,11 +169,12 @@ public class ItemGrid extends GenericGridProEditView<Item> {
     @Override
     protected void deleteEntity(Item entity) {
         ServicePoint.servicePointInstance().getItemRepository().delete(entity);
+        itemIdSignal.value(0);
     }
 
     @Override
     protected void selectEntity(Item entity) {
-        // signal.signal(ViaveaSignalType.DOMAIN_SUB_NODE_SELECTED, entity);
+        itemIdSignal.value(entity.getId());
     }
 
     @SuppressWarnings("unchecked")

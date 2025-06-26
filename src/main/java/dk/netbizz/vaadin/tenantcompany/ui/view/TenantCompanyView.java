@@ -1,6 +1,5 @@
 package dk.netbizz.vaadin.tenantcompany.ui.view;
 
-import com.vaadin.flow.component.ComponentEffect;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.details.Details;
 import com.vaadin.flow.component.html.Main;
@@ -11,7 +10,6 @@ import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.router.Menu;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
-import com.vaadin.signals.ValueSignal;
 import dk.netbizz.vaadin.MainLayout;
 import dk.netbizz.vaadin.gridpro.utils.components.StandardNotifications;
 import dk.netbizz.vaadin.item.domain.Item;
@@ -44,32 +42,23 @@ import static java.lang.Math.*;
 @Route(value = "loadtest", layout = MainLayout.class)
 public class TenantCompanyView extends Main  {
 
-    List<String> catList = new ArrayList<>(List.of("Technical", "Quality", "Delivery", "Legal"));
-    List<String> criticalList = new ArrayList<>(List.of("Low", "Medium", "High"));
-
-    Button genDepartmentsButton = new Button("Generate 100 departments pre tenant company");
-    Button genEmployeesButton = new Button("Generate 10 employees per department");
-    Button genItemsButton = new Button("Generate 100 items for first 1000 users ");
-    Button genItems10000Button = new Button("Generate 10000 items for user with id: ");
-    IntegerField applicatioUserIdField = new IntegerField("Enter Employee id");
-
-    ValueSignal<Integer> companyId = new ValueSignal<>(0);
-    ValueSignal<Integer> departmentId = new ValueSignal<>(0);
-    ValueSignal<Integer> employeeId = new ValueSignal<>(0);
-    ValueSignal<Integer> itemId = new ValueSignal<>(0);
+    private Button genDepartmentsButton = new Button("Generate 100 departments pre tenant company");
+    private Button genEmployeesButton = new Button("Generate 10 employees per department");
+    private Button genItemsButton = new Button("Generate 100 items for first 1000 users ");
+    private Button genItems10000Button = new Button("Generate 10000 items for user with id: ");
+    private IntegerField applicationUserIdField = new IntegerField("Enter Employee id");
 
     private VerticalLayout verticalLayout = new VerticalLayout();
     private ItemGrid itemGrid;
     private EmployeeGrid tenantDepartmentEmployeeGrid;
     private TenantDepartmentGrid tenantDepartmentGrid;
     private TenantCompanyGrid tenantCompanyGrid;
-    Details departmentDetails = new Details("Departments");
-    Details employeeDetails = new Details("Employees");
-    Details itemDetails = new Details("Items");
+    private Details departmentDetails = new Details("Departments");
+    private Details employeeDetails = new Details("Employees");
+    private Details itemDetails = new Details("Items");
 
     @Autowired
     public TenantCompanyView() {
-        setupSignals();
         itemGrid = new ItemGrid();
         tenantDepartmentEmployeeGrid = new EmployeeGrid();
         tenantDepartmentGrid = new TenantDepartmentGrid();
@@ -85,30 +74,10 @@ public class TenantCompanyView extends Main  {
 
         add(verticalLayout);
         tenantCompanyGrid.refresh();
-        setupEffects();
-    }
-
-    private void setupSignals() {
-        SignalHost.signalHostInstance().addSignal("companyId", companyId);
-        SignalHost.signalHostInstance().addSignal("departmentId", departmentId);
-        SignalHost.signalHostInstance().addSignal("employeeId", employeeId);
-        SignalHost.signalHostInstance().addSignal("itemId", itemId);
-    }
-
-    private void setupEffects() {
-        ComponentEffect.effect(tenantDepartmentGrid, () -> {
-            tenantDepartmentGrid.setTenantCompanyId(companyId.value());
-        });
-        ComponentEffect.effect(tenantDepartmentEmployeeGrid, () -> {
-            tenantDepartmentEmployeeGrid.setTenantDepartmentId(departmentId.value());
-        });
-        ComponentEffect.effect(itemGrid, () -> {
-            itemGrid.setTenantDepartmentEmployee(employeeId.value());
-        });
     }
 
     private void buildUI() {
-        HorizontalLayout horizontalLayout = new HorizontalLayout(genDepartmentsButton, genEmployeesButton, genItemsButton, genItems10000Button, applicatioUserIdField);
+        HorizontalLayout horizontalLayout = new HorizontalLayout(genDepartmentsButton, genEmployeesButton, genItemsButton, genItems10000Button, applicationUserIdField);
         horizontalLayout.setAlignItems(FlexComponent.Alignment.BASELINE);
         verticalLayout.add(horizontalLayout);
         verticalLayout.add(tenantCompanyGrid);
@@ -120,7 +89,6 @@ public class TenantCompanyView extends Main  {
         verticalLayout.add(employeeDetails);
         verticalLayout.add(itemDetails);
     }
-
 
     private void buildUX() {
         genDepartmentsButton.addClickListener(evt -> {
@@ -191,7 +159,7 @@ public class TenantCompanyView extends Main  {
             List<ApplicationUser> applicationUserList = ServicePoint.servicePointInstance().getEmployeeRepository().findFirst1000();
             for (ApplicationUser applicationUser : applicationUserList) {
                 for(int i = 0; i < 100; i++) {
-                    Item item = createItem(faker, applicationUser);
+                    Item item = createItem(faker, applicationUser, rand);
                     ServicePoint.servicePointInstance().getItemService().save(item);
                 }
             }
@@ -202,22 +170,22 @@ public class TenantCompanyView extends Main  {
             Faker faker = new Faker();
             Random rand = new Random();
 
-            ApplicationUser applicationUser = ServicePoint.servicePointInstance().getEmployeeRepository().findById(applicatioUserIdField.getValue()).orElse(null);
+            ApplicationUser applicationUser = ServicePoint.servicePointInstance().getEmployeeRepository().findById(applicationUserIdField.getValue()).orElse(null);
             if (applicationUser != null) {
                 System.out.println("Generating items ...");
                 for(int i = 0; i < 10000; i++) {
-                    Item item = createItem(faker, applicationUser);
+                    Item item = createItem(faker, applicationUser, rand);
                     ServicePoint.servicePointInstance().getItemService().save(item);
                 }
                 System.out.println("Finished generating items");
             } else {
-                StandardNotifications.showTempWarningNotification("No user found with id: " + applicatioUserIdField.getValue());
+                StandardNotifications.showTempWarningNotification("No user found with id: " + applicationUserIdField.getValue());
             }
         });
     }
 
 
-    private Item createItem(Faker faker, ApplicationUser applicationUser) {
+    private Item createItem(Faker faker, ApplicationUser applicationUser, Random rand) {
         String description = """
                     <h3>Rich Text Editor Demo</h3><p><strong>HTML text format as description of an Item</strong> </p>
                     <ul><li><span style="background-color: rgb(187, 187, 187); color: rgb(0, 138, 0);">Green</span></li><li><span style="background-color: rgb(187, 187, 187); color: rgb(255, 255, 0);">Yellow</span></li><li><span style="background-color: rgb(187, 187, 187); color: rgb(230, 0, 0);">Red</span></li></ul>
@@ -225,9 +193,10 @@ public class TenantCompanyView extends Main  {
                     <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
                 """;
 
+        List<String> catList = new ArrayList<>(List.of("Technical", "Quality", "Delivery", "Legal"));
+        List<String> criticalList = new ArrayList<>(List.of("Low", "Medium", "High"));
         List<Warehouse> warehouseList = ServicePoint.servicePointInstance().getWarehouseRepository().findAll();
         int whCount = warehouseList.size();
-        Random rand = new Random();
 
         Item item = new Item();
         item.setApplicationUserId(applicationUser.getId());
