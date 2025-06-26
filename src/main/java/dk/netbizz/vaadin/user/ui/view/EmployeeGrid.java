@@ -5,6 +5,7 @@ import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.grid.HeaderRow;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.provider.DataProvider;
+import com.vaadin.signals.Signal;
 import com.vaadin.signals.ValueSignal;
 import dk.netbizz.vaadin.gridpro.utils.components.StandardNotifications;
 import dk.netbizz.vaadin.gridpro.utils.gridprogenerator.GenericGridProEditView;
@@ -29,11 +30,11 @@ public class EmployeeGrid extends GenericGridProEditView<ApplicationUser> {
     public EmployeeGrid() {
         super(ApplicationUser.class);
 
-        setWidthFull();
+        setSizeFull();
         setMargin(false);
         setPadding(false);
         genericGrid.setWidth("100%");
-        genericGrid.setHeight("600px");
+        setMaxGridHeight(10);
         genericGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES, GridVariant.LUMO_NO_BORDER);
         genericGrid.addClassName("vaadin-grid-generator");
 
@@ -50,14 +51,13 @@ public class EmployeeGrid extends GenericGridProEditView<ApplicationUser> {
         tfFullNameFilter = createSearchField("fullname",headerRow.getCell(genericGrid.getColumnByKey("fullname")));
         tfEmailFilter = createSearchField("email",headerRow.getCell(genericGrid.getColumnByKey("email")));
 
-        setMaxGridHeight(10);
-
         SignalHost.signalHostInstance().addSignal(SignalHost.EMPLOYEE_ID, employeeIdSignal);
         ComponentEffect.effect(this, () -> {
-            setTenantDepartmentId(SignalHost.signalHostInstance().getSignal(SignalHost.DEPARTMENT_ID).value());
-            // employeeIdSignal.value(0);  // TODO - This fails with:   java.lang.IllegalStateException: Cannot make changes in a read-only transaction. Also, this should be set to null
+            Signal.runWithoutTransaction(() -> {
+                setTenantDepartmentId(SignalHost.signalHostInstance().getSignal(SignalHost.DEPARTMENT_ID).value());
+                employeeIdSignal.value(null);
+            });
         });
-
     }
 
     private ApplicationUser createEmptyEmployee(Integer tenantDepartmentId)  {
@@ -77,13 +77,8 @@ public class EmployeeGrid extends GenericGridProEditView<ApplicationUser> {
     }
 
     public void setTenantDepartmentId(Integer tenantDepartmentId) {
-        if (tenantDepartmentId == 0) {
-            this.tenantDepartmentId = null;
-        } else {
-            this.tenantDepartmentId = tenantDepartmentId;
-        }
+        this.tenantDepartmentId = tenantDepartmentId;
         refreshGrid();
-
     }
 
     private String createWhere() {
@@ -100,7 +95,7 @@ public class EmployeeGrid extends GenericGridProEditView<ApplicationUser> {
     protected boolean canAddEntity() { return true; }                               // TODO You may add new rows
 
     @Override
-    protected boolean canDeleteEntities() { return false; }                         // You cannot delete entire row, but you may edit it or part of it
+    protected boolean canDeleteEntities() { return true; }                         // You cannot delete entire row, but you may edit it or part of it
 
     // Constructing a new entity is domain specific
     @Override
@@ -146,7 +141,7 @@ public class EmployeeGrid extends GenericGridProEditView<ApplicationUser> {
     @Override
     protected void deleteEntity(ApplicationUser entity) {
         ServicePoint.servicePointInstance().getEmployeeRepository().delete(entity);
-        employeeIdSignal.value(0);          // TODO This should be set to null
+        employeeIdSignal.value(null);
     }
 
     @Override

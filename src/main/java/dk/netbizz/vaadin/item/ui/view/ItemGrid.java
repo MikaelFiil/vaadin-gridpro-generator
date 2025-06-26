@@ -6,6 +6,7 @@ import com.vaadin.flow.component.grid.HeaderRow;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.provider.DataProvider;
+import com.vaadin.signals.Signal;
 import com.vaadin.signals.ValueSignal;
 import dk.netbizz.vaadin.gridpro.utils.components.StandardNotifications;
 import dk.netbizz.vaadin.gridpro.utils.gridprogenerator.GenericGridProEditView;
@@ -32,11 +33,12 @@ public class ItemGrid extends GenericGridProEditView<Item> {
         super(Item.class);
         warehouseList = ServicePoint.servicePointInstance().getWarehouseRepository().findAll();
 
-        setWidthFull();
+        setSizeFull();
         setMargin(false);
         setPadding(false);
         genericGrid.setWidth("100%");
-        genericGrid.setHeight("600px");
+        genericGrid.setHeight("700px");
+        // setMaxGridHeight(25);
         genericGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES, GridVariant.LUMO_NO_BORDER);
         genericGrid.addClassName("vaadin-grid-generator");
 
@@ -53,12 +55,12 @@ public class ItemGrid extends GenericGridProEditView<Item> {
         tfItemNameFilter = createSearchField("itemname",headerRow.getCell(genericGrid.getColumnByKey("itemName")));
         tfCriticalFilter = createSelectSearchField("critical",headerRow.getCell(genericGrid.getColumnByKey("criticality")), getItemsForSelect("criticality"));
 
-        setMaxGridHeight(15);
-
         SignalHost.signalHostInstance().addSignal(SignalHost.ITEM_ID, itemIdSignal);
         ComponentEffect.effect(this, () -> {
-            setTenantDepartmentEmployee(SignalHost.signalHostInstance().getSignal(SignalHost.EMPLOYEE_ID).value());
-            // itemIdSignal.value(0);  // TODO - This fails with:   java.lang.IllegalStateException: Cannot make changes in a read-only transaction. Also, this should be set to null
+            Signal.runWithoutTransaction(() -> {
+                setTenantDepartmentEmployee(SignalHost.signalHostInstance().getSignal(SignalHost.EMPLOYEE_ID).value());
+                itemIdSignal.value(null);
+            });
         });
     }
 
@@ -76,6 +78,7 @@ public class ItemGrid extends GenericGridProEditView<Item> {
 
     private Map<String, String> makeParams() {
         Map<String , String> params = new HashMap<>();
+        params.put("id.readonly", "true");
         params.put("price.readonly", "true");
         params.put("criticality.readonly", "true");
         params.put("yearlyAmount.arrayEndIdx", "3");            // Indexes are zero based
@@ -99,11 +102,7 @@ public class ItemGrid extends GenericGridProEditView<Item> {
     }
 
     public void setTenantDepartmentEmployee(Integer applicationUserId) {
-        if (applicationUserId == 0) {
-            this.applicationUserId = null;
-        } else {
-            this.applicationUserId = applicationUserId;
-        }
+        this.applicationUserId = applicationUserId;
         refreshGrid();
     }
 

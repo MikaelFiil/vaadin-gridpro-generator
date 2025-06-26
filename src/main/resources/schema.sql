@@ -46,7 +46,7 @@ create table if not exists tenant_department (
     department_name character varying (50) not null,
     description character varying (250),
     version integer not null,
-    foreign key(tenant_company_id) references tenant_company(id) on delete restrict
+    foreign key(tenant_company_id) references tenant_company(id) on delete cascade
 );
 -- alter sequence tenant_department_id_seq restart with 1000;
 create index on tenant_department(tenant_company_id);

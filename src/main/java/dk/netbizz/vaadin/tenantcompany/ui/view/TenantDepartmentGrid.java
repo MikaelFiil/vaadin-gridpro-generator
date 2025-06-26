@@ -5,6 +5,7 @@ import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.grid.HeaderRow;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.provider.DataProvider;
+import com.vaadin.signals.Signal;
 import com.vaadin.signals.ValueSignal;
 import dk.netbizz.vaadin.gridpro.utils.components.StandardNotifications;
 import dk.netbizz.vaadin.gridpro.utils.gridprogenerator.GenericGridProEditView;
@@ -29,17 +30,17 @@ public class TenantDepartmentGrid extends GenericGridProEditView<TenantDepartmen
     public TenantDepartmentGrid() {
         super(TenantDepartment.class);
 
-        setWidthFull();
+        setSizeFull();
         setMargin(false);
         setPadding(false);
         genericGrid.setWidth("100%");
-        genericGrid.setHeight("600px");
+        setMaxGridHeight(10);
         genericGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES, GridVariant.LUMO_NO_BORDER);
         genericGrid.addClassName("vaadin-grid-generator");
 
         dataProvider = DataProvider.fromFilteringCallbacks(
-            query -> (tenantCompanyId == null) ? new ArrayList<TenantDepartment>().stream() : ServicePoint.servicePointInstance().getTenantDepartmentService().findFromQuery(createWhere(), createOrderBy(query.getSortOrders()), query.getLimit(), query.getOffset()).stream(),
-            query -> (tenantCompanyId == null) ? 0 : ServicePoint.servicePointInstance().getTenantDepartmentService().countFromQueryFilter(createWhere())
+                query -> (tenantCompanyId == null) ? new ArrayList<TenantDepartment>().stream() : ServicePoint.servicePointInstance().getTenantDepartmentService().findFromQuery(createWhere(), createOrderBy(query.getSortOrders()), query.getLimit(), query.getOffset()).stream(),
+                query -> (tenantCompanyId == null) ? 0 : ServicePoint.servicePointInstance().getTenantDepartmentService().countFromQueryFilter(createWhere())
         );
 
         setupGrid(makeParams());
@@ -47,15 +48,15 @@ public class TenantDepartmentGrid extends GenericGridProEditView<TenantDepartmen
         genericGrid.setDataProvider(dataProvider);
 
         HeaderRow headerRow = genericGrid.appendHeaderRow();
-        tfDepartmentNameFilter = createSearchField("name",headerRow.getCell(genericGrid.getColumnByKey("departmentName")));
-        tfDescriptionFilter = createSearchField("description",headerRow.getCell(genericGrid.getColumnByKey("description")));
-
-        setMaxGridHeight(10);
+        tfDepartmentNameFilter = createSearchField("name", headerRow.getCell(genericGrid.getColumnByKey("departmentName")));
+        tfDescriptionFilter = createSearchField("description", headerRow.getCell(genericGrid.getColumnByKey("description")));
 
         SignalHost.signalHostInstance().addSignal(SignalHost.DEPARTMENT_ID, departmentIdSignal);
         ComponentEffect.effect(this, () -> {
-            setTenantCompanyId(SignalHost.signalHostInstance().getSignal(SignalHost.COMPANY_ID).value());
-            // departmentIdSignal.value(0);    // TODO - This fails with:   java.lang.IllegalStateException: Cannot make changes in a read-only transaction.  Also, this should be set to null
+            Signal.runWithoutTransaction(() -> {
+                setTenantCompanyId(SignalHost.signalHostInstance().getSignal(SignalHost.COMPANY_ID).value());
+                departmentIdSignal.value(null);
+            });
         });
     }
 
@@ -69,16 +70,13 @@ public class TenantDepartmentGrid extends GenericGridProEditView<TenantDepartmen
 
     private Map<String, String> makeParams() {
         Map<String , String> params = new HashMap<>();
-        params.put("readonly", "true");                         // Make entire grid readonly
+        params.put("id.readonly", "true");
+        // params.put("readonly", "true");                         // Make entire grid readonly
         return params;
     }
 
     public void setTenantCompanyId(Integer tenantCompanyId) {
-        if (tenantCompanyId == 0) {
-            this.tenantCompanyId = null;
-        } else {
-            this.tenantCompanyId = tenantCompanyId;
-        }
+        this.tenantCompanyId = tenantCompanyId;
         refreshGrid();
     }
 
@@ -142,7 +140,7 @@ public class TenantDepartmentGrid extends GenericGridProEditView<TenantDepartmen
     @Override
     protected void deleteEntity(TenantDepartment entity) {
         ServicePoint.servicePointInstance().getTenantDepartmentRepository().delete(entity);
-        departmentIdSignal.value(0);            // TODO This should be set to null
+        departmentIdSignal.value(null);
     }
 
     @Override

@@ -15,7 +15,6 @@ import dk.netbizz.vaadin.gridpro.utils.components.StandardNotifications;
 import dk.netbizz.vaadin.item.domain.Item;
 import dk.netbizz.vaadin.item.ui.view.ItemGrid;
 import dk.netbizz.vaadin.service.ServicePoint;
-import dk.netbizz.vaadin.signal.domain.SignalHost;
 import dk.netbizz.vaadin.tenantcompany.domain.TenantCompany;
 import dk.netbizz.vaadin.tenantcompany.domain.TenantDepartment;
 import dk.netbizz.vaadin.user.domain.ApplicationUser;

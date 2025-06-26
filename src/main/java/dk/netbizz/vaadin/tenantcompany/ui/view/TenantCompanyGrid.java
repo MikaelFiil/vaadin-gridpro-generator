@@ -11,6 +11,8 @@ import dk.netbizz.vaadin.gridpro.utils.gridprogenerator.GenericGridProEditView;
 import dk.netbizz.vaadin.service.ServicePoint;
 import dk.netbizz.vaadin.signal.domain.SignalHost;
 import dk.netbizz.vaadin.tenantcompany.domain.TenantCompany;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -35,11 +37,12 @@ public class TenantCompanyGrid extends GenericGridProEditView<TenantCompany> {
 
     public TenantCompanyGrid() {
         super(TenantCompany.class);
-        setWidthFull();
+
+        setSizeFull();
         setMargin(false);
         setPadding(false);
         genericGrid.setWidth("100%");
-        genericGrid.setHeight("600px");
+        setMaxGridHeight(10);
         genericGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES, GridVariant.LUMO_NO_BORDER);
         genericGrid.addThemeVariants(GridVariant.LUMO_WRAP_CELL_CONTENT);
         genericGrid.addClassName("vaadin-grid-generator");
@@ -58,7 +61,6 @@ public class TenantCompanyGrid extends GenericGridProEditView<TenantCompany> {
         tfAddressStreetFilter = createSearchField("Street",headerRow.getCell(genericGrid.getColumnByKey("addressStreet")));
         tfAddressZipCityFilter = createSearchField("City",headerRow.getCell(genericGrid.getColumnByKey("addressZipCity")));
 
-        setMaxGridHeight(10);
         SignalHost.signalHostInstance().addSignal(SignalHost.COMPANY_ID, companyIdSignal);
     }
 
@@ -154,7 +156,7 @@ public class TenantCompanyGrid extends GenericGridProEditView<TenantCompany> {
     @Override
     protected void deleteEntity(TenantCompany entity) {
         ServicePoint.servicePointInstance().getTenantCompanyRepository().delete(entity);
-        companyIdSignal.value(0);
+        companyIdSignal.value(null);
     }
 
     @Override
