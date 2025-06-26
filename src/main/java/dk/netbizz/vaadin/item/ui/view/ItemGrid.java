@@ -58,7 +58,7 @@ public class ItemGrid extends GenericGridProEditView<Item> {
         SignalHost.signalHostInstance().addSignal(SignalHost.ITEM_ID, itemIdSignal);
         ComponentEffect.effect(this, () -> {
             setTenantDepartmentEmployee(SignalHost.signalHostInstance().getSignal(SignalHost.EMPLOYEE_ID).value());
-            // itemIdSignal.value(0);  // TODO - This fails with:   java.lang.IllegalStateException: Cannot make changes in a read-only transaction.
+            // itemIdSignal.value(0);  // TODO - This fails with:   java.lang.IllegalStateException: Cannot make changes in a read-only transaction. Also, this should be set to null
         });
     }
 

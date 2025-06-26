@@ -55,7 +55,7 @@ public class TenantDepartmentGrid extends GenericGridProEditView<TenantDepartmen
         SignalHost.signalHostInstance().addSignal(SignalHost.DEPARTMENT_ID, departmentIdSignal);
         ComponentEffect.effect(this, () -> {
             setTenantCompanyId(SignalHost.signalHostInstance().getSignal(SignalHost.COMPANY_ID).value());
-            // departmentIdSignal.value(0);    // TODO - This fails with:   java.lang.IllegalStateException: Cannot make changes in a read-only transaction.
+            // departmentIdSignal.value(0);    // TODO - This fails with:   java.lang.IllegalStateException: Cannot make changes in a read-only transaction.  Also, this should be set to null
         });
     }
 
@@ -142,7 +142,7 @@ public class TenantDepartmentGrid extends GenericGridProEditView<TenantDepartmen
     @Override
     protected void deleteEntity(TenantDepartment entity) {
         ServicePoint.servicePointInstance().getTenantDepartmentRepository().delete(entity);
-        departmentIdSignal.value(0);
+        departmentIdSignal.value(0);            // TODO This should be set to null
     }
 
     @Override
