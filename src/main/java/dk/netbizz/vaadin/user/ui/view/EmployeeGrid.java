@@ -12,6 +12,8 @@ import dk.netbizz.vaadin.gridpro.utils.gridprogenerator.GenericGridProEditView;
 import dk.netbizz.vaadin.service.ServicePoint;
 import dk.netbizz.vaadin.signal.domain.SignalHost;
 import dk.netbizz.vaadin.user.domain.ApplicationUser;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -19,16 +21,19 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Component
 public class EmployeeGrid extends GenericGridProEditView<ApplicationUser> {
 
     private DataProvider<ApplicationUser, String> dataProvider;
     private Integer tenantDepartmentId = null;
     private TextField tfFullNameFilter;
     private TextField tfEmailFilter;
-    private ValueSignal<Integer> employeeIdSignal = new ValueSignal<>(0);
+    private final SignalHost signalHost;
 
-    public EmployeeGrid() {
+
+    public EmployeeGrid(SignalHost signalHost) {
         super(ApplicationUser.class);
+        this.signalHost = signalHost;
 
         setSizeFull();
         setMargin(false);
@@ -51,11 +56,10 @@ public class EmployeeGrid extends GenericGridProEditView<ApplicationUser> {
         tfFullNameFilter = createSearchField("fullname",headerRow.getCell(genericGrid.getColumnByKey("fullname")));
         tfEmailFilter = createSearchField("email",headerRow.getCell(genericGrid.getColumnByKey("email")));
 
-        SignalHost.signalHostInstance().addSignal(SignalHost.EMPLOYEE_ID, employeeIdSignal);
         ComponentEffect.effect(this, () -> {
+            setTenantDepartmentId(signalHost.getSignal(SignalHost.DEPARTMENT_ID).value());
             Signal.runWithoutTransaction(() -> {
-                setTenantDepartmentId(SignalHost.signalHostInstance().getSignal(SignalHost.DEPARTMENT_ID).value());
-                employeeIdSignal.value(null);
+                signalHost.getSignal(SignalHost.EMPLOYEE_ID).value(null);
             });
         });
     }
@@ -105,7 +109,7 @@ public class EmployeeGrid extends GenericGridProEditView<ApplicationUser> {
             ApplicationUser entity = createEmptyEmployee(tenantDepartmentId);
             saveEntity(entity);
             genericGrid.select(entity);
-            employeeIdSignal.value(entity.getId());
+            signalHost.getSignal(SignalHost.EMPLOYEE_ID).value(entity.getId());
         }
         refreshGrid();
     }
@@ -131,7 +135,10 @@ public class EmployeeGrid extends GenericGridProEditView<ApplicationUser> {
     }
 
     @Override
-    protected void loadEntities() { dataProvider.refreshAll(); }
+    protected void loadEntities() {
+        System.out.println("loadEntities employee");
+        dataProvider.refreshAll();
+    }
 
     @Override
     protected void clearEntities() {
@@ -141,12 +148,12 @@ public class EmployeeGrid extends GenericGridProEditView<ApplicationUser> {
     @Override
     protected void deleteEntity(ApplicationUser entity) {
         ServicePoint.servicePointInstance().getEmployeeRepository().delete(entity);
-        employeeIdSignal.value(null);
+        signalHost.getSignal(SignalHost.EMPLOYEE_ID).value(null);
     }
 
     @Override
     protected void selectEntity(ApplicationUser entity) {
-        employeeIdSignal.value(entity.getId());
+        signalHost.getSignal(SignalHost.EMPLOYEE_ID).value(entity.getId());
     }
 
     @Override

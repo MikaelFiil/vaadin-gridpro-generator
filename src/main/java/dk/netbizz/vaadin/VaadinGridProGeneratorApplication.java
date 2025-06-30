@@ -13,7 +13,6 @@ import org.springframework.scheduling.annotation.EnableAsync;
 import java.time.Clock;
 
 @EnableAsync
-@Push(transport = Transport.LONG_POLLING)
 @SpringBootApplication
 @Theme(value = "vaadin-gridpro-generator", variant = Lumo.DARK)
 public class VaadinGridProGeneratorApplication implements AppShellConfigurator {

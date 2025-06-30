@@ -12,12 +12,15 @@ import dk.netbizz.vaadin.gridpro.utils.gridprogenerator.GenericGridProEditView;
 import dk.netbizz.vaadin.service.ServicePoint;
 import dk.netbizz.vaadin.signal.domain.SignalHost;
 import dk.netbizz.vaadin.tenantcompany.domain.TenantDepartment;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Component
 public class TenantDepartmentGrid extends GenericGridProEditView<TenantDepartment> {
 
 
@@ -25,10 +28,12 @@ public class TenantDepartmentGrid extends GenericGridProEditView<TenantDepartmen
     private DataProvider<TenantDepartment, String> dataProvider;
     private TextField tfDepartmentNameFilter;
     private TextField tfDescriptionFilter;
-    private ValueSignal<Integer> departmentIdSignal= new ValueSignal<>(0);
 
-    public TenantDepartmentGrid() {
+    private final SignalHost signalHost;
+
+    public TenantDepartmentGrid(SignalHost signalHost) {
         super(TenantDepartment.class);
+        this.signalHost = signalHost;
 
         setSizeFull();
         setMargin(false);
@@ -51,11 +56,10 @@ public class TenantDepartmentGrid extends GenericGridProEditView<TenantDepartmen
         tfDepartmentNameFilter = createSearchField("name", headerRow.getCell(genericGrid.getColumnByKey("departmentName")));
         tfDescriptionFilter = createSearchField("description", headerRow.getCell(genericGrid.getColumnByKey("description")));
 
-        SignalHost.signalHostInstance().addSignal(SignalHost.DEPARTMENT_ID, departmentIdSignal);
         ComponentEffect.effect(this, () -> {
+            setTenantCompanyId(signalHost.getSignal(SignalHost.COMPANY_ID).value());
             Signal.runWithoutTransaction(() -> {
-                setTenantCompanyId(SignalHost.signalHostInstance().getSignal(SignalHost.COMPANY_ID).value());
-                departmentIdSignal.value(null);
+                signalHost.getSignal(SignalHost.DEPARTMENT_ID).value(null);
             });
         });
     }
@@ -104,7 +108,7 @@ public class TenantDepartmentGrid extends GenericGridProEditView<TenantDepartmen
             TenantDepartment entity = createEmptyTenantDepartment(tenantCompanyId);
             saveEntity(entity);
             genericGrid.select(entity);
-            departmentIdSignal.value(entity.getId());
+            signalHost.getSignal(SignalHost.DEPARTMENT_ID).value(entity.getId());
         }
         refreshGrid();
     }
@@ -130,7 +134,10 @@ public class TenantDepartmentGrid extends GenericGridProEditView<TenantDepartmen
     }
 
     @Override
-    protected void loadEntities() { dataProvider.refreshAll(); }
+    protected void loadEntities() {
+        System.out.println("loadEntities department");
+        dataProvider.refreshAll();
+    }
 
     @Override
     protected void clearEntities() {
@@ -140,12 +147,12 @@ public class TenantDepartmentGrid extends GenericGridProEditView<TenantDepartmen
     @Override
     protected void deleteEntity(TenantDepartment entity) {
         ServicePoint.servicePointInstance().getTenantDepartmentRepository().delete(entity);
-        departmentIdSignal.value(null);
+        signalHost.getSignal(SignalHost.DEPARTMENT_ID).value(null);
     }
 
     @Override
     protected void selectEntity(TenantDepartment entity) {
-        departmentIdSignal.value(entity.getId());
+        signalHost.getSignal(SignalHost.DEPARTMENT_ID).value(entity.getId());
     }
 
     @Override

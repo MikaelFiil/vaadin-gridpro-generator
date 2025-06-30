@@ -51,6 +51,9 @@ public class Item implements BaseEntity {
     @EqualsAndHashCode.Include
     private Integer id;    // Must be immutable
 
+    @Version
+    private Integer version = null;
+
     private Integer applicationUserId;
 
     @GridEditColumn(header = "Item Name", order = 1, dbColumnName = "item_name", fieldLength = 15, editorClass = TextField.class)
@@ -107,9 +110,6 @@ public class Item implements BaseEntity {
     public BigDecimal getCalculatedImpact(int idx) {
         return  BigDecimal.valueOf(impactAmount[idx]).multiply((likelihood[idx])).divide(BigDecimal.valueOf(100.0));
     }
-
-    @Version
-    private Integer version;
 
 }
 

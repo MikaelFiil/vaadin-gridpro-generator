@@ -48,20 +48,20 @@ public class TenantCompanyView extends Main  {
     private IntegerField applicationUserIdField = new IntegerField("Enter Employee id");
 
     private VerticalLayout verticalLayout = new VerticalLayout();
-    private ItemGrid itemGrid;
-    private EmployeeGrid tenantDepartmentEmployeeGrid;
-    private TenantDepartmentGrid tenantDepartmentGrid;
-    private TenantCompanyGrid tenantCompanyGrid;
+    private final ItemGrid itemGrid;
+    private final EmployeeGrid tenantDepartmentEmployeeGrid;
+    private final TenantDepartmentGrid tenantDepartmentGrid;
+    private final TenantCompanyGrid tenantCompanyGrid;
     private Details departmentDetails = new Details("Departments");
     private Details employeeDetails = new Details("Employees");
     private Details itemDetails = new Details("Items");
 
     @Autowired
-    public TenantCompanyView() {
-        itemGrid = new ItemGrid();
-        tenantDepartmentEmployeeGrid = new EmployeeGrid();
-        tenantDepartmentGrid = new TenantDepartmentGrid();
-        tenantCompanyGrid = new TenantCompanyGrid();
+    public TenantCompanyView(TenantCompanyGrid tenantCompanyGrid, TenantDepartmentGrid tenantDepartmentGrid, EmployeeGrid tenantDepartmentEmployeeGrid, ItemGrid itemGrid) {
+        this.itemGrid = itemGrid;
+        this.tenantDepartmentEmployeeGrid = tenantDepartmentEmployeeGrid;
+        this. tenantDepartmentGrid = tenantDepartmentGrid;
+        this.tenantCompanyGrid  = tenantCompanyGrid;
 
         setSizeFull();
         buildUI();

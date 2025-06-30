@@ -5,6 +5,7 @@ import com.vaadin.flow.component.grid.HeaderRow;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.provider.DataProvider;
 
+import com.vaadin.signals.SignalFactory;
 import com.vaadin.signals.ValueSignal;
 import dk.netbizz.vaadin.gridpro.utils.components.StandardNotifications;
 import dk.netbizz.vaadin.gridpro.utils.gridprogenerator.GenericGridProEditView;
@@ -26,17 +27,18 @@ import java.util.Map;
  * Filtering done right:  https://github.com/mstahv/grid-filtering-example/blob/master/src/main/java/org/example/views/GridColumnFiltering.java
  */
 
-
+@Component
 public class TenantCompanyGrid extends GenericGridProEditView<TenantCompany> {
 
     private DataProvider<TenantCompany, String> dataProvider;
     private TextField tfCompanyNameFilter;
     private TextField tfAddressStreetFilter;
     private TextField tfAddressZipCityFilter;
-    private ValueSignal<Integer> companyIdSignal = new ValueSignal<>(0);
+    private final SignalHost signalHost;
 
-    public TenantCompanyGrid() {
+    public TenantCompanyGrid(SignalHost signalHost) {
         super(TenantCompany.class);
+        this.signalHost = signalHost;
 
         setSizeFull();
         setMargin(false);
@@ -60,8 +62,6 @@ public class TenantCompanyGrid extends GenericGridProEditView<TenantCompany> {
         tfCompanyNameFilter = createSearchField("name",headerRow.getCell(genericGrid.getColumnByKey("companyName")));
         tfAddressStreetFilter = createSearchField("Street",headerRow.getCell(genericGrid.getColumnByKey("addressStreet")));
         tfAddressZipCityFilter = createSearchField("City",headerRow.getCell(genericGrid.getColumnByKey("addressZipCity")));
-
-        SignalHost.signalHostInstance().addSignal(SignalHost.COMPANY_ID, companyIdSignal);
     }
 
     private TenantCompany createEmptyTenantCompany() {
@@ -120,7 +120,7 @@ public class TenantCompanyGrid extends GenericGridProEditView<TenantCompany> {
         saveEntity(entity);
         refreshGrid();
         genericGrid.select(entity);
-        companyIdSignal.value(entity.getId());
+        signalHost.getSignal(SignalHost.COMPANY_ID).value(entity.getId());
     }
 
     @Override
@@ -145,6 +145,7 @@ public class TenantCompanyGrid extends GenericGridProEditView<TenantCompany> {
 
     @Override
     protected void loadEntities() {
+        System.out.println("loadEntities company");
         dataProvider.refreshAll();
     }
 
@@ -156,12 +157,12 @@ public class TenantCompanyGrid extends GenericGridProEditView<TenantCompany> {
     @Override
     protected void deleteEntity(TenantCompany entity) {
         ServicePoint.servicePointInstance().getTenantCompanyRepository().delete(entity);
-        companyIdSignal.value(null);
+        signalHost.getSignal(SignalHost.COMPANY_ID).value(null);
     }
 
     @Override
     protected void selectEntity(TenantCompany entity) {
-        companyIdSignal.value(entity.getId());
+        signalHost.getSignal(SignalHost.COMPANY_ID).value(entity.getId());
     }
 
     @Override

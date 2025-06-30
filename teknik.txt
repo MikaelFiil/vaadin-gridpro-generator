@@ -1,0 +1,21 @@
+
+
+
+
+Session scoped
+https://vaadin.com/docs/latest/flow/integrations/spring/scopes
+https://vaadin.com/blog/sessionscope-vs-vaadinsessionscope-which-one-should-you-use
+
+
+https://youtu.be/CWEQ-1vff1o
+
+
+Whenever we talk about sharing, there’s also a question about the scope of that sharing. Some state should be shared globally between all UI instances for all users.
+Some between all UI instances that have the same business entity open. Some between all UI instances of a single user.
+Some between different parts within the same UI instance. Some only between components in the same view instance.
+
+There is built-in support for the singleton with a map pattern through SignalFactory.IN_MEMORY_SHARED.
+State isolated to a view instance is also natural to have as instance fields of the view component.
+For anything in between, I’m leaning towards relying on Spring / CDI scopes with signal instances in managed beans with a suitable scope.
+
+You could note that there’s a known issue with using a singleton scope for a single global signal instance due to the way the scoped bean will be initialized before VaadinService initializes the signal environment.

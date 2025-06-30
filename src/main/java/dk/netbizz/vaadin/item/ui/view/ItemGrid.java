@@ -14,24 +14,28 @@ import dk.netbizz.vaadin.item.domain.Item;
 import dk.netbizz.vaadin.service.ServicePoint;
 import dk.netbizz.vaadin.signal.domain.SignalHost;
 import dk.netbizz.vaadin.warehouse.domain.Warehouse;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Component
 public class ItemGrid extends GenericGridProEditView<Item> {
 
     private Integer applicationUserId;
     private DataProvider<Item, String> dataProvider;
     private TextField tfItemNameFilter;
     private Select<String> tfCriticalFilter;
-    private List<Warehouse> warehouseList;
-    private ValueSignal<Integer> itemIdSignal = new ValueSignal<>(0);
+    private final SignalHost signalHost;
+    private final ServicePoint servicePoint;
 
-    public ItemGrid() {
+    public ItemGrid(SignalHost signalHost, ServicePoint servicePoint) {
         super(Item.class);
-        warehouseList = ServicePoint.servicePointInstance().getWarehouseRepository().findAll();
+        this.signalHost = signalHost;
+        this.servicePoint = servicePoint;
 
         setSizeFull();
         setMargin(false);
@@ -43,7 +47,7 @@ public class ItemGrid extends GenericGridProEditView<Item> {
         genericGrid.addClassName("vaadin-grid-generator");
 
         dataProvider = DataProvider.fromFilteringCallbacks(
-            query -> (applicationUserId == null) ? new ArrayList<Item>().stream() : ServicePoint.servicePointInstance().getItemService().findFromQuery(warehouseList, createWhere(), createOrderBy(query.getSortOrders()), query.getLimit(), query.getOffset()).stream(),
+            query -> (applicationUserId == null) ? new ArrayList<Item>().stream() : ServicePoint.servicePointInstance().getItemService().findFromQuery(servicePoint.getWarehouseRepository().findAll(), createWhere(), createOrderBy(query.getSortOrders()), query.getLimit(), query.getOffset()).stream(),
             query -> (applicationUserId == null) ? 0 : ServicePoint.servicePointInstance().getItemService().countFromQueryFilter(createWhere())
         );
 
@@ -55,11 +59,10 @@ public class ItemGrid extends GenericGridProEditView<Item> {
         tfItemNameFilter = createSearchField("itemname",headerRow.getCell(genericGrid.getColumnByKey("itemName")));
         tfCriticalFilter = createSelectSearchField("critical",headerRow.getCell(genericGrid.getColumnByKey("criticality")), getItemsForSelect("criticality"));
 
-        SignalHost.signalHostInstance().addSignal(SignalHost.ITEM_ID, itemIdSignal);
         ComponentEffect.effect(this, () -> {
+            setTenantDepartmentEmployee(signalHost.getSignal(SignalHost.EMPLOYEE_ID).value());
             Signal.runWithoutTransaction(() -> {
-                setTenantDepartmentEmployee(SignalHost.signalHostInstance().getSignal(SignalHost.EMPLOYEE_ID).value());
-                itemIdSignal.value(null);
+                signalHost.getSignal(SignalHost.ITEM_ID).value(null);
             });
         });
     }
@@ -80,7 +83,7 @@ public class ItemGrid extends GenericGridProEditView<Item> {
         Map<String , String> params = new HashMap<>();
         params.put("id.readonly", "true");
         params.put("price.readonly", "true");
-        params.put("criticality.readonly", "true");
+        // params.put("criticality.readonly", "true");
         params.put("yearlyAmount.arrayEndIdx", "3");            // Indexes are zero based
         params.put("yearlyAmount.header0", "Year 2024");
         params.put("yearlyAmount.header1", "Year 2025");
@@ -130,7 +133,7 @@ public class ItemGrid extends GenericGridProEditView<Item> {
             Item entity = createEmptyItem();
             saveEntity(entity);
             genericGrid.select(entity);
-            itemIdSignal.value(entity.getId());
+            signalHost.getSignal(SignalHost.ITEM_ID).value(entity.getId());
         }
         refreshGrid();
     }
@@ -157,6 +160,7 @@ public class ItemGrid extends GenericGridProEditView<Item> {
 
     @Override
     protected void loadEntities() {
+        System.out.println("loadEntities item");
         dataProvider.refreshAll();
     }
 
@@ -168,12 +172,12 @@ public class ItemGrid extends GenericGridProEditView<Item> {
     @Override
     protected void deleteEntity(Item entity) {
         ServicePoint.servicePointInstance().getItemRepository().delete(entity);
-        itemIdSignal.value(0);
+        signalHost.getSignal(SignalHost.ITEM_ID).value(null);
     }
 
     @Override
     protected void selectEntity(Item entity) {
-        itemIdSignal.value(entity.getId());
+        signalHost.getSignal(SignalHost.ITEM_ID).value(entity.getId());
     }
 
     @SuppressWarnings("unchecked")
@@ -185,7 +189,7 @@ public class ItemGrid extends GenericGridProEditView<Item> {
                 return (List<S>) new ArrayList<>(List.of("Technical", "Quality", "Delivery", "Legal"));
             }
             case "warehouse" -> {
-                return (List<S>) warehouseList;
+                return (List<S>) servicePoint.getWarehouseRepository().findAll();
             }
             case "criticality" -> {
                 return (List<S>) new ArrayList<>(List.of("", "Low", "Medium", "High"));

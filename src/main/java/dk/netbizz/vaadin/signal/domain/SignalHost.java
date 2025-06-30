@@ -1,17 +1,16 @@
 package dk.netbizz.vaadin.signal.domain;
 
-
+import com.vaadin.flow.spring.annotation.VaadinSessionScope;
+import com.vaadin.signals.SignalFactory;
 import com.vaadin.signals.ValueSignal;
-import lombok.Getter;
-import org.springframework.context.annotation.Bean;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-@Getter
-@Component
+@VaadinSessionScope
+@Service
 public class SignalHost {
 
     public static final String COMPANY_ID = "companyId";
@@ -19,19 +18,13 @@ public class SignalHost {
     public static final String EMPLOYEE_ID = "employeeId";
     public static final String ITEM_ID = "itemId";
 
-    private static dk.netbizz.vaadin.signal.domain.SignalHost instance;
     private Map<String, ValueSignal<Integer>> signalMap = Collections.synchronizedMap(new HashMap<>());
 
-
-    private SignalHost() {
-    }
-
-    @Bean
-    public static synchronized SignalHost signalHostInstance() {
-        if (instance == null) {
-            instance = new SignalHost();
-        }
-        return instance;
+    public SignalHost() {
+        addSignal(COMPANY_ID, new ValueSignal<>(Integer.class));
+        addSignal(DEPARTMENT_ID, new ValueSignal<>(Integer.class));
+        addSignal(EMPLOYEE_ID, new ValueSignal<>(Integer.class));
+        addSignal(ITEM_ID, new ValueSignal<>(Integer.class));
     }
 
     public void addSignal(String name, ValueSignal<Integer> signal) {

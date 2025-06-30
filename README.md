@@ -17,6 +17,7 @@
 * ### Version 0.30 - 2025-04-23  - Major changes to code structure and with enhancements to central class GenericGridProEditView. Added some performance tests behind the menu "Load and performance test" using H2 memory database.
 * ### Version 0.31 - 2025-04-26  - Many small improvement in both code and UI. Testing load and performance shows production readiness 
 * ### Version 0.40 - 2025-06-25  - Major changes, including some breaking changes. Now it uses Spring Data JDBC in combination with paging, sorting and filtering in the "Load & performance test" menu. Code has been simplified, especially for Readonly situations. Formatting of cells has changed, see examples. Utilizing the Vaadin 24.8 new Signal concept to keep the 1-N relations updated    
+* ### Version 0.41 - 2025-06-30  - Fixed/clarified the use of Vaadin Signals and a problem with readonly columns. To my mind signals will be an improvement to the business domain code, reducing dependencies  
 
 ### Author Mikael Fiil - mikael.fiil@netbizz.dk
 ###
