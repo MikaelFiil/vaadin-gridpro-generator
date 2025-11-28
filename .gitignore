@@ -37,4 +37,6 @@ build/
 .fastRequest/
 /src/main/frontend/generated/
 
+!**/node_modules/
+
 
