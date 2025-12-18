@@ -56,7 +56,7 @@ public class Item implements BaseEntity {
 
     private Integer applicationUserId;
 
-    @GridEditColumn(header = "Item Name", order = 1, dbColumnName = "item_name", fieldLength = 15, editorClass = TextField.class)
+    @GridEditColumn(header = "Item Name", order = 1, dbColumnName = "item_name", fieldLength = 50, editorClass = TextField.class)
     private String itemName = "New name ...";
 
     @GridEditColumn(header = "Category", order = 2, dbColumnName = "category", sortable = true, editorClass = Select.class)

@@ -2,18 +2,14 @@ package dk.netbizz.vaadin.item.service;
 
 import dk.netbizz.vaadin.exception.ApplicationRuntimeException;
 import dk.netbizz.vaadin.item.domain.Item;
-import dk.netbizz.vaadin.tenantcompany.domain.TenantDepartment;
-import dk.netbizz.vaadin.tenantcompany.service.TenantDepartmentService;
 import dk.netbizz.vaadin.warehouse.domain.Warehouse;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 
@@ -105,8 +101,9 @@ public class ItemService {
 
     @Transactional
     public List<Item> findFromQuery(List<Warehouse> warehouseList, String where, String orderBy, int limit, int offset) {
-        return jdbcTemplate.query("select * from item" + where + orderBy + " limit " + limit + " offset " + offset,
-                ItemRowMapper.getInstance().setWareHouseList(warehouseList));
+        String sql = "select * from item" + where + orderBy + " offset " + offset + " limit " + limit;
+        System.out.println(sql);
+        return jdbcTemplate.query(sql,ItemRowMapper.getInstance().setWareHouseList(warehouseList));
     }
 
     @Transactional

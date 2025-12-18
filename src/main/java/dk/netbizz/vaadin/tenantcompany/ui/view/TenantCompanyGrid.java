@@ -4,7 +4,6 @@ import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.grid.HeaderRow;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.provider.DataProvider;
-
 import com.vaadin.signals.SignalFactory;
 import com.vaadin.signals.ValueSignal;
 import dk.netbizz.vaadin.gridpro.utils.components.StandardNotifications;
@@ -12,7 +11,6 @@ import dk.netbizz.vaadin.gridpro.utils.gridprogenerator.GenericGridProEditView;
 import dk.netbizz.vaadin.service.ServicePoint;
 import dk.netbizz.vaadin.signal.domain.SignalHost;
 import dk.netbizz.vaadin.tenantcompany.domain.TenantCompany;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -34,11 +32,9 @@ public class TenantCompanyGrid extends GenericGridProEditView<TenantCompany> {
     private TextField tfCompanyNameFilter;
     private TextField tfAddressStreetFilter;
     private TextField tfAddressZipCityFilter;
-    private final SignalHost signalHost;
 
-    public TenantCompanyGrid(SignalHost signalHost) {
+    public TenantCompanyGrid() {
         super(TenantCompany.class);
-        this.signalHost = signalHost;
 
         setSizeFull();
         setMargin(false);
@@ -120,7 +116,7 @@ public class TenantCompanyGrid extends GenericGridProEditView<TenantCompany> {
         saveEntity(entity);
         refreshGrid();
         genericGrid.select(entity);
-        signalHost.getSignal(SignalHost.COMPANY_ID).value(entity.getId());
+        SignalFactory.IN_MEMORY_SHARED.value(SignalHost.COMPANY_ID, "").value(String.valueOf(entity.getId()));
     }
 
     @Override
@@ -157,12 +153,12 @@ public class TenantCompanyGrid extends GenericGridProEditView<TenantCompany> {
     @Override
     protected void deleteEntity(TenantCompany entity) {
         ServicePoint.servicePointInstance().getTenantCompanyRepository().delete(entity);
-        signalHost.getSignal(SignalHost.COMPANY_ID).value(null);
+        SignalFactory.IN_MEMORY_SHARED.value(SignalHost.COMPANY_ID, "").value(null);
     }
 
     @Override
     protected void selectEntity(TenantCompany entity) {
-        signalHost.getSignal(SignalHost.COMPANY_ID).value(entity.getId());
+        SignalFactory.IN_MEMORY_SHARED.value(SignalHost.COMPANY_ID, "").value(String.valueOf(entity.getId()));
     }
 
     @Override

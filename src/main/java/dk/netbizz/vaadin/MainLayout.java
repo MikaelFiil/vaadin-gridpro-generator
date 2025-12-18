@@ -15,6 +15,7 @@ import com.vaadin.flow.server.auth.AnonymousAllowed;
 import com.vaadin.flow.server.menu.MenuConfiguration;
 import com.vaadin.flow.server.menu.MenuEntry;
 import com.vaadin.flow.theme.lumo.LumoUtility;
+import dk.netbizz.vaadin.signal.domain.SignalHost;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
@@ -46,9 +47,7 @@ public class MainLayout extends AppLayout {
         Span appName = new Span("Vaadin GridPro Generator");
         appName.addClassNames(LumoUtility.FontWeight.SEMIBOLD, LumoUtility.FontSize.LARGE);
         Header header = new Header(appName);
-
         Scroller scroller = new Scroller(createNavigation());
-
         addToDrawer(header, scroller, createFooter());
     }
 

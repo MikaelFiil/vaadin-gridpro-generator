@@ -6,13 +6,13 @@ import com.vaadin.flow.component.grid.HeaderRow;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.provider.DataProvider;
 import com.vaadin.signals.Signal;
+import com.vaadin.signals.SignalFactory;
 import com.vaadin.signals.ValueSignal;
 import dk.netbizz.vaadin.gridpro.utils.components.StandardNotifications;
 import dk.netbizz.vaadin.gridpro.utils.gridprogenerator.GenericGridProEditView;
 import dk.netbizz.vaadin.service.ServicePoint;
 import dk.netbizz.vaadin.signal.domain.SignalHost;
 import dk.netbizz.vaadin.tenantcompany.domain.TenantDepartment;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -29,11 +29,8 @@ public class TenantDepartmentGrid extends GenericGridProEditView<TenantDepartmen
     private TextField tfDepartmentNameFilter;
     private TextField tfDescriptionFilter;
 
-    private final SignalHost signalHost;
-
-    public TenantDepartmentGrid(SignalHost signalHost) {
+    public TenantDepartmentGrid() {
         super(TenantDepartment.class);
-        this.signalHost = signalHost;
 
         setSizeFull();
         setMargin(false);
@@ -57,10 +54,11 @@ public class TenantDepartmentGrid extends GenericGridProEditView<TenantDepartmen
         tfDescriptionFilter = createSearchField("description", headerRow.getCell(genericGrid.getColumnByKey("description")));
 
         ComponentEffect.effect(this, () -> {
-            setTenantCompanyId(signalHost.getSignal(SignalHost.COMPANY_ID).value());
             Signal.runWithoutTransaction(() -> {
-                signalHost.getSignal(SignalHost.DEPARTMENT_ID).value(null);
+                setTenantCompanyId(SignalFactory.IN_MEMORY_SHARED.value(SignalHost.COMPANY_ID, "").value());
+                SignalFactory.IN_MEMORY_SHARED.value(SignalHost.DEPARTMENT_ID, "").value(null);
             });
+
         });
     }
 
@@ -79,8 +77,12 @@ public class TenantDepartmentGrid extends GenericGridProEditView<TenantDepartmen
         return params;
     }
 
-    public void setTenantCompanyId(Integer tenantCompanyId) {
-        this.tenantCompanyId = tenantCompanyId;
+    public void setTenantCompanyId(String tenantCompanyId) {
+        if (tenantCompanyId == null || tenantCompanyId.isEmpty()) {
+            this.tenantCompanyId = null;
+        } else {
+            this.tenantCompanyId = Integer.parseInt(tenantCompanyId);
+        }
         refreshGrid();
     }
 
@@ -108,7 +110,7 @@ public class TenantDepartmentGrid extends GenericGridProEditView<TenantDepartmen
             TenantDepartment entity = createEmptyTenantDepartment(tenantCompanyId);
             saveEntity(entity);
             genericGrid.select(entity);
-            signalHost.getSignal(SignalHost.DEPARTMENT_ID).value(entity.getId());
+            SignalFactory.IN_MEMORY_SHARED.value(SignalHost.DEPARTMENT_ID, "").value(String.valueOf(entity.getId()));
         }
         refreshGrid();
     }
@@ -147,12 +149,12 @@ public class TenantDepartmentGrid extends GenericGridProEditView<TenantDepartmen
     @Override
     protected void deleteEntity(TenantDepartment entity) {
         ServicePoint.servicePointInstance().getTenantDepartmentRepository().delete(entity);
-        signalHost.getSignal(SignalHost.DEPARTMENT_ID).value(null);
+        SignalFactory.IN_MEMORY_SHARED.value(SignalHost.DEPARTMENT_ID, "").value(null);
     }
 
     @Override
     protected void selectEntity(TenantDepartment entity) {
-        signalHost.getSignal(SignalHost.DEPARTMENT_ID).value(entity.getId());
+        SignalFactory.IN_MEMORY_SHARED.value(SignalHost.DEPARTMENT_ID, "").value(String.valueOf(entity.getId()));
     }
 
     @Override

@@ -7,14 +7,12 @@ import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.provider.DataProvider;
 import com.vaadin.signals.Signal;
-import com.vaadin.signals.ValueSignal;
+import com.vaadin.signals.SignalFactory;
 import dk.netbizz.vaadin.gridpro.utils.components.StandardNotifications;
 import dk.netbizz.vaadin.gridpro.utils.gridprogenerator.GenericGridProEditView;
 import dk.netbizz.vaadin.item.domain.Item;
 import dk.netbizz.vaadin.service.ServicePoint;
 import dk.netbizz.vaadin.signal.domain.SignalHost;
-import dk.netbizz.vaadin.warehouse.domain.Warehouse;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -29,12 +27,10 @@ public class ItemGrid extends GenericGridProEditView<Item> {
     private DataProvider<Item, String> dataProvider;
     private TextField tfItemNameFilter;
     private Select<String> tfCriticalFilter;
-    private final SignalHost signalHost;
     private final ServicePoint servicePoint;
 
-    public ItemGrid(SignalHost signalHost, ServicePoint servicePoint) {
+    public ItemGrid(ServicePoint servicePoint) {
         super(Item.class);
-        this.signalHost = signalHost;
         this.servicePoint = servicePoint;
 
         setSizeFull();
@@ -42,7 +38,7 @@ public class ItemGrid extends GenericGridProEditView<Item> {
         setPadding(false);
         genericGrid.setWidth("100%");
         genericGrid.setHeight("700px");
-        // setMaxGridHeight(25);
+        genericGrid.setPageSize(100);
         genericGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES, GridVariant.LUMO_NO_BORDER);
         genericGrid.addClassName("vaadin-grid-generator");
 
@@ -60,9 +56,9 @@ public class ItemGrid extends GenericGridProEditView<Item> {
         tfCriticalFilter = createSelectSearchField("critical",headerRow.getCell(genericGrid.getColumnByKey("criticality")), getItemsForSelect("criticality"));
 
         ComponentEffect.effect(this, () -> {
-            setTenantDepartmentEmployee(signalHost.getSignal(SignalHost.EMPLOYEE_ID).value());
             Signal.runWithoutTransaction(() -> {
-                signalHost.getSignal(SignalHost.ITEM_ID).value(null);
+                setTenantDepartmentEmployee(SignalFactory.IN_MEMORY_SHARED.value(SignalHost.EMPLOYEE_ID, "").value());
+                SignalFactory.IN_MEMORY_SHARED.value(SignalHost.ITEM_ID, "").value(null);
             });
         });
     }
@@ -104,8 +100,12 @@ public class ItemGrid extends GenericGridProEditView<Item> {
         return params;
     }
 
-    public void setTenantDepartmentEmployee(Integer applicationUserId) {
-        this.applicationUserId = applicationUserId;
+    public void setTenantDepartmentEmployee(String applicationUserId) {
+        if (applicationUserId == null || applicationUserId.isEmpty()) {
+            this.applicationUserId = null;
+        } else {
+            this.applicationUserId = Integer.parseInt(applicationUserId);
+        }
         refreshGrid();
     }
 
@@ -133,7 +133,7 @@ public class ItemGrid extends GenericGridProEditView<Item> {
             Item entity = createEmptyItem();
             saveEntity(entity);
             genericGrid.select(entity);
-            signalHost.getSignal(SignalHost.ITEM_ID).value(entity.getId());
+            // SignalFactory.IN_MEMORY_SHARED.value(SignalHost.ITEM_ID, "").value(String.valueOf(entity.getId()));
         }
         refreshGrid();
     }
@@ -172,12 +172,12 @@ public class ItemGrid extends GenericGridProEditView<Item> {
     @Override
     protected void deleteEntity(Item entity) {
         ServicePoint.servicePointInstance().getItemRepository().delete(entity);
-        signalHost.getSignal(SignalHost.ITEM_ID).value(null);
+        // SignalFactory.IN_MEMORY_SHARED.value(SignalHost.ITEM_ID, "").value(null);
     }
 
     @Override
     protected void selectEntity(Item entity) {
-        signalHost.getSignal(SignalHost.ITEM_ID).value(entity.getId());
+        // SignalFactory.IN_MEMORY_SHARED.value(SignalHost.ITEM_ID, "").value(String.valueOf(entity.getId()));
     }
 
     @SuppressWarnings("unchecked")

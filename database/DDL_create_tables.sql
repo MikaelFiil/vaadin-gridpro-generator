@@ -309,6 +309,9 @@ create table if not exists netbizz.item (
 );
 alter sequence item_id_seq restart with 1000;
 create index on netbizz.item(application_user_id);
+create index on netbizz.item(lower(item_name));
+create index on netbizz.item(lower(category));
+create index on netbizz.item(lower(criticality));
 
 
 create table if not exists netbizz.warehouse (

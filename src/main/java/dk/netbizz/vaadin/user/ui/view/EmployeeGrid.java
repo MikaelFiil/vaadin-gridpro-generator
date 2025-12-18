@@ -6,13 +6,13 @@ import com.vaadin.flow.component.grid.HeaderRow;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.provider.DataProvider;
 import com.vaadin.signals.Signal;
+import com.vaadin.signals.SignalFactory;
 import com.vaadin.signals.ValueSignal;
 import dk.netbizz.vaadin.gridpro.utils.components.StandardNotifications;
 import dk.netbizz.vaadin.gridpro.utils.gridprogenerator.GenericGridProEditView;
 import dk.netbizz.vaadin.service.ServicePoint;
 import dk.netbizz.vaadin.signal.domain.SignalHost;
 import dk.netbizz.vaadin.user.domain.ApplicationUser;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -28,12 +28,9 @@ public class EmployeeGrid extends GenericGridProEditView<ApplicationUser> {
     private Integer tenantDepartmentId = null;
     private TextField tfFullNameFilter;
     private TextField tfEmailFilter;
-    private final SignalHost signalHost;
 
-
-    public EmployeeGrid(SignalHost signalHost) {
+    public EmployeeGrid() {
         super(ApplicationUser.class);
-        this.signalHost = signalHost;
 
         setSizeFull();
         setMargin(false);
@@ -57,11 +54,12 @@ public class EmployeeGrid extends GenericGridProEditView<ApplicationUser> {
         tfEmailFilter = createSearchField("email",headerRow.getCell(genericGrid.getColumnByKey("email")));
 
         ComponentEffect.effect(this, () -> {
-            setTenantDepartmentId(signalHost.getSignal(SignalHost.DEPARTMENT_ID).value());
             Signal.runWithoutTransaction(() -> {
-                signalHost.getSignal(SignalHost.EMPLOYEE_ID).value(null);
+                setTenantDepartmentId(SignalFactory.IN_MEMORY_SHARED.value(SignalHost.DEPARTMENT_ID, "").value());
+                SignalFactory.IN_MEMORY_SHARED.value(SignalHost.EMPLOYEE_ID, "").value(null);
             });
         });
+
     }
 
     private ApplicationUser createEmptyEmployee(Integer tenantDepartmentId)  {
@@ -80,8 +78,12 @@ public class EmployeeGrid extends GenericGridProEditView<ApplicationUser> {
         return params;
     }
 
-    public void setTenantDepartmentId(Integer tenantDepartmentId) {
-        this.tenantDepartmentId = tenantDepartmentId;
+    public void setTenantDepartmentId(String tenantDepartmentId) {
+        if (tenantDepartmentId == null || tenantDepartmentId.isEmpty()) {
+            this.tenantDepartmentId = null;
+        } else {
+            this.tenantDepartmentId = Integer.parseInt(tenantDepartmentId);
+        }
         refreshGrid();
     }
 
@@ -109,7 +111,7 @@ public class EmployeeGrid extends GenericGridProEditView<ApplicationUser> {
             ApplicationUser entity = createEmptyEmployee(tenantDepartmentId);
             saveEntity(entity);
             genericGrid.select(entity);
-            signalHost.getSignal(SignalHost.EMPLOYEE_ID).value(entity.getId());
+            SignalFactory.IN_MEMORY_SHARED.value(SignalHost.EMPLOYEE_ID, "").value(String.valueOf(entity.getId()));
         }
         refreshGrid();
     }
@@ -148,12 +150,12 @@ public class EmployeeGrid extends GenericGridProEditView<ApplicationUser> {
     @Override
     protected void deleteEntity(ApplicationUser entity) {
         ServicePoint.servicePointInstance().getEmployeeRepository().delete(entity);
-        signalHost.getSignal(SignalHost.EMPLOYEE_ID).value(null);
+        SignalFactory.IN_MEMORY_SHARED.value(SignalHost.EMPLOYEE_ID, "").value(null);
     }
 
     @Override
     protected void selectEntity(ApplicationUser entity) {
-        signalHost.getSignal(SignalHost.EMPLOYEE_ID).value(entity.getId());
+        SignalFactory.IN_MEMORY_SHARED.value(SignalHost.EMPLOYEE_ID, "").value(String.valueOf(entity.getId()));
     }
 
     @Override

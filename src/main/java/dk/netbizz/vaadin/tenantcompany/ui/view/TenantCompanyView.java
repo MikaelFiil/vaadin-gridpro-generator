@@ -44,8 +44,9 @@ public class TenantCompanyView extends Main  {
     private Button genDepartmentsButton = new Button("Generate 100 departments pre tenant company");
     private Button genEmployeesButton = new Button("Generate 10 employees per department");
     private Button genItemsButton = new Button("Generate 100 items for first 1000 users ");
-    private Button genItems10000Button = new Button("Generate 10000 items for user with id: ");
-    private IntegerField applicationUserIdField = new IntegerField("Enter Employee id");
+    private Button genItems10000Button = new Button("Generate 10000 items for user with id between First and Last id: ");
+    private IntegerField firstApplicationUserIdField = new IntegerField("Enter First Employee id");
+    private IntegerField lastApplicationUserIdField = new IntegerField("Enter Last Employee id");
 
     private VerticalLayout verticalLayout = new VerticalLayout();
     private final ItemGrid itemGrid;
@@ -76,7 +77,7 @@ public class TenantCompanyView extends Main  {
     }
 
     private void buildUI() {
-        HorizontalLayout horizontalLayout = new HorizontalLayout(genDepartmentsButton, genEmployeesButton, genItemsButton, genItems10000Button, applicationUserIdField);
+        HorizontalLayout horizontalLayout = new HorizontalLayout(genDepartmentsButton, genEmployeesButton, genItemsButton, genItems10000Button, firstApplicationUserIdField, lastApplicationUserIdField);
         horizontalLayout.setAlignItems(FlexComponent.Alignment.BASELINE);
         verticalLayout.add(horizontalLayout);
         verticalLayout.add(tenantCompanyGrid);
@@ -169,16 +170,18 @@ public class TenantCompanyView extends Main  {
             Faker faker = new Faker();
             Random rand = new Random();
 
-            ApplicationUser applicationUser = ServicePoint.servicePointInstance().getEmployeeRepository().findById(applicationUserIdField.getValue()).orElse(null);
-            if (applicationUser != null) {
-                System.out.println("Generating items ...");
-                for(int i = 0; i < 10000; i++) {
-                    Item item = createItem(faker, applicationUser, rand);
-                    ServicePoint.servicePointInstance().getItemService().save(item);
+            for (int id = firstApplicationUserIdField.getValue(); id <= lastApplicationUserIdField.getValue(); id++) {
+                ApplicationUser applicationUser = ServicePoint.servicePointInstance().getEmployeeRepository().findById(id).orElse(null);
+                if (applicationUser != null) {
+                    System.out.println("Generating items ...");
+                    for (int i = 0; i < 10000; i++) {
+                        Item item = createItem(faker, applicationUser, rand);
+                        ServicePoint.servicePointInstance().getItemService().save(item);
+                    }
+                    System.out.println("Finished generating items");
+                } else {
+                    StandardNotifications.showTempWarningNotification("No user found with id: " + firstApplicationUserIdField.getValue());
                 }
-                System.out.println("Finished generating items");
-            } else {
-                StandardNotifications.showTempWarningNotification("No user found with id: " + applicationUserIdField.getValue());
             }
         });
     }

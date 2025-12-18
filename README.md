@@ -94,7 +94,7 @@ public @interface GridEditColumn {
 ###
 ### The "Load & performance test" menu demo shows a working multi hierarchy (1 -> N) relations example using Spring Data JDBC DataProvider.fromFilteringCallbacks together with the paging operations of the GridPro grids.
 ### The grids have some sorting and filtering options that goes all the way to the database for memory efficiency.
-### The demo can use either H2 memory DB or PostgreSQL, consult the application.properties AND ItemRowMapper.java when choosing the DB
+### NOTE! The demo can use either H2 memory DB or PostgreSQL, consult the application.properties AND ItemRowMapper.java when choosing the DB!
 ### Notice the schema.sql and data.sql files in the "resources" directory, only the "tenant_company" and "warehouse" tables are populated, the rest requires use of the "Generate ..." buttons at the top of the view.
 ### 
 ### Other menus are just experimental or a small helper like the "Warehouse"

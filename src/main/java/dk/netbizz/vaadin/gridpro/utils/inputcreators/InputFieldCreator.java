@@ -17,8 +17,8 @@ public class InputFieldCreator {
     private InputFieldCreator() {}
 
     private static TextField setTextFieldStd(TextField tf, int maxLength) {
-        tf.setWidth(MEDIUM_FIELD);
-        tf.setMaxWidth(MEDIUM_FIELD);
+        tf.setWidth("100%");
+        tf.setMaxWidth("100%");
         tf.setMaxLength(maxLength);
         return tf;
     }
